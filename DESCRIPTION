@@ -22,7 +22,16 @@ Imports:
   pool,
   RSQLite,
   dplyr,
-  formattable
+  formattable,
+  shinythemes,
+  cowplot,
+  DT,
+  viridis,
+  dplyr,
+  tidyr,
+  tibble,
+  ggbeeswarm,
+  aplot
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Remotes: exaexa/scattermore
