@@ -1,1 +1,1 @@
-# plaeApp
+# PLatform for Analysis of scEiad
