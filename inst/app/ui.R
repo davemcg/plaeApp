@@ -14,12 +14,12 @@ shinyUI(
              theme = shinytheme('flatly'),
              selected = 'Overview',
              navbarMenu('Viz', # UMAP ----------
-                        tabPanel('UMAP - Tables', 
+                        tabPanel('UMAP - Tables',
                                  fluidPage(
                                    fluidRow(
                                      # Gene Scatter  ---------------
                                      column(6,
-                                            plotOutput('gene_scatter_plot', 
+                                            plotOutput('gene_scatter_plot',
                                                        dblclick = "gene_scatter_plot_dblclick",
                                                        brush = brushOpts(
                                                          id = "gene_scatter_plot_brush",
@@ -29,10 +29,10 @@ shinyUI(
                                                                            choices=NULL, multiple=FALSE)),
                                                      column(5,
                                                             selectizeInput('pt_size_gene', strong('Point Size: '),
-                                                                           choices=c(1,3,5,10), 
+                                                                           choices=c(1,3,5,10),
                                                                            selected = 1, multiple=FALSE))),
                                             fluidRow(column(5,
-                                                            sliderInput("gene_scatter_slider", label = strong("Expression Range: "), min = 1, 
+                                                            sliderInput("gene_scatter_slider", label = strong("Expression Range: "), min = 1,
                                                                         max = 15, value = c(1, 15))
                                             )),
                                             fluidRow(column(5,
@@ -48,22 +48,22 @@ shinyUI(
                                                        brush = brushOpts(
                                                          id = "meta_plot_brush",
                                                          resetOnNew = TRUE)),
-                                            fluidRow(column(5, 
+                                            fluidRow(column(5,
                                                             selectizeInput('meta_column', strong('Color: '),
                                                                            choices= NULL, selected = 'CellType_predict')),
-                                                     column(5, 
+                                                     column(5,
                                                             selectizeInput('pt_size_meta', strong('Point Size: '),
-                                                                           choices=c(1,3,5), 
+                                                                           choices=c(1,3,5),
                                                                            selected = 1, multiple=FALSE))),
-                                            fluidRow(column(5, 
-                                                            selectInput("label_toggle", label = strong("Label: "), 
+                                            fluidRow(column(5,
+                                                            selectInput("label_toggle", label = strong("Label: "),
                                                                         choices = list("None" = 0,
                                                                                        "CellType (published)" = 1,
                                                                                        "CellType (predict)" = 2,
                                                                                        "Cluster" = 3), multiple = FALSE,
                                                                         selected = 2)),
-                                                     column(2, 
-                                                            radioButtons('meta_column_transform', 
+                                                     column(2,
+                                                            radioButtons('meta_column_transform',
                                                                          label = 'Numeric Transform', inline = FALSE,
                                                                          choices = list("None" = "None", "log2" = "log2")))
                                             ),
@@ -76,19 +76,19 @@ shinyUI(
                                      )
                                    ),
                                    fluidRow(
-                                     column(6, 
-                                            fluidRow( 
+                                     column(6,
+                                            fluidRow(
                                               column(12, actionButton('BUTTON_draw_scatter',' Draw Scatter Plot', icon = icon("arrow-up"),
                                                                       style='background-color: #3399ff; color: #ffffff'),
                                                      actionButton('BUTTON_make_gene_table',' Make Gene Table', icon = icon("arrow-down"),
                                                                   style='background-color: #3399ff; color: #ffffff'))),
                                             br(),
                                             selectizeInput('grouping_features', strong('Gene Table Grouping(s)'),
-                                                           choices = NULL, 
+                                                           choices = NULL,
                                                            multiple = TRUE),
                                             div(DT::dataTableOutput('gene_cluster_stats'), style='font-size:75%')),
                                      column(6,
-                                            fluidRow( 
+                                            fluidRow(
                                               column(12,
                                                      actionButton('BUTTON_draw_meta',' Draw Meta Plot', icon = icon("arrow-up"),
                                                                   style='background-color: #3399ff; color: #ffffff'),
@@ -96,21 +96,21 @@ shinyUI(
                                                                   style='background-color: #3399ff; color: #ffffff'))),
                                             br(),
                                             selectizeInput('meta_groupings', strong('Metadata Table Groupings '),
-                                                           choices = NULL, 
+                                                           choices = NULL,
                                                            multiple = TRUE),
                                             div(DT::dataTableOutput('metadata_stats'), style='font-size:75%'))
                                    )
                                  )
                         ),
                         # exp_plots ------
-                        tabPanel('Expression Plot by Groupings', 
+                        tabPanel('Expression Plot by Groupings',
                                  column(12,
                                         fluidRow(
-                                          column(3, 
+                                          column(3,
                                                  (selectizeInput('exp_plot_genes', strong('Gene(s): '),
                                                                  choices = NULL, multiple = TRUE))),
-                                          
-                                          
+
+
                                           column(3,
                                                  selectizeInput('exp_plot_height', strong('Plot Height: '),
                                                                 choices = seq(200, 2000, by = 100),
@@ -131,21 +131,21 @@ shinyUI(
                                           column(3,
                                                  (checkboxInput('exp_plot_facet', 'Facet on 1st Group', TRUE))),
                                           column(3,
-                                                 (radioButtons('exp_plot_axis', inline =  TRUE, 'X axis is: ', 
+                                                 (radioButtons('exp_plot_axis', inline =  TRUE, 'X axis is: ',
                                                                choices = list("Grouping Features" = 1, "Gene" = 2),
                                                                selected = 1))),
                                           column(3,
-                                                 (radioButtons('exp_plot_color', inline = TRUE, 'Color is: ', 
+                                                 (radioButtons('exp_plot_color', inline = TRUE, 'Color is: ',
                                                                choices = list("Grouping Features" = 1, "Gene" = 2),
                                                                selected = 2)))
-                                          
+
                                         ),
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                          style='background-color: #3399ff; color: #ffffff'))),
                                         br(),
                                         fluidRow(column(10, plotOutput('exp_plot'))))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
-                                 column(10, 
+                                 column(10,
                                         fluidRow(
                                           column(10,
                                                  fluidRow(column(5,
@@ -156,7 +156,7 @@ shinyUI(
                                                                                 choices=NULL, multiple=FALSE)),
                                                           column(5,
                                                                  selectizeInput('pt_size_facet', strong('Point Size: '),
-                                                                                choices=c(1,3,5,10), 
+                                                                                choices=c(1,3,5,10),
                                                                                 selected = 1, multiple=FALSE)),
                                                           column(5,
                                                                  selectizeInput('facet_height', strong('Plot Height: '),
@@ -167,7 +167,7 @@ shinyUI(
                                                  br(),
                                                  plotOutput('facet_plot'))
                                         )
-                                        
+
                                  )),
                         # temporal plot -----
                         tabPanel('Temporal Gene x Cell Type',
@@ -180,10 +180,10 @@ shinyUI(
                                                                                 choices = c('CellType', 'CellType (predict)'))),
                                                           column(3, selectInput('temporal_y_val', strong('Value: '),
                                                                                 choices = c('Mean CPM', 'Ratio Detected')))))),
-                                        fluidRow(column(5, 
+                                        fluidRow(column(5,
                                                         actionButton('BUTTON_draw_temporal','Draw Plot', icon = icon("arrow-down"),
                                                                      style='background-color: #3399ff; color: #ffffff'))),
-                                        br(), br(), 
+                                        br(), br(),
                                         fluidRow(column(10, plotOutput('temporal_plot')))
                                  )),
                         tabPanel('Dotplot', # Dotplot ---------
@@ -211,7 +211,16 @@ shinyUI(
                       fluidPage(column(8,
                                        fluidRow(
                                          selectInput('search_by', strong('Search by: '),
-                                                     choices = c('Gene','Test'),
+                                                     choices = c('Gene',
+                                                                 "CellType (Predict) against Remaining",
+                                                                 "CellType against Remaining",
+                                                                 "Cluster against Remaining",
+                                                                 "Organism against Organism within CellType",
+                                                                 "Organism against Organism within CellType (Predict)",
+                                                                 "Organism against Organism within Cluster",
+                                                                 "Pairwise CellType (Predict) against CellType (Predict)",
+                                                                 "Pairwise CellType against CellType",
+                                                                 "Pairwise Cluster against Cluster"),
                                                      selected = 'Gene')
                                        )),
                                 column(8,
@@ -220,9 +229,9 @@ shinyUI(
                                                           selectizeInput('diff_gene', strong('Genes: '),
                                                                          choices =  NULL,
                                                                          multiple = TRUE)),
-                                         conditionalPanel("input.search_by == 'Test'",
+                                         conditionalPanel("input.search_by != 'Gene'",
                                                           selectizeInput('diff_term', strong('Term: '),
-                                                                         choices =  c("CellType (Predict) against Remaining","CellType against Remaining", "Cluster against Remaining","Organism against Organism within CellType", "Organism against Organism within CellType (Predict)", "Organism against Organism within Cluster", "Pairwise CellType (Predict) against CellType (Predict)", "Pairwise CellType against CellType", "Pairwise Cluster against Cluster"),
+                                                                         choices =  NULL,
                                                                          multiple = TRUE))
                                        )),
                                 column(8,
