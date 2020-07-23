@@ -182,7 +182,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'exp_filter_cat',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
-                           selected = '',
+                           selected = 'CellType',
                            server = TRUE)
     }
     observeEvent(input$exp_filter_cat, {
@@ -193,13 +193,14 @@ shinyServer(function(input, output, session) {
       }
       updateSelectizeInput(session, 'exp_filter_on',
                            choices = choice,
+                           selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
                            server = TRUE)
     })
     if (is.null(query[['exp_plot_groups']])){
       updateSelectizeInput(session, 'exp_plot_groups',
                            choices = meta_filter %>%
                              dplyr::select_if(negate(is.numeric)) %>% select(-Barcode, -subcluster) %>%  colnames() %>% sort(),
-                           selected = c('organism','CellType'),
+                           selected = c('study_accession'),
                            server = TRUE)
     }
 
@@ -549,10 +550,10 @@ shinyServer(function(input, output, session) {
         need(input$exp_plot_groups != '', "Please select at least one grouping feature")
       )
 
-
+      #cat(input)
       box_data <- box_data %>%
         #filter(!is.na(!!as.symbol(grouping_features))) %>%
-        group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
+        group_by_at(vars(one_of(c('Gene', input$ exp_plot_facet, grouping_features)))) %>%
         summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
                   cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
         full_join(., meta_filter %>%
@@ -570,23 +571,21 @@ shinyServer(function(input, output, session) {
         tidyr::drop_na()
       box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)
 
-      if (input$exp_plot_axis == 1){
-        x_is <- 'Group'
-      } else { x_is <- 'Gene' }
-      if (input$exp_plot_color == 1){
-        color_is <- 'Group'
-      } else {color_is <- 'Gene'}
-
-      plot <- box_data %>%
-        ggplot(aes(x=!!as.symbol(x_is), y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(color_is))) +
-        ggbeeswarm::geom_quasirandom(size = 3) +
+      # if (input$exp_plot_axis == 1){
+      #   x_is <- 'Group'
+      # } else { x_is <- 'Gene' }
+      # if (input$exp_plot_color == 1){
+      #   color_is <- 'Group'
+      # } else {color_is <- 'Gene'}
+      box_data %>%
+        ggplot(aes(x=Gene, y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
+        geom_boxplot(color = 'black', outlier.shape = NA) +
+        ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), grouponX = TRUE) +
         cowplot::theme_cowplot() +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-        scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20))
-      if (input$exp_plot_facet){
-        plot + facet_wrap(ncol = 3, scales = 'free_x', vars(!!as.symbol(grouping_features[1])))
-      } else {plot}
-
+        scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
+        theme(legend.position="bottom") +
+        facet_wrap(ncol = 3, scales = 'free_x', vars(!!as.symbol(input$exp_plot_facet)))
     })
 
     output$exp_plot <- renderPlot({

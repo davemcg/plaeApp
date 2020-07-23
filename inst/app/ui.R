@@ -103,43 +103,45 @@ shinyUI(
                                  )
                         ),
                         # exp_plots ------
-                        tabPanel('Expression Plot by Groupings',
+                        tabPanel('Expression Plot',
                                  column(12,
                                         fluidRow(
                                           column(3,
                                                  (selectizeInput('exp_plot_genes', strong('Gene(s): '),
                                                                  choices = NULL, multiple = TRUE))),
-
-
                                           column(3,
                                                  selectizeInput('exp_plot_height', strong('Plot Height: '),
-                                                                choices = seq(200, 2000, by = 100),
+                                                                choices = seq(200, 4000, by = 100),
                                                                 selected = 400, multiple = FALSE)),
                                           column(3,
                                                  selectInput('exp_plot_ylab', strong('Value: '),
                                                              choices = c('Mean CPM', '% of Cells Detected')))),
                                         fluidRow(
                                           column(3,
-                                                 (selectizeInput('exp_plot_groups', strong('Grouping feature(s): '),
-                                                                 choices = NULL, multiple = TRUE))),
+                                                 (selectizeInput('exp_plot_facet', strong('Facet on): '),
+                                                                 choices = c('CellType','cluster','CellType_predict'), multiple = FALSE))),
+                                          column(3,
+                                                 (selectizeInput('exp_plot_groups', strong('Group on: '),
+                                                                 choices = NULL, multiple = FALSE)))
+                                        ),
+                                        fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = FALSE)),
                                           column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
                                                                    choices = NULL, multiple = TRUE)),
                                         ),
-                                        fluidRow(
-                                          column(3,
-                                                 (checkboxInput('exp_plot_facet', 'Facet on 1st Group', TRUE))),
-                                          column(3,
-                                                 (radioButtons('exp_plot_axis', inline =  TRUE, 'X axis is: ',
-                                                               choices = list("Grouping Features" = 1, "Gene" = 2),
-                                                               selected = 1))),
-                                          column(3,
-                                                 (radioButtons('exp_plot_color', inline = TRUE, 'Color is: ',
-                                                               choices = list("Grouping Features" = 1, "Gene" = 2),
-                                                               selected = 2)))
-
-                                        ),
+                                        # fluidRow(
+                                        #   column(3,
+                                        #          (checkboxInput('exp_plot_facet', 'Facet on 1st Group', TRUE))),
+                                        #   column(3,
+                                        #          (radioButtons('exp_plot_axis', inline =  TRUE, 'X axis is: ',
+                                        #                        choices = list("Grouping Features" = 1, "Gene" = 2),
+                                        #                        selected = 1))),
+                                        #   column(3,
+                                        #          (radioButtons('exp_plot_color', inline = TRUE, 'Color is: ',
+                                        #                        choices = list("Grouping Features" = 1, "Gene" = 2),
+                                        #                        selected = 2)))
+                                        # ),
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                          style='background-color: #3399ff; color: #ffffff'))),
                                         br(),
