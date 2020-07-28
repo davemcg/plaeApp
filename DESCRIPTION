@@ -1,6 +1,6 @@
 Package: plaeApp
-Title: What the Package Does (One Line, Title Case)
-Version: 0.1.000
+Title: PLatform for Analysis of scEiad
+Version: 0.2.000
 Authors@R: 
     person(given = "David",
            family = "McGaughey",
@@ -31,6 +31,7 @@ Imports:
   tidyr,
   tibble,
   ggbeeswarm,
+  shinyWidgets,
   aplot
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
