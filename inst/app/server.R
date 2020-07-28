@@ -14,7 +14,6 @@ library(purrr)
 library(pool)
 library(RSQLite)
 library(dplyr)
-library(formattable)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 

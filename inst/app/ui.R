@@ -8,7 +8,6 @@ library(scattermore)
 library(pals)
 library(shinythemes)
 library(cowplot)
-library(formattable)
 
 # header color
 ## orig: #2c3e50
@@ -249,16 +248,24 @@ shinyUI(
                         fluidRow(column(width = 8, offset = 1, h2('Overview'))),
                         fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. plae is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
                         fluidRow(column(width = 8, offset = 1, h2('Data Sources'))),
-                        fluidRow(column(width = 8, offset = 1, formattableOutput("formattable01"))),
-                        fluidRow(column(width = 8, offset = 1, h2('Cell Types'))),
-                        fluidRow(column(width = 6, offset = 1, formattableOutput("formattable02"))),
+                        #fluidRow(column(width = 8, offset = 1, formattableOutput("formattable01"))),
+                        fluidRow(column(width = 8, offset = 1, img(src='01_table.png', width="80%"))),
+                        fluidRow(column(width = 8, offset = 1, h2('Extracted Cell Types'))),
+                        #fluidRow(column(width = 6, offset = 1, formattableOutput("formattable02"))),
+                        fluidRow(column(width = 8, offset = 1, img(src='02_table.png', width="50%"))),
+                        fluidRow(column(width = 8, offset = 1, 'Labelled cell types were pulled from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
                         br(),
                         fluidRow(column(width = 8, offset = 1, h2('Change log'))),
                         fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),
+                        br(),
                         fluidRow(column(width = 8, offset = 1, '0.30 (2020-07-20): Huge update. Hundreds of thousands of cells added. The Tabula Muris project data (pan mouse) has been added to faciliate non-eye comparison. Filtering options added to most of the plotting views to allow for quick slicing into this huge dataset. Differential expression testing totally reworked - now uses "pseudoBulk" approach to better utilize the large number of studies we have.')),
+                        br(),
                         fluidRow(column(width = 8, offset = 1, '0.23 (2020-06-16): Remove low N cell type from diff expression tables, tweak Overview with spacing alterations and updated text.')),
+                        br(),
                         fluidRow(column(width = 8, offset = 1, '0.22 (2020-06-15): Added expression plot by user selected groups plot view. Fixed bug in mean cpm expression calculation for Viz -> UMAP - Table gene tables')),
+                        br(),
                         fluidRow(column(width = 8, offset = 1, '0.21 (2020-06-15): Added subcluster diff testing tables, temporal gene expression by celltype plot section.')),
+                        br(),
                         fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
                         br(), br(), br()
                       ))
