@@ -15,16 +15,17 @@ library(pool)
 library(RSQLite)
 library(dplyr)
 library(formattable)
+
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 
-anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-30-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 
 # fancy tables
 # they come from `tables.Rmd` in analysis/
 load('www/formattables.Rdata')
 # filter
-meta_filter <- left_join(anthology_2020_v01 %>% tbl('metadata_filter'),
-                         anthology_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
+meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
+                         scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
   as_tibble() %>%
   mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
          doublet_score_scran = as.numeric(doublet_score_scran))
@@ -55,13 +56,14 @@ cat(file=stderr(), ' seconds.\n')
 
 # site begins! ---------
 shinyServer(function(input, output, session) {
+  #bootstraplib::bs_themer()
   observe({
     query <- parseQueryString(session$clientData$url_search)
     # server help queries ------
     # gene plot updateSelectizeInput -------
     if (is.null(query[['Gene']])){
       updateSelectizeInput(session, 'Gene',
-                           choices = anthology_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX',
                            server = TRUE)
@@ -117,7 +119,7 @@ shinyServer(function(input, output, session) {
     # dotplot updateSelectizeInput ----
     if (is.null(query[['dotplot_Gene']])){
       updateSelectizeInput(session, 'dotplot_Gene',
-                           choices = anthology_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('RHO','WIF1','CABP5', 'AIF1','AQPT4','ARR3','ONECUT1','GRIK1','GAD1','POU4F2'),
                            server = TRUE)
@@ -154,7 +156,7 @@ shinyServer(function(input, output, session) {
     #
     if (is.null(query[['grouping_features']])){
       updateSelectizeInput(session, 'grouping_features',
-                           choices = anthology_2020_v01 %>% tbl('grouped_stats') %>%
+                           choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
                              select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
                            selected = c('CellType_predict'),
@@ -173,7 +175,7 @@ shinyServer(function(input, output, session) {
     # exp_plot plot updateSelect -----
     if (is.null(query[['exp_plot_genes']])){
       updateSelectizeInput(session, 'exp_plot_genes',
-                           choices = anthology_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('PAX6','POU4F2','CRX','NRL'),
                            server = TRUE)
@@ -209,7 +211,7 @@ shinyServer(function(input, output, session) {
     # temporal plot updateSelect -----
     if (is.null(query[['temporal_gene']])){
       updateSelectizeInput(session, 'temporal_gene',
-                           choices = anthology_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('PAX6','POU4F2'),
                            server = TRUE)
@@ -237,7 +239,7 @@ shinyServer(function(input, output, session) {
     # diff table updateSelect ------
     if (is.null(query[['diff_gene']])){
       updateSelectizeInput(session, 'diff_gene',
-                           choices = anthology_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX',
                            server = TRUE)
@@ -245,7 +247,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['diff_term']])){
       term = input$search_by
       updateSelectizeInput(session, 'diff_term',
-                           choices = anthology_2020_v01 %>%
+                           choices = scEiaD_2020_v01 %>%
                              tbl('PB_Test_terms') %>%
                              filter(PB_Test == term) %>%
                              pull(terms) %>% strsplit(., '___') %>%
@@ -263,7 +265,7 @@ shinyServer(function(input, output, session) {
       gene <- input$Gene
       pt_size <- input$pt_size_gene %>% as.numeric()
       expression_range <- input$gene_scatter_slider
-      p <-  anthology_2020_v01 %>% tbl('cpm') %>%
+      p <-  scEiaD_2020_v01 %>% tbl('cpm') %>%
         filter(Gene == gene) %>%
         as_tibble() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
@@ -440,7 +442,7 @@ shinyServer(function(input, output, session) {
     gene_cluster_stats_maker <- eventReactive(input$BUTTON_make_gene_table, {
       grouping_features <- input$grouping_features
       gene <- input$Gene
-      table <- anthology_2020_v01 %>% tbl('grouped_stats') %>%
+      table <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
         filter(Gene == gene) %>%
         group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
         summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
@@ -536,13 +538,13 @@ shinyServer(function(input, output, session) {
       grouping_features <- input$exp_plot_groups
 
       if (input$exp_filter_cat != ''){
-        box_data <- anthology_2020_v01 %>% tbl('grouped_stats') %>%
+        box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
           as_tibble() %>%
           filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
 
       } else {
-        box_data <- anthology_2020_v01 %>% tbl('grouped_stats') %>%
+        box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
           as_tibble()
       }
@@ -571,12 +573,6 @@ shinyServer(function(input, output, session) {
         tidyr::drop_na()
       box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)
 
-      # if (input$exp_plot_axis == 1){
-      #   x_is <- 'Group'
-      # } else { x_is <- 'Gene' }
-      # if (input$exp_plot_color == 1){
-      #   color_is <- 'Group'
-      # } else {color_is <- 'Gene'}
       box_data %>%
         ggplot(aes(x=Gene, y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
         geom_boxplot(color = 'black', outlier.shape = NA) +
@@ -605,7 +601,7 @@ shinyServer(function(input, output, session) {
       meta_data <- meta_filter %>%
         group_by(organism, !!as.symbol(grouping), Age) %>%
         summarise(full_count = n())
-      temporal_data <- anthology_2020_v01 %>% tbl('cpm') %>%
+      temporal_data <- scEiaD_2020_v01 %>% tbl('cpm') %>%
         filter(Gene %in% gene) %>%
         as_tibble() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
@@ -659,13 +655,13 @@ shinyServer(function(input, output, session) {
       grouping_features <- input$dotplot_groups
 
       if (input$dotplot_filter_cat != ''){
-        dotplot_data <- anthology_2020_v01 %>% tbl('grouped_stats') %>%
+        dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
           as_tibble() %>%
           filter(!!as.symbol(input$dotplot_filter_cat) %in% input$dotplot_filter_on)
 
       } else {
-        dotplot_data <- anthology_2020_v01 %>% tbl('grouped_stats') %>%
+        dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
           as_tibble()
       }
@@ -800,14 +796,14 @@ shinyServer(function(input, output, session) {
     gene <- input$diff_gene
     #cat(diff_table)
     if (input$search_by == 'Gene'){
-      out <- anthology_2020_v01 %>% tbl('PB_results') %>%
+      out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
         filter(Gene %in% gene)
     } else {
      # isolate({
         req(input$diff_term)
         test_val <- input$diff_term
         filter_term <- input$search_by
-        out <- anthology_2020_v01 %>% tbl('PB_results') %>%
+        out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
           filter(PB_Test == filter_term) %>%
           filter(test == test_val)
       #})

@@ -9,9 +9,24 @@ library(pals)
 library(shinythemes)
 library(cowplot)
 library(formattable)
+
+# header color
+## orig: #2c3e50
+## new:  #6439db
+# header select color
+## orig: #1a242f
+## new: #400a91
+# text color
+## orig: #2c3e50
+## new: #0f0f0f
+
+
+# button and slider styling
+# #3399ff
+
 shinyUI(
-  navbarPage('Ocular scAnthology',
-             theme = shinytheme('flatly'),
+  navbarPage('Ocular plae',
+             theme = 'flatly_mod.css',
              selected = 'Overview',
              navbarMenu('Viz', # UMAP ----------
                         tabPanel('UMAP - Tables',
@@ -31,6 +46,7 @@ shinyUI(
                                                             selectizeInput('pt_size_gene', strong('Point Size: '),
                                                                            choices=c(1,3,5,10),
                                                                            selected = 1, multiple=FALSE))),
+                                            shinyWidgets::setSliderColor(c("#3399ff"), c(1)),
                                             fluidRow(column(5,
                                                             sliderInput("gene_scatter_slider", label = strong("Expression Range: "), min = 1,
                                                                         max = 15, value = c(1, 15))
@@ -118,10 +134,10 @@ shinyUI(
                                                              choices = c('Mean CPM', '% of Cells Detected')))),
                                         fluidRow(
                                           column(3,
-                                                 (selectizeInput('exp_plot_facet', strong('Facet on): '),
+                                                 (selectizeInput('exp_plot_facet', strong('Facet on: '),
                                                                  choices = c('CellType','cluster','CellType_predict'), multiple = FALSE))),
                                           column(3,
-                                                 (selectizeInput('exp_plot_groups', strong('Group on: '),
+                                                 (selectizeInput('exp_plot_groups', strong('Color on: '),
                                                                  choices = NULL, multiple = FALSE)))
                                         ),
                                         fluidRow(
@@ -130,18 +146,6 @@ shinyUI(
                                           column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
                                                                    choices = NULL, multiple = TRUE)),
                                         ),
-                                        # fluidRow(
-                                        #   column(3,
-                                        #          (checkboxInput('exp_plot_facet', 'Facet on 1st Group', TRUE))),
-                                        #   column(3,
-                                        #          (radioButtons('exp_plot_axis', inline =  TRUE, 'X axis is: ',
-                                        #                        choices = list("Grouping Features" = 1, "Gene" = 2),
-                                        #                        selected = 1))),
-                                        #   column(3,
-                                        #          (radioButtons('exp_plot_color', inline = TRUE, 'Color is: ',
-                                        #                        choices = list("Grouping Features" = 1, "Gene" = 2),
-                                        #                        selected = 2)))
-                                        # ),
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                          style='background-color: #3399ff; color: #ffffff'))),
                                         br(),
@@ -240,17 +244,18 @@ shinyUI(
                                        div(DT::dataTableOutput('make_diff_table'), style='font-size:75%')))),
              tabPanel('Overview', # Overview ------
                       fluidPage(
-                        fluidRow(column(width = 8, offset = 1, h2('scAnthology v0.30'))),
+                        fluidRow(column(width = 8, offset = 1, h2('plae v0.31'))),
                         br(),
                         fluidRow(column(width = 8, offset = 1, h2('Overview'))),
-                        fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the signals to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. scAnthology is a meta-analysis project over 1.2 million single-cell transcriptomes across 15 studies and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
+                        fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. plae is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
                         fluidRow(column(width = 8, offset = 1, h2('Data Sources'))),
                         fluidRow(column(width = 8, offset = 1, formattableOutput("formattable01"))),
                         fluidRow(column(width = 8, offset = 1, h2('Cell Types'))),
                         fluidRow(column(width = 6, offset = 1, formattableOutput("formattable02"))),
                         br(),
                         fluidRow(column(width = 8, offset = 1, h2('Change log'))),
-                        fluidRow(column(width = 8, offset = 1, '0.30 (2020-07-20): Huge update. Hundreds of thousands of cells added. The Tabula Muris project data (pan mouse) has been added to faciliate non-eye comparison. Filtering options added to most of the plotting views to allow for quick slicing into this huge dataset.')),
+                        fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),
+                        fluidRow(column(width = 8, offset = 1, '0.30 (2020-07-20): Huge update. Hundreds of thousands of cells added. The Tabula Muris project data (pan mouse) has been added to faciliate non-eye comparison. Filtering options added to most of the plotting views to allow for quick slicing into this huge dataset. Differential expression testing totally reworked - now uses "pseudoBulk" approach to better utilize the large number of studies we have.')),
                         fluidRow(column(width = 8, offset = 1, '0.23 (2020-06-16): Remove low N cell type from diff expression tables, tweak Overview with spacing alterations and updated text.')),
                         fluidRow(column(width = 8, offset = 1, '0.22 (2020-06-15): Added expression plot by user selected groups plot view. Fixed bug in mean cpm expression calculation for Viz -> UMAP - Table gene tables')),
                         fluidRow(column(width = 8, offset = 1, '0.21 (2020-06-15): Added subcluster diff testing tables, temporal gene expression by celltype plot section.')),
