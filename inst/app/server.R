@@ -554,7 +554,7 @@ shinyServer(function(input, output, session) {
       #cat(input)
       box_data <- box_data %>%
         #filter(!is.na(!!as.symbol(grouping_features))) %>%
-        group_by_at(vars(one_of(c('Gene', input$ exp_plot_facet, grouping_features)))) %>%
+        group_by_at(vars(one_of(c('Gene', input$exp_plot_facet, grouping_features)))) %>%
         summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
                   cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
         full_join(., meta_filter %>%
@@ -822,6 +822,6 @@ shinyServer(function(input, output, session) {
 
   })
 
-  output$formattable01 <- renderFormattable({formattable_01})
-  output$formattable02 <- renderFormattable({formattable_02})
+  # output$formattable01 <- renderFormattable({formattable_01})
+  # output$formattable02 <- renderFormattable({formattable_02})
 })
