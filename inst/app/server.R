@@ -250,8 +250,8 @@ shinyServer(function(input, output, session) {
                            choices = scEiaD_2020_v01 %>%
                              tbl('PB_Test_terms') %>%
                              filter(PB_Test == term) %>%
-                             pull(terms) %>% strsplit(., '___') %>%
-                             unlist(),
+                             collect() %>% pull(terms) %>%
+                             strsplit(., '___') %>% unlist(),
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
@@ -804,8 +804,9 @@ shinyServer(function(input, output, session) {
         test_val <- input$diff_term
         filter_term <- input$search_by
         out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-          filter(PB_Test == filter_term) %>%
-          filter(test == test_val)
+          filter(test == test_val) %>%
+          collect() %>%
+          filter(PB_Test == filter_term)
       #})
     }
     out %>%
@@ -814,7 +815,8 @@ shinyServer(function(input, output, session) {
       # select(-status, -model_component, -count, -med_auc, -estimate, -test_val, -p_value) %>%
       # collect() %>%
       # filter(!grepl('Doub|RPE|Astro|Red|Vascular', term)) %>%
-      as_tibble() %>% select(-comparison) %>%
+      collect() %>%
+      select(-comparison) %>%
       DT::datatable(extensions = 'Buttons', rownames = F,
                     filter = list(position = 'bottom', clear = FALSE),
                     options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
