@@ -17,17 +17,18 @@ library(dplyr)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/Volumes/McGaughey_S/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 
 # fancy tables
 # they come from `tables.Rmd` in analysis/
-load('www/formattables.Rdata')
+# load('www/formattables.Rdata')
 # filter
 meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
                          scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
   as_tibble() %>%
   mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
-         doublet_score_scran = as.numeric(doublet_score_scran))
+         doublet_score_scran = as.numeric(doublet_score_scran)) %>%
+  mutate(PMID = as.character(PMID))
 
 # cutdown mf for plotting
 mf <- meta_filter %>% sample_frac(0.2)
@@ -81,9 +82,16 @@ shinyServer(function(input, output, session) {
       } else {
         choice = meta_filter[,input$gene_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
-      updateSelectizeInput(session, 'gene_filter_on',
-                           choices = choice,
-                           server = TRUE)
+      output$gene_filter_on_dynamicUI <- renderUI({
+        if (class(choice) == 'character'){
+          selectizeInput('gene_filter_on', strong('Filter on: '),
+                         choices = choice, selected = NULL, multiple = TRUE)
+        } else {
+          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
+          sliderInput("gene_filter_on", label = strong("Filter Range: "), min = min(choice),
+                      max = max(choice), value = c(min(choice), max(choice)))
+        }
+      })
     })
 
     # meta plot updateSelectizeInput ------
@@ -110,9 +118,17 @@ shinyServer(function(input, output, session) {
       } else {
         choice = meta_filter[,input$meta_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
-      updateSelectizeInput(session, 'meta_filter_on',
-                           choices = choice,
-                           server = TRUE)
+      output$meta_filter_on_dynamicUI <- renderUI({
+        if (class(choice) == 'character'){
+          selectizeInput('meta_filter_on', strong('Filter on: '),
+                         choices = choice, selected = NULL, multiple = TRUE)
+        } else {
+          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
+          sliderInput("meta_filter_on", label = strong("Filter Range: "), min = min(choice),
+                      max = max(choice), value = c(min(choice), max(choice)))
+        }
+      })
+
     })
 
     # dotplot updateSelectizeInput ----
@@ -192,10 +208,20 @@ shinyServer(function(input, output, session) {
       } else {
         choice = meta_filter[,input$exp_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
-      updateSelectizeInput(session, 'exp_filter_on',
-                           choices = choice,
-                           selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
-                           server = TRUE)
+      output$exp_filter_on_dynamicUI <- renderUI({
+        if (class(choice) != 'numeric'){
+          selectizeInput('exp_filter_on', strong('Filter on: '),
+                         choices = choice, selected = c('Cones','Retinal Ganglion Cells', 'Horizontal Cells'), multiple = TRUE)
+        } else {
+          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
+          sliderInput("exp_filter_on", label = strong("Filter Range: "), min = min(choice),
+                      max = max(choice), value = c(min(choice), max(choice)))
+        }
+      })
+      # updateSelectizeInput(session, 'exp_filter_on',
+      #                      choices = choice,
+      #                      selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
+      #                      server = TRUE)
     })
     if (is.null(query[['exp_plot_groups']])){
       updateSelectizeInput(session, 'exp_plot_groups',
@@ -272,9 +298,20 @@ shinyServer(function(input, output, session) {
                cpm < as.numeric(expression_range[2])) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
         filter(!is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
+      cat(input$gene_filter_on)
+      cat('\n')
+      cat(class(input$gene_filter_on))
+      cat('\n')
       if (input$gene_filter_cat != ''){
-        p <- p %>%
-          filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
+        cat('filter cat')
+        if (class(input$gene_filter_on) == 'character'){
+          p <- p %>%
+            filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
+        } else {
+          p <- p %>%
+            filter(!!as.symbol(input$gene_filter_cat) > input$gene_filter_on[1],
+                   !!as.symbol(input$gene_filter_cat) < input$gene_filter_on[1])
+        }
       }
       color_range <- range(p$cpm)
       plot <- p %>% ggplot() +
@@ -331,6 +368,7 @@ shinyServer(function(input, output, session) {
         meta_filter[,meta_column] <- log2(meta_filter[,meta_column] + 1)
       }
       p_data <- meta_filter %>%
+        filter(!grepl('Doub|\\/Margin\\/Periocular', CellType)) %>%
         filter(!is.na(!!as.symbol(meta_column)))
       # category filtering
       if (input$meta_filter_cat != ''){
@@ -796,16 +834,18 @@ shinyServer(function(input, output, session) {
     #cat(diff_table)
     if (input$search_by == 'Gene'){
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(Gene %in% gene)
+        filter(Gene %in% gene) %>%
+        arrange(FDR)
     } else {
-     # isolate({
-        req(input$diff_term)
-        test_val <- input$diff_term
-        filter_term <- input$search_by
-        out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-          filter(test == test_val) %>%
-          collect() %>%
-          filter(PB_Test == filter_term)
+      # isolate({
+      req(input$diff_term)
+      test_val <- input$diff_term
+      filter_term <- input$search_by
+      out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
+        filter(test == test_val) %>%
+        arrange(FDR) %>%
+        collect() %>%
+        filter(PB_Test == filter_term)
       #})
     }
     out %>%

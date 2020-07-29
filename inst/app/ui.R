@@ -54,8 +54,7 @@ shinyUI(
                                                             selectizeInput('gene_filter_cat', strong('Filter Category: '),
                                                                            choices = NULL, selected = NULL)),
                                                      column(5,
-                                                            selectizeInput('gene_filter_on', strong('Filter On: '),
-                                                                           choices = NULL, selected = NULL, multiple = TRUE)))),
+                                                            uiOutput('gene_filter_on_dynamicUI')))),
                                      # Meta Plot ------
                                      column(6,
                                             plotOutput('meta_plot',
@@ -86,33 +85,41 @@ shinyUI(
                                                             selectizeInput('meta_filter_cat', strong('Filter Category: '),
                                                                            choices = NULL, selected = NULL)),
                                                      column(5,
-                                                            selectizeInput('meta_filter_on', strong('Filter on: '),
-                                                                           choices = NULL, selected = NULL, multiple = TRUE)))
+                                                            uiOutput('meta_filter_on_dynamicUI')))
+                                            # selectizeInput('meta_filter_on', strong('Filter on: '),
+                                            #                choices = NULL, selected = NULL, multiple = TRUE)))
                                      )
                                    ),
                                    fluidRow(
                                      column(6,
                                             fluidRow(
                                               column(12, actionButton('BUTTON_draw_scatter',' Draw Scatter Plot', icon = icon("arrow-up"),
-                                                                      style='background-color: #3399ff; color: #ffffff'),
-                                                     actionButton('BUTTON_make_gene_table',' Make Gene Table', icon = icon("arrow-down"),
-                                                                  style='background-color: #3399ff; color: #ffffff'))),
+                                                                      style='background-color: #3399ff; color: #ffffff'))),
                                             br(),
                                             selectizeInput('grouping_features', strong('Gene Table Grouping(s)'),
                                                            choices = NULL,
                                                            multiple = TRUE),
+                                            fluidRow(
+                                              column(12,  actionButton('BUTTON_make_gene_table',' Make Gene Table', icon = icon("arrow-down"),
+                                                                       style='background-color: #3399ff; color: #ffffff'))
+                                            ),
+                                            br(),
                                             div(DT::dataTableOutput('gene_cluster_stats'), style='font-size:75%')),
                                      column(6,
                                             fluidRow(
                                               column(12,
                                                      actionButton('BUTTON_draw_meta',' Draw Meta Plot', icon = icon("arrow-up"),
-                                                                  style='background-color: #3399ff; color: #ffffff'),
-                                                     actionButton('BUTTON_make_meta_table',' Make Meta Table', icon = icon("arrow-down"),
                                                                   style='background-color: #3399ff; color: #ffffff'))),
                                             br(),
                                             selectizeInput('meta_groupings', strong('Metadata Table Groupings '),
                                                            choices = NULL,
                                                            multiple = TRUE),
+                                            fluidRow(
+                                              column(12,
+                                                     actionButton('BUTTON_make_meta_table',' Make Meta Table', icon = icon("arrow-down"),
+                                                                  style='background-color: #3399ff; color: #ffffff'))
+                                            ),
+                                            br(),
                                             div(DT::dataTableOutput('metadata_stats'), style='font-size:75%'))
                                    )
                                  )
@@ -142,8 +149,9 @@ shinyUI(
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = FALSE)),
-                                          column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
-                                                                   choices = NULL, multiple = TRUE)),
+                                          column(3, uiOutput('exp_filter_on_dynamicUI')),
+                                          # column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
+                                          #                          choices = NULL, multiple = TRUE)),
                                         ),
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                          style='background-color: #3399ff; color: #ffffff'))),
@@ -253,21 +261,23 @@ shinyUI(
                         fluidRow(column(width = 8, offset = 1, h2('Extracted Cell Types'))),
                         #fluidRow(column(width = 6, offset = 1, formattableOutput("formattable02"))),
                         fluidRow(column(width = 8, offset = 1, img(src='02_table.png', width="50%"))),
-                        fluidRow(column(width = 8, offset = 1, 'Labelled cell types were pulled from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, h2('Change log'))),
-                        fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.30 (2020-07-20): Huge update. Hundreds of thousands of cells added. The Tabula Muris project data (pan mouse) has been added to faciliate non-eye comparison. Filtering options added to most of the plotting views to allow for quick slicing into this huge dataset. Differential expression testing totally reworked - now uses "pseudoBulk" approach to better utilize the large number of studies we have.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.23 (2020-06-16): Remove low N cell type from diff expression tables, tweak Overview with spacing alterations and updated text.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.22 (2020-06-15): Added expression plot by user selected groups plot view. Fixed bug in mean cpm expression calculation for Viz -> UMAP - Table gene tables')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.21 (2020-06-15): Added subcluster diff testing tables, temporal gene expression by celltype plot section.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
-                        br(), br(), br()
-                      ))
-  )
+                        fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, h2('Change log'))),
+                      fluidRow(column(width = 8, offset = 1, '0.32 (2020-07-29): Move table draw button under filtering in UMAP - Tables. Sort Diff Exp results by FDR. Filtering on numeric column now returns slider UI')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.30 (2020-07-20): Huge update. Hundreds of thousands of cells added. The Tabula Muris project data (pan mouse) has been added to faciliate non-eye comparison. Filtering options added to most of the plotting views to allow for quick slicing into this huge dataset. Differential expression testing totally reworked - now uses "pseudoBulk" approach to better utilize the large number of studies we have.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.23 (2020-06-16): Remove low N cell type from diff expression tables, tweak Overview with spacing alterations and updated text.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.22 (2020-06-15): Added expression plot by user selected groups plot view. Fixed bug in mean cpm expression calculation for Viz -> UMAP - Table gene tables')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.21 (2020-06-15): Added subcluster diff testing tables, temporal gene expression by celltype plot section.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
+                      br(), br(), br()
+             ))
+)
 
