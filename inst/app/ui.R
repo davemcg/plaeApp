@@ -157,6 +157,36 @@ shinyUI(
                                                                          style='background-color: #3399ff; color: #ffffff'))),
                                         br(),
                                         fluidRow(column(10, plotOutput('exp_plot'))))),
+
+                        # in situ ---------
+                        tabPanel('In Situ Projection',
+                                 fluidPage(
+                                   column(8,
+                                          fluidRow(
+                                            column(4, selectizeInput('insitu_Gene', strong('Genes: '),
+                                                                     choices=NULL, multiple=FALSE)),
+                                            column(4, selectizeInput('insitu_height', strong('Plot Height: '),
+                                                                     choices = seq(400, 2000, by = 100), selected = 800))
+                                          ),
+                                          fluidRow(
+                                            column(4, selectizeInput('insitu_filter_cat', strong('Filter category: '),
+                                                                     choices=NULL, multiple=FALSE)),
+                                            column(4, selectizeInput('insitu_filter_on', strong('Filter on: '),
+                                                                     choices=NULL, multiple=TRUE)),
+                                          ),
+                                          actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
+                                                       style='background-color: #3399ff; color: #ffffff'),
+                                          actionButton("BUTTON_show_insitu_table", div(icon("arrow-down"), icon("arrow-down"),"Show In Situ Data Table!"),
+                                                       style='background-color: #3399ff; color: #ffffff'),
+
+
+                                          fluidRow(
+                                            plotOutput('insitu_img', height = "auto")
+                                          ),
+                                          hr(),
+                                          fluidRow(
+                                            div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%')
+                                          )))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
                                  column(10,
                                         fluidRow(
@@ -217,36 +247,7 @@ shinyUI(
                                         actionButton('BUTTON_draw_dotplot','Draw Dotplot!', icon = icon("arrow-down"),
                                                      style='background-color: #3399ff; color: #ffffff'),
                                         br(), br(),
-                                        plotOutput('dotplot'))),
-                        # insitu ---------
-                        tabPanel('In Situ Projection',
-                                 fluidPage(
-                                 column(8,
-                                        fluidRow(
-                                          column(4, selectizeInput('insitu_Gene', strong('Genes: '),
-                                                                   choices=NULL, multiple=FALSE)),
-                                          column(4, selectizeInput('insitu_height', strong('Plot Height: '),
-                                                                   choices = seq(400, 2000, by = 100), selected = 800))
-                                        ),
-                                        fluidRow(
-                                          column(4, selectizeInput('insitu_filter_cat', strong('Filter category: '),
-                                                                   choices=NULL, multiple=FALSE)),
-                                          column(4, selectizeInput('insitu_filter_on', strong('Filter on: '),
-                                                                   choices=NULL, multiple=TRUE)),
-                                        ),
-                                        actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
-                                                     style='background-color: #3399ff; color: #ffffff'),
-                                        actionButton("BUTTON_show_insitu_table", div(icon("arrow-down"), icon("arrow-down"),"Show In Situ Data Table!"),
-                                                     style='background-color: #3399ff; color: #ffffff'),
-
-
-                                        fluidRow(
-                                        plotOutput('insitu_img', height = "auto")
-                                        ),
-                                        hr(),
-                                        fluidRow(
-                                        div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%')
-                                        ))))
+                                        plotOutput('dotplot')))
              ),
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
@@ -293,7 +294,7 @@ shinyUI(
                         fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
                       br(),
                       fluidRow(column(width = 8, offset = 1, h2('Change log'))),
-                      fluidRow(column(width = 8, offset = 1, '0.32 (2020-07-29): Move table draw button under filtering in UMAP - Tables. Sort Diff Exp results by FDR. Filtering on numeric column now returns slider UI')),
+                      fluidRow(column(width = 8, offset = 1, '0.32 (2020-07-29): In situ Projection viz added courtesy of Zachary Batz! It\'s a simulated cross section of the retina with each cell type colored by intensity of scRNA expression! Move table draw button under filtering in UMAP - Tables. Sort Diff Exp results by FDR. Filtering on numeric column now returns slider UI.')),
                       br(),
                       fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),
                       br(),
