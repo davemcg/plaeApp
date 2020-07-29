@@ -209,7 +209,36 @@ shinyUI(
                                         actionButton('BUTTON_draw_dotplot','Draw Dotplot!', icon = icon("arrow-down"),
                                                      style='background-color: #3399ff; color: #ffffff'),
                                         br(), br(),
-                                        plotOutput('dotplot')))
+                                        plotOutput('dotplot'))),
+                        # insitu ---------
+                        tabPanel('In Situ Projection',
+                                 fluidPage(
+                                 column(8,
+                                        fluidRow(
+                                          column(4, selectizeInput('insitu_Gene', strong('Genes: '),
+                                                                   choices=NULL, multiple=FALSE)),
+                                          column(4, selectizeInput('insitu_height', strong('Plot Height: '),
+                                                                   choices = seq(400, 2000, by = 100), selected = 800))
+                                        ),
+                                        fluidRow(
+                                          column(4, selectizeInput('insitu_filter_cat', strong('Filter category: '),
+                                                                   choices=NULL, multiple=FALSE)),
+                                          column(4, selectizeInput('insitu_filter_on', strong('Filter on: '),
+                                                                   choices=NULL, multiple=TRUE)),
+                                        ),
+                                        actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
+                                                     style='background-color: #3399ff; color: #ffffff'),
+                                        actionButton("BUTTON_show_insitu_table", div(icon("arrow-down"), icon("arrow-down"),"Show In Situ Data Table!"),
+                                                     style='background-color: #3399ff; color: #ffffff'),
+
+
+                                        fluidRow(
+                                        plotOutput('insitu_img', height = "auto")
+                                        ),
+                                        hr(),
+                                        fluidRow(
+                                        div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%')
+                                        ))))
              ),
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
