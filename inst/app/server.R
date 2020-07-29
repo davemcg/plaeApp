@@ -25,7 +25,7 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/Volumes/McGaughey_S/data/ma
 # filter
 meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
                          scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
-  as_tibble() %>%
+  collect() %>%
   mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
          doublet_score_scran = as.numeric(doublet_score_scran)) %>%
   mutate(PMID = as.character(PMID))
@@ -63,7 +63,7 @@ shinyServer(function(input, output, session) {
     # gene plot updateSelectizeInput -------
     if (is.null(query[['Gene']])){
       updateSelectizeInput(session, 'Gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX',
                            server = TRUE)
@@ -134,7 +134,7 @@ shinyServer(function(input, output, session) {
     # dotplot updateSelectizeInput ----
     if (is.null(query[['dotplot_Gene']])){
       updateSelectizeInput(session, 'dotplot_Gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('RHO','WIF1','CABP5', 'AIF1','AQPT4','ARR3','ONECUT1','GRIK1','GAD1','POU4F2'),
                            server = TRUE)
@@ -190,7 +190,7 @@ shinyServer(function(input, output, session) {
     # exp_plot plot updateSelect -----
     if (is.null(query[['exp_plot_genes']])){
       updateSelectizeInput(session, 'exp_plot_genes',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('PAX6','POU4F2','CRX','NRL'),
                            server = TRUE)
@@ -236,7 +236,7 @@ shinyServer(function(input, output, session) {
     # temporal plot updateSelect -----
     if (is.null(query[['temporal_gene']])){
       updateSelectizeInput(session, 'temporal_gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('PAX6','POU4F2'),
                            server = TRUE)
@@ -264,7 +264,7 @@ shinyServer(function(input, output, session) {
     # diff table updateSelect ------
     if (is.null(query[['diff_gene']])){
       updateSelectizeInput(session, 'diff_gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX',
                            server = TRUE)
@@ -292,7 +292,7 @@ shinyServer(function(input, output, session) {
       expression_range <- input$gene_scatter_slider
       p <-  scEiaD_2020_v01 %>% tbl('cpm') %>%
         filter(Gene == gene) %>%
-        as_tibble() %>%
+        collect() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
         filter(cpm > as.numeric(expression_range[1]),
                cpm < as.numeric(expression_range[2])) %>%
@@ -484,7 +484,7 @@ shinyServer(function(input, output, session) {
         group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
         summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
                   cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
-        as_tibble() %>%
+        collect() %>%
         tidyr::drop_na() %>%
         full_join(., meta_filter %>%
                     group_by_at(vars(one_of(grouping_features))) %>%
@@ -577,13 +577,13 @@ shinyServer(function(input, output, session) {
       if (input$exp_filter_cat != ''){
         box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
-          as_tibble() %>%
+          collect() %>%
           filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
 
       } else {
         box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
-          as_tibble()
+          collect()
       }
       validate(
         need(input$exp_plot_groups != '', "Please select at least one grouping feature")
@@ -640,7 +640,7 @@ shinyServer(function(input, output, session) {
         summarise(full_count = n())
       temporal_data <- scEiaD_2020_v01 %>% tbl('cpm') %>%
         filter(Gene %in% gene) %>%
-        as_tibble() %>%
+        collect() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
         filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE|Astro', !!as.symbol(grouping))) %>%
@@ -694,13 +694,13 @@ shinyServer(function(input, output, session) {
       if (input$dotplot_filter_cat != ''){
         dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
-          as_tibble() %>%
+          collect() %>%
           filter(!!as.symbol(input$dotplot_filter_cat) %in% input$dotplot_filter_on)
 
       } else {
         dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
-          as_tibble()
+          collect()
       }
       validate(
         need(input$dotplot_groups != '', "Please select at least one grouping feature")
@@ -711,7 +711,7 @@ shinyServer(function(input, output, session) {
         group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
         summarise(cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE),
                   cpm = mean(cpm)) %>%
-        as_tibble() %>%
+        collect() %>%
         tidyr::drop_na() %>%
         full_join(., meta_filter %>%
                     group_by_at(vars(one_of(grouping_features))) %>%
