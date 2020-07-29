@@ -174,18 +174,19 @@ shinyUI(
                                             column(4, selectizeInput('insitu_filter_on', strong('Filter on: '),
                                                                      choices=NULL, multiple=TRUE)),
                                           ),
-                                          actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
-                                                       style='background-color: #3399ff; color: #ffffff'),
-                                          actionButton("BUTTON_show_insitu_table", div(icon("arrow-down"), icon("arrow-down"),"Show In Situ Data Table!"),
-                                                       style='background-color: #3399ff; color: #ffffff'),
-
+                                          fluidRow(
+                                          column(4,actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
+                                                       style='background-color: #3399ff; color: #ffffff')),
+                                          column(4,radioButtons('RADIO_show_insitu_table', "Show data table?", choices = c("Yes"="yes", "No"="no"), selected = "yes", inline=TRUE))
+                                          ),
 
                                           fluidRow(
                                             plotOutput('insitu_img', height = "auto")
                                           ),
+                                          conditionalPanel(condition = "input.RADIO_show_insitu_table == 'yes'",
                                           hr(),
                                           fluidRow(
-                                            div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%')
+                                            div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
                                           )))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
                                  column(10,

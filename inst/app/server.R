@@ -180,8 +180,8 @@ shinyServer(function(input, output, session) {
 
     if (is.null(query[['insitu_filter_cat']])){
       updateSelectizeInput(session, 'insitu_filter_cat',
-                           choices = meta_filter %>%
-                             dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
+                           choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
                            selected = '',
                            server = TRUE)
     }
@@ -678,7 +678,7 @@ shinyServer(function(input, output, session) {
         collect() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
-        filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE', !!as.symbol(grouping))) %>%
+        filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE|Astro', !!as.symbol(grouping))) %>%
         group_by(organism, !!as.symbol(grouping), Age, Gene) %>%
         summarise(cpm = mean(cpm), count = n()) %>%
         right_join(., meta_data) %>%
@@ -876,6 +876,11 @@ shinyServer(function(input, output, session) {
     gene <- input$insitu_Gene
     grouping_features <- "CellType_predict"
 
+    if (input$insitu_filter_cat !=''){
+    validate(
+      need(input$insitu_filter_on != '', "Please select at least one feature to filter on")
+    )}
+
     ### Filter expression table, if filters active
     if (input$insitu_filter_cat != ''){
       filt_cat <- input$insitu_filter_cat
@@ -919,7 +924,8 @@ shinyServer(function(input, output, session) {
   }
   # Event reactives to produce image and table
   ## Reactive that generates data table
-  insitu_table_maker <- eventReactive(input$BUTTON_show_insitu_table, {
+  insitu_table_maker <- eventReactive(input$BUTTON_draw_insitu, {
+
     full_table <- get_insitu_table()
     full_table <- full_table %>%
       rename(`Cells # Detected` = cell_exp_ct,
