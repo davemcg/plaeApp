@@ -678,7 +678,7 @@ shinyServer(function(input, output, session) {
         collect() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
-        filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE|Astro', !!as.symbol(grouping))) %>%
+        filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE', !!as.symbol(grouping))) %>%
         group_by(organism, !!as.symbol(grouping), Age, Gene) %>%
         summarise(cpm = mean(cpm), count = n()) %>%
         right_join(., meta_data) %>%
