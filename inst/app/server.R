@@ -18,7 +18,7 @@ library(magick)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/Volumes/McGaughey_S/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 
 # fancy tables
 # they come from `tables.Rmd` in analysis/
@@ -225,8 +225,8 @@ shinyServer(function(input, output, session) {
     }
     if (is.null(query[['exp_filter_cat']])){
       updateSelectizeInput(session, 'exp_filter_cat',
-                           choices = meta_filter %>%
-                             dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
+                           choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
                            selected = 'CellType',
                            server = TRUE)
     }
@@ -236,20 +236,11 @@ shinyServer(function(input, output, session) {
       } else {
         choice = meta_filter[,input$exp_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
-      output$exp_filter_on_dynamicUI <- renderUI({
-        if (class(choice) != 'numeric'){
-          selectizeInput('exp_filter_on', strong('Filter on: '),
-                         choices = choice, selected = c('Cones','Retinal Ganglion Cells', 'Horizontal Cells'), multiple = TRUE)
-        } else {
-          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
-          sliderInput("exp_filter_on", label = strong("Filter Range: "), min = min(choice),
-                      max = max(choice), value = c(min(choice), max(choice)))
-        }
-      })
-      # updateSelectizeInput(session, 'exp_filter_on',
-      #                      choices = choice,
-      #                      selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
-      #                      server = TRUE)
+
+      updateSelectizeInput(session, 'exp_filter_on',
+                           choices = choice,
+                           selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
+                           server = TRUE)
     })
     if (is.null(query[['exp_plot_groups']])){
       updateSelectizeInput(session, 'exp_plot_groups',
@@ -326,19 +317,14 @@ shinyServer(function(input, output, session) {
                cpm < as.numeric(expression_range[2])) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
         filter(!is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
-      cat(input$gene_filter_on)
-      cat('\n')
-      cat(class(input$gene_filter_on))
-      cat('\n')
       if (input$gene_filter_cat != ''){
-        cat('filter cat')
         if (class(input$gene_filter_on) == 'character'){
           p <- p %>%
             filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
         } else {
           p <- p %>%
-            filter(!!as.symbol(input$gene_filter_cat) > input$gene_filter_on[1],
-                   !!as.symbol(input$gene_filter_cat) < input$gene_filter_on[1])
+            filter(!!as.symbol(input$gene_filter_cat) >= input$gene_filter_on[1],
+                   !!as.symbol(input$gene_filter_cat) <= input$gene_filter_on[2])
         }
       }
       color_range <- range(p$cpm)
@@ -400,8 +386,14 @@ shinyServer(function(input, output, session) {
         filter(!is.na(!!as.symbol(meta_column)))
       # category filtering
       if (input$meta_filter_cat != ''){
-        p_data <- p_data %>%
-          filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
+        if (class(input$meta_filter_on) == 'character'){
+          p_data <- p_data %>%
+            filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
+        } else {
+          p_data <- p_data %>%
+            filter(!!as.symbol(input$meta_filter_cat) >= input$meta_filter_on[1],
+                   !!as.symbol(input$meta_filter_cat) <= input$meta_filter_on[2])
+        }
       }
 
       # metadata NUMERIC plot --------------
@@ -603,10 +595,25 @@ shinyServer(function(input, output, session) {
       grouping_features <- input$exp_plot_groups
 
       if (input$exp_filter_cat != ''){
-        box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-          filter(Gene %in% gene) %>%
-          collect() %>%
-          filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+        # box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+        #   filter(Gene %in% gene) %>%
+        #   collect() %>%
+        #   filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+        #
+
+        if (class(input$exp_filter_on) == 'character'){
+          box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+            filter(Gene %in% gene) %>%
+            collect() %>%
+            filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+        } else {
+          box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+            filter(Gene %in% gene) %>%
+            collect() %>%
+            #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on) %>%
+            filter(!!as.symbol(input$exp_filter_cat) >= input$exp_filter_on[1],
+                   !!as.symbol(input$exp_filter_cat) <= input$exp_filter_on[2])
+        }
 
       } else {
         box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
@@ -844,7 +851,7 @@ shinyServer(function(input, output, session) {
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
   })
 
-  #insitu ---
+  # in situ ----
   # Functions used to generate in situ plots
 
   ## Function to read in original images
@@ -852,7 +859,7 @@ shinyServer(function(input, output, session) {
     image_read(file.path(paste0('www/insitu_layers/ret_',file, ".png")))
   }
 
-  ## Function to recolor each inidividual cell layer based on expression
+  ## Function to recolor each individual cell layer based on expression
   recolor <- function(ret_layer, color){
     if (length(color) == 0) {
       recolored_layer <- ret_layer

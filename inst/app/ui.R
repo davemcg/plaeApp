@@ -149,9 +149,9 @@ shinyUI(
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = FALSE)),
-                                          column(3, uiOutput('exp_filter_on_dynamicUI')),
-                                          # column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
-                                          #                          choices = NULL, multiple = TRUE)),
+                                          #column(3, uiOutput('exp_filter_on_dynamicUI')),
+                                          column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
+                                                                   choices = NULL, multiple = TRUE)),
                                         ),
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                          style='background-color: #3399ff; color: #ffffff'))),
