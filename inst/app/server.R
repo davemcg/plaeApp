@@ -266,7 +266,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['facet']])){
       updateSelectizeInput(session, 'facet',
                            choices = meta_filter %>%
-                             dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
+                             dplyr::select_if(is.character) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
                            selected = 'organism',
                            server = TRUE)
@@ -275,7 +275,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['facet_color']])){
       updateSelectizeInput(session, 'facet_color',
                            choices = meta_filter %>%
-                             dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
+                             dplyr::select_if(is.character) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CellType',
                            server = TRUE)
