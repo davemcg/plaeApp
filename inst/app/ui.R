@@ -144,7 +144,10 @@ shinyUI(
                                                                  choices = c('CellType','cluster','CellType_predict'), multiple = FALSE))),
                                           column(3,
                                                  (selectizeInput('exp_plot_groups', strong('Color on: '),
-                                                                 choices = NULL, multiple = FALSE)))
+                                                                 choices = NULL, multiple = FALSE))),
+                                          column(3,
+                                                 numericInput('exp_plot_col_num', strong('Number of columns: '),
+                                                              min = 1, max = 30, value = 5)),
                                         ),
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
@@ -166,7 +169,7 @@ shinyUI(
                                             column(4, selectizeInput('insitu_Gene', strong('Genes: '),
                                                                      choices=NULL, multiple=FALSE)),
                                             column(4, selectizeInput('insitu_height', strong('Plot Height: '),
-                                                                     choices = seq(400, 2000, by = 100), selected = 800))
+                                                                     choices = seq(500, 1000, by = 100), selected = 700))
                                           ),
                                           fluidRow(
                                             column(4, selectizeInput('insitu_filter_cat', strong('Filter category: '),
@@ -175,18 +178,18 @@ shinyUI(
                                                                      choices=NULL, multiple=TRUE)),
                                           ),
                                           fluidRow(
-                                          column(4,actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
-                                                       style='background-color: #3399ff; color: #ffffff')),
-                                          column(4,radioButtons('RADIO_show_insitu_table', "Show data table?", choices = c("Yes"="yes", "No"="no"), selected = "yes", inline=TRUE))
+                                            column(4,actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
+                                                                  style='background-color: #3399ff; color: #ffffff')),
+                                            column(4,radioButtons('RADIO_show_insitu_table', "Show data table?", choices = c("Yes"="yes", "No"="no"), selected = "yes", inline=TRUE))
                                           ),
 
                                           fluidRow(
                                             plotOutput('insitu_img', height = "auto")
                                           ),
                                           conditionalPanel(condition = "input.RADIO_show_insitu_table == 'yes'",
-                                          hr(),
-                                          fluidRow(
-                                            div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
+                                                           hr(),
+                                                           fluidRow(
+                                                             div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
                                           )))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
                                  column(10,
@@ -289,12 +292,14 @@ shinyUI(
                         fluidRow(column(width = 8, offset = 1, h2('Data Sources'))),
                         #fluidRow(column(width = 8, offset = 1, formattableOutput("formattable01"))),
                         fluidRow(column(width = 8, offset = 1, img(src='01_table.png', width="80%"))),
-                        fluidRow(column(width = 8, offset = 1, h2('Extracted Cell Types'))),
+                        fluidRow(column(width = 8, offset = 1, h2('Extracted Cell Type Labels'))),
                         #fluidRow(column(width = 6, offset = 1, formattableOutput("formattable02"))),
                         fluidRow(column(width = 8, offset = 1, img(src='02_table.png', width="50%"))),
                         fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
                       br(),
                       fluidRow(column(width = 8, offset = 1, h2('Change log'))),
+                      fluidRow(column(width = 8, offset = 1, '0.33 (2020-07-30): Exp plot can now take space or comma separated Genes as input. User can selected number of columns in Exp Plot. Diff Table formatting improved with rounding and PB_Test can be selected as a drop down now in the data table search.')),
+                      br(),
                       fluidRow(column(width = 8, offset = 1, '0.32 (2020-07-29): In situ Projection viz added courtesy of Zachary Batz! It\'s a simulated cross section of the retina with each cell type colored by intensity of scRNA expression! Move table draw button under filtering in UMAP - Tables. Sort Diff Exp results by FDR. Filtering on numeric column now returns slider UI. Remove super dangerous ability to create faceted plots on numeric values.')),
                       br(),
                       fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),

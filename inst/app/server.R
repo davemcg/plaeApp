@@ -219,8 +219,18 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['exp_plot_genes']])){
       updateSelectizeInput(session, 'exp_plot_genes',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
-                           options = list(placeholder = 'Type to search'),
+                           #options = list(placeholder = 'Type to search'),
                            selected = c('PAX6','POU4F2','CRX','NRL'),
+                           options = list(
+                             placeholder = 'Type to search',
+                             splitOn = I("(function() { return /[, ;]/; })()"),
+                             create = I("function(input, callback){
+                                          return {
+                                            value: input,
+                                            text: input
+                                          };
+                                        }")
+                           ),
                            server = TRUE)
     }
     if (is.null(query[['exp_filter_cat']])){
@@ -653,7 +663,7 @@ shinyServer(function(input, output, session) {
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
         scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
         theme(legend.position="bottom") +
-        facet_wrap(ncol = 3, scales = 'free_x', vars(!!as.symbol(input$exp_plot_facet)))
+        facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_x', vars(!!as.symbol(input$exp_plot_facet)))
     })
 
     output$exp_plot <- renderPlot({
@@ -877,9 +887,9 @@ shinyServer(function(input, output, session) {
     grouping_features <- "CellType_predict"
 
     if (input$insitu_filter_cat !=''){
-    validate(
-      need(input$insitu_filter_on != '', "Please select at least one feature to filter on")
-    )}
+      validate(
+        need(input$insitu_filter_on != '', "Please select at least one feature to filter on")
+      )}
 
     ### Filter expression table, if filters active
     if (input$insitu_filter_cat != ''){
@@ -1066,9 +1076,17 @@ shinyServer(function(input, output, session) {
       # filter(!grepl('Doub|RPE|Astro|Red|Vascular', term)) %>%
       collect() %>%
       select(-comparison) %>%
+      mutate(PB_Test = as.factor(PB_Test)) %>%
+      mutate(FDR = format(FDR, digits = 3),
+             FDR = as.numeric(FDR),
+             PValue = format(PValue, digits = 3),
+             PValue = as.numeric(PValue)) %>%
       DT::datatable(extensions = 'Buttons', rownames = F,
                     filter = list(position = 'bottom', clear = FALSE),
-                    options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+                    options = list(pageLength = 10,
+                                   dom = 'frtBip', buttons = c('pageLength','copy', 'csv'))) %>%
+      DT::formatRound(columns = c('logFC','logCPM','F'), digits = 2) %>%
+      DT::formatStyle(columns = c(8), width='250px')
 
   })
 
