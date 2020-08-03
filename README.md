@@ -5,7 +5,7 @@
   - You'll need [magick](https://imagemagick.org/index.php) otherwise the package install will fail
   
 # Installation (in R)
-  - `devtools::install_github('davemcg/plaeApp')`
+  - `remotes::install_github('davemcg/plaeApp')`
   -  Get scEiaD (run in bash/Terminal)
 
     wget http://hpc.nih.gov/~mcgaugheyd/scEiaD/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite.gz
