@@ -40,6 +40,12 @@ celltype_predict_labels <- meta_filter %>%
 celltype_labels <- meta_filter %>%
   group_by(CellType) %>%
   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+# tabulamuris_labels <- meta_filter %>%
+#   group_by(TabulaMurisCellType) %>%
+#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+tabulamuris_predict_labels <- meta_filter %>%
+  group_by(TabulaMurisCellType_predict) %>%
+  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
 # get coords for cell labels
 cluster_labels <- meta_filter %>% group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
 
@@ -59,7 +65,17 @@ cat(file=stderr(), ' seconds.\n')
 shinyServer(function(input, output, session) {
   #bootstraplib::bs_themer()
   observe({
+    # URL scanning to jump directly to tab/section
     query <- parseQueryString(session$clientData$url_search)
+    if(!is.null(query$url)) {
+      cat(query$url)
+      url <- strsplit(query$url,"\"")[[1]][2]
+      cat(url)
+      #species <- strsplit(query$species, "\"")[[1]][2]
+      updateTabsetPanel(session, 'nav', query$url)
+      #updateSelectInput(session, 'species',selected = species)
+    }
+
     # server help queries ------
     # gene plot updateSelectizeInput -------
     if (is.null(query[['Gene']])){
@@ -480,7 +496,12 @@ shinyServer(function(input, output, session) {
                                 aes(x = UMAP_1, y = UMAP_2, label = cluster),
                                 max.iter = 20)
       }
-      if (meta_column %in% c('cluster','subcluster')){
+      if ('4' %in% input$label_toggle){
+        more <- geom_text_repel(data = tabulamuris_predict_labels, bg.color = 'white',
+                                aes(x = UMAP_1, y = UMAP_2, label = TabulaMurisCellType_predict),
+                                max.iter = 20)
+      }
+      if (meta_column %in% c('cluster','subcluster', 'TabulaMurisCellType', 'TabulaMurisCellType_predict')){
         suppressWarnings(plot + more + theme(legend.position = 'none'))
       } else {
         suppressWarnings(plot + more)
@@ -896,8 +917,8 @@ shinyServer(function(input, output, session) {
       filt_cat <- input$insitu_filter_cat
       filt_on <- input$insitu_filter_on
       full_table <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-        filter(!!as.symbol(filt_cat) %in% filt_on) %>%
         filter(Gene == gene) %>%
+        filter(!!as.symbol(filt_cat) %in% filt_on) %>%
         group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
         summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
                   cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%

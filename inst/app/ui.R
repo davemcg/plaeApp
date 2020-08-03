@@ -24,7 +24,7 @@ library(cowplot)
 # #3399ff
 
 shinyUI(
-  navbarPage('Ocular plae',
+  navbarPage('Ocular plae',id = 'nav',
              theme = 'flatly_mod.css',
              selected = 'Overview',
              navbarMenu('Viz', # UMAP ----------
@@ -74,7 +74,8 @@ shinyUI(
                                                                         choices = list("None" = 0,
                                                                                        "CellType (published)" = 1,
                                                                                        "CellType (predict)" = 2,
-                                                                                       "Cluster" = 3), multiple = FALSE,
+                                                                                       "Cluster" = 3,
+                                                                                       "Tabula Muris" = 4), multiple = FALSE,
                                                                         selected = 2)),
                                                      column(2,
                                                             radioButtons('meta_column_transform',
@@ -285,19 +286,21 @@ shinyUI(
                                        div(DT::dataTableOutput('make_diff_table'), style='font-size:75%')))),
              tabPanel('Overview', # Overview ------
                       fluidPage(
-                        fluidRow(column(width = 8, offset = 1, h2('plae v0.31'))),
+                        fluidRow(column(width = 8, offset = 1, h1('plae v0.31'))),
                         br(),
-                        fluidRow(column(width = 8, offset = 1, h2('Overview'))),
+                        fluidRow(column(width = 8, offset = 1, h1('Overview'))),
                         fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. plae is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
-                        fluidRow(column(width = 8, offset = 1, h2('Data Sources'))),
+                        fluidRow(column(width = 8, offset = 1, h1('Data Sources'))),
                         #fluidRow(column(width = 8, offset = 1, formattableOutput("formattable01"))),
                         fluidRow(column(width = 8, offset = 1, img(src='01_table.png', width="80%"))),
-                        fluidRow(column(width = 8, offset = 1, h2('Extracted Cell Type Labels'))),
+                        fluidRow(column(width = 8, offset = 1, h1('Extracted Cell Type Labels'))),
                         #fluidRow(column(width = 6, offset = 1, formattableOutput("formattable02"))),
                         fluidRow(column(width = 8, offset = 1, img(src='02_table.png', width="50%"))),
                         fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
                       br(),
-                      fluidRow(column(width = 8, offset = 1, h2('Change log'))),
+                      fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                      fluidRow(column(width = 8, offset = 1, '0.34 (2020-08-03): Fixed issue with TabulaMuris labels not appearing. Scanned app with koa11y for 508 compliance - changed headers from h2 to h1 to comply. ')),
+                      br(),
                       fluidRow(column(width = 8, offset = 1, '0.33 (2020-07-30): Exp plot can now take space or comma separated Genes as input. User can selected number of columns in Exp Plot. Diff Table formatting improved with rounding and PB_Test can be selected as a drop down now in the data table search.')),
                       br(),
                       fluidRow(column(width = 8, offset = 1, '0.32 (2020-07-29): In situ Projection viz added courtesy of Zachary Batz! It\'s a simulated cross section of the retina with each cell type colored by intensity of scRNA expression! Move table draw button under filtering in UMAP - Tables. Sort Diff Exp results by FDR. Filtering on numeric column now returns slider UI. Remove super dangerous ability to create faceted plots on numeric values.')),
