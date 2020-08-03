@@ -24,7 +24,7 @@ library(cowplot)
 # #3399ff
 
 shinyUI(
-  navbarPage('Ocular plae',
+  navbarPage('Ocular plae',id = 'nav',
              theme = 'flatly_mod.css',
              selected = 'Overview',
              navbarMenu('Viz', # UMAP ----------
@@ -54,8 +54,7 @@ shinyUI(
                                                             selectizeInput('gene_filter_cat', strong('Filter Category: '),
                                                                            choices = NULL, selected = NULL)),
                                                      column(5,
-                                                            selectizeInput('gene_filter_on', strong('Filter On: '),
-                                                                           choices = NULL, selected = NULL, multiple = TRUE)))),
+                                                            uiOutput('gene_filter_on_dynamicUI')))),
                                      # Meta Plot ------
                                      column(6,
                                             plotOutput('meta_plot',
@@ -75,7 +74,8 @@ shinyUI(
                                                                         choices = list("None" = 0,
                                                                                        "CellType (published)" = 1,
                                                                                        "CellType (predict)" = 2,
-                                                                                       "Cluster" = 3), multiple = FALSE,
+                                                                                       "Cluster" = 3,
+                                                                                       "Tabula Muris" = 4), multiple = FALSE,
                                                                         selected = 2)),
                                                      column(2,
                                                             radioButtons('meta_column_transform',
@@ -86,33 +86,41 @@ shinyUI(
                                                             selectizeInput('meta_filter_cat', strong('Filter Category: '),
                                                                            choices = NULL, selected = NULL)),
                                                      column(5,
-                                                            selectizeInput('meta_filter_on', strong('Filter on: '),
-                                                                           choices = NULL, selected = NULL, multiple = TRUE)))
+                                                            uiOutput('meta_filter_on_dynamicUI')))
+                                            # selectizeInput('meta_filter_on', strong('Filter on: '),
+                                            #                choices = NULL, selected = NULL, multiple = TRUE)))
                                      )
                                    ),
                                    fluidRow(
                                      column(6,
                                             fluidRow(
                                               column(12, actionButton('BUTTON_draw_scatter',' Draw Scatter Plot', icon = icon("arrow-up"),
-                                                                      style='background-color: #3399ff; color: #ffffff'),
-                                                     actionButton('BUTTON_make_gene_table',' Make Gene Table', icon = icon("arrow-down"),
-                                                                  style='background-color: #3399ff; color: #ffffff'))),
+                                                                      style='background-color: #3399ff; color: #ffffff'))),
                                             br(),
                                             selectizeInput('grouping_features', strong('Gene Table Grouping(s)'),
                                                            choices = NULL,
                                                            multiple = TRUE),
+                                            fluidRow(
+                                              column(12,  actionButton('BUTTON_make_gene_table',' Make Gene Table', icon = icon("arrow-down"),
+                                                                       style='background-color: #3399ff; color: #ffffff'))
+                                            ),
+                                            br(),
                                             div(DT::dataTableOutput('gene_cluster_stats'), style='font-size:75%')),
                                      column(6,
                                             fluidRow(
                                               column(12,
                                                      actionButton('BUTTON_draw_meta',' Draw Meta Plot', icon = icon("arrow-up"),
-                                                                  style='background-color: #3399ff; color: #ffffff'),
-                                                     actionButton('BUTTON_make_meta_table',' Make Meta Table', icon = icon("arrow-down"),
                                                                   style='background-color: #3399ff; color: #ffffff'))),
                                             br(),
                                             selectizeInput('meta_groupings', strong('Metadata Table Groupings '),
                                                            choices = NULL,
                                                            multiple = TRUE),
+                                            fluidRow(
+                                              column(12,
+                                                     actionButton('BUTTON_make_meta_table',' Make Meta Table', icon = icon("arrow-down"),
+                                                                  style='background-color: #3399ff; color: #ffffff'))
+                                            ),
+                                            br(),
                                             div(DT::dataTableOutput('metadata_stats'), style='font-size:75%'))
                                    )
                                  )
@@ -137,11 +145,15 @@ shinyUI(
                                                                  choices = c('CellType','cluster','CellType_predict'), multiple = FALSE))),
                                           column(3,
                                                  (selectizeInput('exp_plot_groups', strong('Color on: '),
-                                                                 choices = NULL, multiple = FALSE)))
+                                                                 choices = NULL, multiple = FALSE))),
+                                          column(3,
+                                                 numericInput('exp_plot_col_num', strong('Number of columns: '),
+                                                              min = 1, max = 30, value = 5)),
                                         ),
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = FALSE)),
+                                          #column(3, uiOutput('exp_filter_on_dynamicUI')),
                                           column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
                                                                    choices = NULL, multiple = TRUE)),
                                         ),
@@ -149,6 +161,37 @@ shinyUI(
                                                                          style='background-color: #3399ff; color: #ffffff'))),
                                         br(),
                                         fluidRow(column(10, plotOutput('exp_plot'))))),
+
+                        # in situ ---------
+                        tabPanel('In Situ Projection',
+                                 fluidPage(
+                                   column(8,
+                                          fluidRow(
+                                            column(4, selectizeInput('insitu_Gene', strong('Genes: '),
+                                                                     choices=NULL, multiple=FALSE)),
+                                            column(4, selectizeInput('insitu_height', strong('Plot Height: '),
+                                                                     choices = seq(500, 1000, by = 100), selected = 700))
+                                          ),
+                                          fluidRow(
+                                            column(4, selectizeInput('insitu_filter_cat', strong('Filter category: '),
+                                                                     choices=NULL, multiple=FALSE)),
+                                            column(4, selectizeInput('insitu_filter_on', strong('Filter on: '),
+                                                                     choices=NULL, multiple=TRUE)),
+                                          ),
+                                          fluidRow(
+                                            column(4,actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
+                                                                  style='background-color: #3399ff; color: #ffffff')),
+                                            column(4,radioButtons('RADIO_show_insitu_table', "Show data table?", choices = c("Yes"="yes", "No"="no"), selected = "yes", inline=TRUE))
+                                          ),
+
+                                          fluidRow(
+                                            plotOutput('insitu_img', height = "auto")
+                                          ),
+                                          conditionalPanel(condition = "input.RADIO_show_insitu_table == 'yes'",
+                                                           hr(),
+                                                           fluidRow(
+                                                             div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
+                                          )))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
                                  column(10,
                                         fluidRow(
@@ -243,31 +286,37 @@ shinyUI(
                                        div(DT::dataTableOutput('make_diff_table'), style='font-size:75%')))),
              tabPanel('Overview', # Overview ------
                       fluidPage(
-                        fluidRow(column(width = 8, offset = 1, h2('plae v0.31'))),
+                        fluidRow(column(width = 8, offset = 1, h1('plae v0.31'))),
                         br(),
-                        fluidRow(column(width = 8, offset = 1, h2('Overview'))),
+                        fluidRow(column(width = 8, offset = 1, h1('Overview'))),
                         fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. plae is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
-                        fluidRow(column(width = 8, offset = 1, h2('Data Sources'))),
+                        fluidRow(column(width = 8, offset = 1, h1('Data Sources'))),
                         #fluidRow(column(width = 8, offset = 1, formattableOutput("formattable01"))),
                         fluidRow(column(width = 8, offset = 1, img(src='01_table.png', width="80%"))),
-                        fluidRow(column(width = 8, offset = 1, h2('Extracted Cell Types'))),
+                        fluidRow(column(width = 8, offset = 1, h1('Extracted Cell Type Labels'))),
                         #fluidRow(column(width = 6, offset = 1, formattableOutput("formattable02"))),
                         fluidRow(column(width = 8, offset = 1, img(src='02_table.png', width="50%"))),
-                        fluidRow(column(width = 8, offset = 1, 'Labelled cell types were pulled from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, h2('Change log'))),
-                        fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.30 (2020-07-20): Huge update. Hundreds of thousands of cells added. The Tabula Muris project data (pan mouse) has been added to faciliate non-eye comparison. Filtering options added to most of the plotting views to allow for quick slicing into this huge dataset. Differential expression testing totally reworked - now uses "pseudoBulk" approach to better utilize the large number of studies we have.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.23 (2020-06-16): Remove low N cell type from diff expression tables, tweak Overview with spacing alterations and updated text.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.22 (2020-06-15): Added expression plot by user selected groups plot view. Fixed bug in mean cpm expression calculation for Viz -> UMAP - Table gene tables')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.21 (2020-06-15): Added subcluster diff testing tables, temporal gene expression by celltype plot section.')),
-                        br(),
-                        fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
-                        br(), br(), br()
-                      ))
-  )
+                        fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                      fluidRow(column(width = 8, offset = 1, '0.34 (2020-08-03): Fixed issue with TabulaMuris labels not appearing. Scanned app with koa11y for 508 compliance - changed headers from h2 to h1 to comply. ')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.33 (2020-07-30): Exp plot can now take space or comma separated Genes as input. User can selected number of columns in Exp Plot. Diff Table formatting improved with rounding and PB_Test can be selected as a drop down now in the data table search.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.32 (2020-07-29): In situ Projection viz added courtesy of Zachary Batz! It\'s a simulated cross section of the retina with each cell type colored by intensity of scRNA expression! Move table draw button under filtering in UMAP - Tables. Sort Diff Exp results by FDR. Filtering on numeric column now returns slider UI. Remove super dangerous ability to create faceted plots on numeric values.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.31 (2020-07-24): Re-created scEiaD with better internal (Hufnagel) transwell RPE labelling (there are roughly two groups - mature RPE with high TTR expression and less (?) mature RPE with lower TTR), removal of the SRP166660 study as it was *all* non-normal (injured retina) (confirmed with correspondence with Dr. Poche), removed the pan RGC CellType labelling for the SRP212151 as I see post-hoc that there are LOADS of non-RGC cells. Did the same for SRP186407, which has substantial non-microglia. Generally, FACS != 100% celltype purity. Added differential testing against all Tabula Muris cell types. Removing clusters/cells with high doublet scores. Added cell cycle phase (G1/G2M/S) assignment. More study level metadata.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.30 (2020-07-20): Huge update. Hundreds of thousands of cells added. The Tabula Muris project data (pan mouse) has been added to faciliate non-eye comparison. Filtering options added to most of the plotting views to allow for quick slicing into this huge dataset. Differential expression testing totally reworked - now uses "pseudoBulk" approach to better utilize the large number of studies we have.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.23 (2020-06-16): Remove low N cell type from diff expression tables, tweak Overview with spacing alterations and updated text.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.22 (2020-06-15): Added expression plot by user selected groups plot view. Fixed bug in mean cpm expression calculation for Viz -> UMAP - Table gene tables')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.21 (2020-06-15): Added subcluster diff testing tables, temporal gene expression by celltype plot section.')),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
+                      br(), br(), br()
+             ))
+)
 

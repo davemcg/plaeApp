@@ -14,6 +14,7 @@ library(purrr)
 library(pool)
 library(RSQLite)
 library(dplyr)
+library(magick)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 
@@ -21,13 +22,14 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_ey
 
 # fancy tables
 # they come from `tables.Rmd` in analysis/
-load('www/formattables.Rdata')
+# load('www/formattables.Rdata')
 # filter
 meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
                          scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
-  as_tibble() %>%
+  collect() %>%
   mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
-         doublet_score_scran = as.numeric(doublet_score_scran))
+         doublet_score_scran = as.numeric(doublet_score_scran)) %>%
+  mutate(PMID = as.character(PMID))
 
 # cutdown mf for plotting
 mf <- meta_filter %>% sample_frac(0.2)
@@ -37,6 +39,12 @@ celltype_predict_labels <- meta_filter %>%
   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
 celltype_labels <- meta_filter %>%
   group_by(CellType) %>%
+  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+# tabulamuris_labels <- meta_filter %>%
+#   group_by(TabulaMurisCellType) %>%
+#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+tabulamuris_predict_labels <- meta_filter %>%
+  group_by(TabulaMurisCellType_predict) %>%
   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
 # get coords for cell labels
 cluster_labels <- meta_filter %>% group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
@@ -57,12 +65,22 @@ cat(file=stderr(), ' seconds.\n')
 shinyServer(function(input, output, session) {
   #bootstraplib::bs_themer()
   observe({
+    # URL scanning to jump directly to tab/section
     query <- parseQueryString(session$clientData$url_search)
+    if(!is.null(query$url)) {
+      cat(query$url)
+      url <- strsplit(query$url,"\"")[[1]][2]
+      cat(url)
+      #species <- strsplit(query$species, "\"")[[1]][2]
+      updateTabsetPanel(session, 'nav', query$url)
+      #updateSelectInput(session, 'species',selected = species)
+    }
+
     # server help queries ------
     # gene plot updateSelectizeInput -------
     if (is.null(query[['Gene']])){
       updateSelectizeInput(session, 'Gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX',
                            server = TRUE)
@@ -81,9 +99,16 @@ shinyServer(function(input, output, session) {
       } else {
         choice = meta_filter[,input$gene_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
-      updateSelectizeInput(session, 'gene_filter_on',
-                           choices = choice,
-                           server = TRUE)
+      output$gene_filter_on_dynamicUI <- renderUI({
+        if (class(choice) == 'character'){
+          selectizeInput('gene_filter_on', strong('Filter on: '),
+                         choices = choice, selected = NULL, multiple = TRUE)
+        } else {
+          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
+          sliderInput("gene_filter_on", label = strong("Filter Range: "), min = min(choice),
+                      max = max(choice), value = c(min(choice), max(choice)))
+        }
+      })
     })
 
     # meta plot updateSelectizeInput ------
@@ -110,15 +135,23 @@ shinyServer(function(input, output, session) {
       } else {
         choice = meta_filter[,input$meta_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
-      updateSelectizeInput(session, 'meta_filter_on',
-                           choices = choice,
-                           server = TRUE)
+      output$meta_filter_on_dynamicUI <- renderUI({
+        if (class(choice) == 'character'){
+          selectizeInput('meta_filter_on', strong('Filter on: '),
+                         choices = choice, selected = NULL, multiple = TRUE)
+        } else {
+          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
+          sliderInput("meta_filter_on", label = strong("Filter Range: "), min = min(choice),
+                      max = max(choice), value = c(min(choice), max(choice)))
+        }
+      })
+
     })
 
     # dotplot updateSelectizeInput ----
     if (is.null(query[['dotplot_Gene']])){
       updateSelectizeInput(session, 'dotplot_Gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('RHO','WIF1','CABP5', 'AIF1','AQPT4','ARR3','ONECUT1','GRIK1','GAD1','POU4F2'),
                            server = TRUE)
@@ -152,6 +185,33 @@ shinyServer(function(input, output, session) {
                            server = TRUE)
     })
 
+    # insitu updateSelectizeInput ----
+    if (is.null(query[['insitu_Gene']])){
+      updateSelectizeInput(session, 'insitu_Gene',
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           options = list(placeholder = 'Type to search'),
+                           selected = c('RHO'),
+                           server = TRUE)
+    }
+
+    if (is.null(query[['insitu_filter_cat']])){
+      updateSelectizeInput(session, 'insitu_filter_cat',
+                           choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
+                           selected = '',
+                           server = TRUE)
+    }
+    observeEvent(input$insitu_filter_cat, {
+      if (input$insitu_filter_cat == ''){
+        choice = ''
+      } else {
+        choice = meta_filter[,input$insitu_filter_cat] %>% pull(1) %>% unique() %>% sort()
+      }
+      updateSelectizeInput(session, 'insitu_filter_on',
+                           choices = choice,
+                           server = TRUE)
+    })
+
     #
     if (is.null(query[['grouping_features']])){
       updateSelectizeInput(session, 'grouping_features',
@@ -174,15 +234,25 @@ shinyServer(function(input, output, session) {
     # exp_plot plot updateSelect -----
     if (is.null(query[['exp_plot_genes']])){
       updateSelectizeInput(session, 'exp_plot_genes',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
-                           options = list(placeholder = 'Type to search'),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
+                           #options = list(placeholder = 'Type to search'),
                            selected = c('PAX6','POU4F2','CRX','NRL'),
+                           options = list(
+                             placeholder = 'Type to search',
+                             splitOn = I("(function() { return /[, ;]/; })()"),
+                             create = I("function(input, callback){
+                                          return {
+                                            value: input,
+                                            text: input
+                                          };
+                                        }")
+                           ),
                            server = TRUE)
     }
     if (is.null(query[['exp_filter_cat']])){
       updateSelectizeInput(session, 'exp_filter_cat',
-                           choices = meta_filter %>%
-                             dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
+                           choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
                            selected = 'CellType',
                            server = TRUE)
     }
@@ -192,6 +262,7 @@ shinyServer(function(input, output, session) {
       } else {
         choice = meta_filter[,input$exp_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
+
       updateSelectizeInput(session, 'exp_filter_on',
                            choices = choice,
                            selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
@@ -210,7 +281,7 @@ shinyServer(function(input, output, session) {
     # temporal plot updateSelect -----
     if (is.null(query[['temporal_gene']])){
       updateSelectizeInput(session, 'temporal_gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('PAX6','POU4F2'),
                            server = TRUE)
@@ -221,7 +292,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['facet']])){
       updateSelectizeInput(session, 'facet',
                            choices = meta_filter %>%
-                             dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
+                             dplyr::select_if(is.character) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
                            selected = 'organism',
                            server = TRUE)
@@ -230,7 +301,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['facet_color']])){
       updateSelectizeInput(session, 'facet_color',
                            choices = meta_filter %>%
-                             dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
+                             dplyr::select_if(is.character) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CellType',
                            server = TRUE)
@@ -238,7 +309,7 @@ shinyServer(function(input, output, session) {
     # diff table updateSelect ------
     if (is.null(query[['diff_gene']])){
       updateSelectizeInput(session, 'diff_gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX',
                            server = TRUE)
@@ -266,15 +337,21 @@ shinyServer(function(input, output, session) {
       expression_range <- input$gene_scatter_slider
       p <-  scEiaD_2020_v01 %>% tbl('cpm') %>%
         filter(Gene == gene) %>%
-        as_tibble() %>%
+        collect() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
         filter(cpm > as.numeric(expression_range[1]),
                cpm < as.numeric(expression_range[2])) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
         filter(!is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
       if (input$gene_filter_cat != ''){
-        p <- p %>%
-          filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
+        if (class(input$gene_filter_on) == 'character'){
+          p <- p %>%
+            filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
+        } else {
+          p <- p %>%
+            filter(!!as.symbol(input$gene_filter_cat) >= input$gene_filter_on[1],
+                   !!as.symbol(input$gene_filter_cat) <= input$gene_filter_on[2])
+        }
       }
       color_range <- range(p$cpm)
       plot <- p %>% ggplot() +
@@ -331,11 +408,18 @@ shinyServer(function(input, output, session) {
         meta_filter[,meta_column] <- log2(meta_filter[,meta_column] + 1)
       }
       p_data <- meta_filter %>%
+        filter(!grepl('Doub|\\/Margin\\/Periocular', CellType)) %>%
         filter(!is.na(!!as.symbol(meta_column)))
       # category filtering
       if (input$meta_filter_cat != ''){
-        p_data <- p_data %>%
-          filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
+        if (class(input$meta_filter_on) == 'character'){
+          p_data <- p_data %>%
+            filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
+        } else {
+          p_data <- p_data %>%
+            filter(!!as.symbol(input$meta_filter_cat) >= input$meta_filter_on[1],
+                   !!as.symbol(input$meta_filter_cat) <= input$meta_filter_on[2])
+        }
       }
 
       # metadata NUMERIC plot --------------
@@ -412,7 +496,12 @@ shinyServer(function(input, output, session) {
                                 aes(x = UMAP_1, y = UMAP_2, label = cluster),
                                 max.iter = 20)
       }
-      if (meta_column %in% c('cluster','subcluster')){
+      if ('4' %in% input$label_toggle){
+        more <- geom_text_repel(data = tabulamuris_predict_labels, bg.color = 'white',
+                                aes(x = UMAP_1, y = UMAP_2, label = TabulaMurisCellType_predict),
+                                max.iter = 20)
+      }
+      if (meta_column %in% c('cluster','subcluster', 'TabulaMurisCellType', 'TabulaMurisCellType_predict')){
         suppressWarnings(plot + more + theme(legend.position = 'none'))
       } else {
         suppressWarnings(plot + more)
@@ -446,7 +535,7 @@ shinyServer(function(input, output, session) {
         group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
         summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
                   cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
-        as_tibble() %>%
+        collect() %>%
         tidyr::drop_na() %>%
         full_join(., meta_filter %>%
                     group_by_at(vars(one_of(grouping_features))) %>%
@@ -537,15 +626,30 @@ shinyServer(function(input, output, session) {
       grouping_features <- input$exp_plot_groups
 
       if (input$exp_filter_cat != ''){
-        box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-          filter(Gene %in% gene) %>%
-          as_tibble() %>%
-          filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+        # box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+        #   filter(Gene %in% gene) %>%
+        #   collect() %>%
+        #   filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+        #
+
+        if (class(input$exp_filter_on) == 'character'){
+          box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+            filter(Gene %in% gene) %>%
+            collect() %>%
+            filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+        } else {
+          box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+            filter(Gene %in% gene) %>%
+            collect() %>%
+            #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on) %>%
+            filter(!!as.symbol(input$exp_filter_cat) >= input$exp_filter_on[1],
+                   !!as.symbol(input$exp_filter_cat) <= input$exp_filter_on[2])
+        }
 
       } else {
         box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
-          as_tibble()
+          collect()
       }
       validate(
         need(input$exp_plot_groups != '', "Please select at least one grouping feature")
@@ -580,7 +684,7 @@ shinyServer(function(input, output, session) {
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
         scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
         theme(legend.position="bottom") +
-        facet_wrap(ncol = 3, scales = 'free_x', vars(!!as.symbol(input$exp_plot_facet)))
+        facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_x', vars(!!as.symbol(input$exp_plot_facet)))
     })
 
     output$exp_plot <- renderPlot({
@@ -602,10 +706,10 @@ shinyServer(function(input, output, session) {
         summarise(full_count = n())
       temporal_data <- scEiaD_2020_v01 %>% tbl('cpm') %>%
         filter(Gene %in% gene) %>%
-        as_tibble() %>%
+        collect() %>%
         mutate(cpm = cpm - min(cpm) + 1) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
-        filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE|Astro', !!as.symbol(grouping))) %>%
+        filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE', !!as.symbol(grouping))) %>%
         group_by(organism, !!as.symbol(grouping), Age, Gene) %>%
         summarise(cpm = mean(cpm), count = n()) %>%
         right_join(., meta_data) %>%
@@ -656,13 +760,13 @@ shinyServer(function(input, output, session) {
       if (input$dotplot_filter_cat != ''){
         dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
-          as_tibble() %>%
+          collect() %>%
           filter(!!as.symbol(input$dotplot_filter_cat) %in% input$dotplot_filter_on)
 
       } else {
         dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
           filter(Gene %in% gene) %>%
-          as_tibble()
+          collect()
       }
       validate(
         need(input$dotplot_groups != '', "Please select at least one grouping feature")
@@ -673,7 +777,7 @@ shinyServer(function(input, output, session) {
         group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
         summarise(cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE),
                   cpm = mean(cpm)) %>%
-        as_tibble() %>%
+        collect() %>%
         tidyr::drop_na() %>%
         full_join(., meta_filter %>%
                     group_by_at(vars(one_of(grouping_features))) %>%
@@ -778,6 +882,181 @@ shinyServer(function(input, output, session) {
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
   })
 
+  # in situ ----
+  # Functions used to generate in situ plots
+
+  ## Function to read in original images
+  get_image <- function(file) {
+    image_read(file.path(paste0('www/insitu_layers/ret_',file, ".png")))
+  }
+
+  ## Function to recolor each individual cell layer based on expression
+  recolor <- function(ret_layer, color){
+    if (length(color) == 0) {
+      recolored_layer <- ret_layer
+    } else {
+      recolored_layer <- ret_layer %>% image_colorize(75,color)
+    }
+    return(recolored_layer)
+  }
+
+  ## Function to gather gene expression data in table
+  get_insitu_table <- function() {
+
+    ### Pull the data for the gene of interest
+    gene <- input$insitu_Gene
+    grouping_features <- "CellType_predict"
+
+    if (input$insitu_filter_cat !=''){
+      validate(
+        need(input$insitu_filter_on != '', "Please select at least one feature to filter on")
+      )}
+
+    ### Filter expression table, if filters active
+    if (input$insitu_filter_cat != ''){
+      filt_cat <- input$insitu_filter_cat
+      filt_on <- input$insitu_filter_on
+      full_table <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+        filter(Gene == gene) %>%
+        filter(!!as.symbol(filt_cat) %in% filt_on) %>%
+        group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
+        summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
+                  cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
+        as_tibble() %>%
+        tidyr::drop_na() %>%
+        full_join(., meta_filter %>%
+                    group_by_at(vars(one_of(grouping_features))) %>%
+                    summarise(Count = n())) %>%
+        mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
+        mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
+               Expression = round(cpm * (`%` / 100), 2)) %>%
+        select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
+        arrange(-Expression)
+    }
+
+    ### Or make expression table without filtering if none selected
+    else {
+      full_table <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+        filter(Gene == gene) %>%
+        group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
+        summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
+                  cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
+        as_tibble() %>%
+        tidyr::drop_na() %>%
+        full_join(., meta_filter %>%
+                    group_by_at(vars(one_of(grouping_features))) %>%
+                    summarise(Count = n())) %>%
+        mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
+        mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
+               Expression = round(cpm * (`%` / 100), 2)) %>%
+        select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
+        arrange(-Expression)
+    }
+  }
+  # Event reactives to produce image and table
+  ## Reactive that generates data table
+  insitu_table_maker <- eventReactive(input$BUTTON_draw_insitu, {
+
+    full_table <- get_insitu_table()
+    full_table <- full_table %>%
+      rename(`Cells # Detected` = cell_exp_ct,
+             `Total Cells` = Count,
+             `log2(cpm+1)` = Expression) %>%
+      tidyr::drop_na()
+    full_table %>% DT::datatable(extensions = 'Buttons', rownames = F,
+                                 filter = list(position = 'bottom', clear = FALSE),
+                                 options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+  })
+
+  ## Reactive that generates in situ image
+  make_pic <- eventReactive( input$BUTTON_draw_insitu, {
+
+    ### Load unedited images
+    amacrine <- get_image('amacrine')
+    artery <- get_image('artery')
+    astrocyte <- get_image('astrocyte')
+    axons <- get_image('axons')
+    layer_labels <- get_image('background')
+    bipolar <- get_image('bipolar')
+    bruch <- get_image('bruch')
+    choriocap <- get_image('choriocap')
+    cones <- get_image('cones')
+    horizontal <- get_image('horizontal')
+    cell_labels <- get_image('labels')
+    melanocytes <- get_image('melanocytes')
+    microglia <- get_image('microglia')
+    muller <- get_image('muller')
+    rgc <- get_image('rgc')
+    rods <- get_image('rods')
+    rpe <- get_image('rpe')
+    sclera <- get_image('sclera')
+    vein <- get_image('vein')
+
+    full_table <- get_insitu_table()
+
+    ### Create mini table with color codes
+    p <- full_table %>%
+      select(CellType_predict,Expression) %>%
+      tidyr::drop_na() %>%
+      arrange(Expression)
+
+    ### Convert expression to color scale
+    p$col <- viridis(length(p$Expression))
+
+    ### Generate legend plot
+    leg_lab <- seq(min(p$Expression),max(p$Expression),l=5)
+    leg_lab[] <- lapply(leg_lab, round,2)
+    legend <- image_graph(width = 300, height = 600, res = 96)
+    legend_image <- as.raster(matrix(rev(p$col), ncol=1))
+    plot(c(0,3),c(0,1),type = 'n', axes = F,xlab = '', ylab = '', main = expression(bold("Log"[2] * "(CPM + 1)")), cex.main=1.5)
+    text(x=2, y = seq(0,1,l=5), labels = leg_lab[], cex=1.5)
+    rasterImage(legend_image, 0, 0, 1,1)
+    dev.off()
+
+    ### Recolor each layer based on expression
+    amacrine <- recolor(amacrine, p$col[which(p$CellType_predict == "Amacrine Cells")])
+    artery <- recolor(artery,  p$col[which(p$CellType_predict == "Artery")])
+    astrocyte <- recolor(astrocyte,  p$col[which(p$CellType_predict == "Astrocytes")])
+    axons <- recolor(axons, p$col[which(p$CellType_predict == "Axons")])
+    bipolar <- recolor(bipolar, p$col[which(p$CellType_predict == "Bipolar Cells")])
+    bruch <- recolor(bruch, p$col[which(p$CellType_predict == "Bruch Membrane")])
+    cones <- recolor(cones, p$col[which(p$CellType_predict == "Cones")])
+    choriocap <- recolor(choriocap, p$col[which(p$CellType_predict == "Choriocapillaris")])
+    horizontal <- recolor(horizontal, p$col[which(p$CellType_predict == "Horizontal Cells")])
+    melanocytes <- recolor(melanocytes, p$col[which(p$CellType_predict == "Melanocytes")])
+    microglia <- recolor(microglia, p$col[which(p$CellType_predict == "Microglia")])
+    muller <- recolor(muller, p$col[which(p$CellType_predict == "Muller Glia")])
+    rpe <- recolor(rpe, p$col[which(p$CellType_predict == "RPE")])
+    rgc <- recolor(rgc, p$col[which(p$CellType_predict == "Retinal Ganglion Cells")])
+    rods <- recolor(rods, p$col[which(p$CellType_predict == "Rods")])
+    sclera <- recolor(sclera, p$col[which(p$CellType_predict == "Sclera")])
+    vein <- recolor(vein,  p$col[which(p$CellType_predict == "Vein")])
+
+    ### Merge the recolored layers into single image
+    retina_insitu <- c(layer_labels, amacrine, artery, astrocyte,choriocap, bipolar, bruch, cones, horizontal, melanocytes, microglia, muller, axons, rpe, rgc, rods, sclera, vein, cell_labels)
+    ret_img <- retina_insitu %>%
+      image_mosaic() %>%
+      image_flatten()
+
+    ### Append the legend to the side and write a temporary file with the complete image
+    tmpfile <- image_append(c(ret_img,legend), stack=FALSE) %>%
+      image_write(tempfile(fileext='png'), format = 'png')
+
+    ### Return the location of the temporary file
+    return(list(src = tmpfile,
+                height = input$insitu_height,
+                contentType = "image/png"))
+  })
+
+  # Output in situ
+  ## Output table
+  output$insitu_gene_stats <- DT::renderDataTable({ insitu_table_maker()})
+
+  ## Output image
+  output$insitu_img <- renderImage({
+    make_pic()
+  }, deleteFile = TRUE)
+
   ## diff testing table ----
   # diff_table <- reactive({
   #   req(input$diff_table_select)
@@ -796,16 +1075,18 @@ shinyServer(function(input, output, session) {
     #cat(diff_table)
     if (input$search_by == 'Gene'){
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(Gene %in% gene)
+        filter(Gene %in% gene) %>%
+        arrange(FDR)
     } else {
-     # isolate({
-        req(input$diff_term)
-        test_val <- input$diff_term
-        filter_term <- input$search_by
-        out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-          filter(test == test_val) %>%
-          collect() %>%
-          filter(PB_Test == filter_term)
+      # isolate({
+      req(input$diff_term)
+      test_val <- input$diff_term
+      filter_term <- input$search_by
+      out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
+        filter(test == test_val) %>%
+        arrange(FDR) %>%
+        collect() %>%
+        filter(PB_Test == filter_term)
       #})
     }
     out %>%
@@ -816,9 +1097,17 @@ shinyServer(function(input, output, session) {
       # filter(!grepl('Doub|RPE|Astro|Red|Vascular', term)) %>%
       collect() %>%
       select(-comparison) %>%
+      mutate(PB_Test = as.factor(PB_Test)) %>%
+      mutate(FDR = format(FDR, digits = 3),
+             FDR = as.numeric(FDR),
+             PValue = format(PValue, digits = 3),
+             PValue = as.numeric(PValue)) %>%
       DT::datatable(extensions = 'Buttons', rownames = F,
                     filter = list(position = 'bottom', clear = FALSE),
-                    options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+                    options = list(pageLength = 10,
+                                   dom = 'frtBip', buttons = c('pageLength','copy', 'csv'))) %>%
+      DT::formatRound(columns = c('logFC','logCPM','F'), digits = 2) %>%
+      DT::formatStyle(columns = c(8), width='250px')
 
   })
 
