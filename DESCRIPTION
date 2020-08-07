@@ -31,8 +31,9 @@ Imports:
   shiny (>=1.4.0),
   shinythemes,
   shinyWidgets,
+  stringr,
   tibble,
-  tidyr,
+  tidyr (>=1.0.0),
   viridis
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
