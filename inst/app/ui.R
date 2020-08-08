@@ -30,6 +30,13 @@ shinyUI(
              navbarMenu('Viz', # UMAP ----------
                         tabPanel('UMAP - Tables',
                                  fluidPage(
+                                   fluidRow(column(6, radioButtons(
+                                     inputId = "gene_and_meta_scatter_tech",
+                                     label = "Technology",
+                                     choices = c("Droplet", "Well"),
+                                     selected = "Droplet",
+                                     inline = TRUE,
+                                   ))),
                                    fluidRow(
                                      # Gene Scatter  ---------------
                                      column(6,
@@ -52,7 +59,7 @@ shinyUI(
                                             )),
                                             fluidRow(column(5,
                                                             selectizeInput('gene_filter_cat', strong('Filter Category: '),
-                                                                           choices = NULL, selected = NULL)),
+                                                                           choices = NULL, selected = NULL, multiple = TRUE)),
                                                      column(5,
                                                             uiOutput('gene_filter_on_dynamicUI')))),
                                      # Meta Plot ------
@@ -84,7 +91,7 @@ shinyUI(
                                             ),
                                             fluidRow(column(5,
                                                             selectizeInput('meta_filter_cat', strong('Filter Category: '),
-                                                                           choices = NULL, selected = NULL)),
+                                                                           choices = NULL, selected = NULL, multiple = TRUE)),
                                                      column(5,
                                                             uiOutput('meta_filter_on_dynamicUI')))
                                             # selectizeInput('meta_filter_on', strong('Filter on: '),
@@ -152,7 +159,7 @@ shinyUI(
                                         ),
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
-                                                                   choices = NULL, multiple = FALSE)),
+                                                                   choices = NULL, multiple = TRUE)),
                                           #column(3, uiOutput('exp_filter_on_dynamicUI')),
                                           column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
                                                                    choices = NULL, multiple = TRUE)),
@@ -262,13 +269,16 @@ shinyUI(
                                                      choices = c('Gene',
                                                                  "CellType (Predict) against Remaining",
                                                                  "CellType against Remaining",
-                                                                 "Cluster against Remaining",
+                                                                 "Cluster (Droplet) against Remaining",
+                                                                 "Cluster (Well) against Remaining",
                                                                  "Organism against Organism within CellType",
                                                                  "Organism against Organism within CellType (Predict)",
-                                                                 "Organism against Organism within Cluster",
+                                                                 "Organism against Organism within Cluster (Droplet)",
+                                                                 "Organism against Organism within Cluster (Well)",
                                                                  "Pairwise CellType (Predict) against CellType (Predict)",
                                                                  "Pairwise CellType against CellType",
-                                                                 "Pairwise Cluster against Cluster"),
+                                                                 "Pairwise Cluster against Cluster",
+                                                                 "Pairwise Cluster against Cluster (Well)"),
                                                      selected = 'Gene')
                                        )),
                                 column(8,
@@ -286,7 +296,7 @@ shinyUI(
                                        div(DT::dataTableOutput('make_diff_table'), style='font-size:75%')))),
              tabPanel('Overview', # Overview ------
                       fluidPage(
-                        fluidRow(column(width = 8, offset = 1, h1('plae v0.31'))),
+                        fluidRow(column(width = 8, offset = 1, h1('plae v0.35'))),
                         br(),
                         fluidRow(column(width = 8, offset = 1, h1('Overview'))),
                         fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. plae is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),

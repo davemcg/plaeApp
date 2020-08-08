@@ -30,25 +30,46 @@ meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
   collect() %>%
   mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
          doublet_score_scran = as.numeric(doublet_score_scran)) %>%
-  mutate(PMID = as.character(PMID))
+  mutate(PMID = as.character(PMID)) %>%
+  mutate(Tech = case_when(Platform %in% c('10xv2','10xv3','DropSeq') ~ 'Droplet',
+                          TRUE ~ 'Well'))
 
 # cutdown mf for plotting
 mf <- meta_filter %>% sample_frac(0.2)
 # get coords for cell labels
-celltype_predict_labels <- meta_filter %>%
-  group_by(CellType_predict) %>%
-  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+celltype_predict_labels <-
+  bind_rows(meta_filter %>%
+              filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+              group_by(CellType_predict) %>%
+              summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+              mutate(Tech = 'Droplet'),
+            meta_filter %>%
+              filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+              group_by(CellType_predict) %>%
+              summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+              mutate(Tech = 'Well'))
 celltype_labels <- meta_filter %>%
   group_by(CellType) %>%
-  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+  mutate(Tech = 'Droplet')
 # tabulamuris_labels <- meta_filter %>%
 #   group_by(TabulaMurisCellType) %>%
 #   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
 tabulamuris_predict_labels <- meta_filter %>%
   group_by(TabulaMurisCellType_predict) %>%
-  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+  mutate(Tech = 'Droplet')
 # get coords for cell labels
-cluster_labels <- meta_filter %>% group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+cluster_labels <-
+  bind_rows(meta_filter %>%
+              filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+              group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+              mutate(Tech = 'Droplet'),
+            meta_filter %>%
+              filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+              group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+              mutate(Tech = 'Well'))
+
 
 
 # # attach colors to cell types
@@ -98,7 +119,7 @@ shinyServer(function(input, output, session) {
       if (input$gene_filter_cat == ''){
         choice = ''
       } else {
-        choice = meta_filter[,input$gene_filter_cat] %>% pull(1) %>% unique() %>% sort()
+        choice = meta_filter[,input$gene_filter_cat] %>% t() %>% c() %>% unique() %>% sort()
       }
       output$gene_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
@@ -134,7 +155,7 @@ shinyServer(function(input, output, session) {
       if (input$meta_filter_cat == ''){
         choice = ''
       } else {
-        choice = meta_filter[,input$meta_filter_cat] %>% pull(1) %>% unique() %>% sort()
+        choice = meta_filter[,input$meta_filter_cat] %>% t() %>% c() %>% unique() %>% sort()
       }
       output$meta_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
@@ -261,7 +282,7 @@ shinyServer(function(input, output, session) {
       if (input$exp_filter_cat == ''){
         choice = ''
       } else {
-        choice = meta_filter[,input$exp_filter_cat] %>% pull(1) %>% unique() %>% sort()
+        choice = meta_filter[,input$exp_filter_cat] %>% t() %>% c() %>% unique() %>% sort()
       }
 
       updateSelectizeInput(session, 'exp_filter_on',
@@ -271,8 +292,8 @@ shinyServer(function(input, output, session) {
     })
     if (is.null(query[['exp_plot_groups']])){
       updateSelectizeInput(session, 'exp_plot_groups',
-                           choices = meta_filter %>%
-                             dplyr::select_if(negate(is.numeric)) %>% select(-Barcode, -subcluster) %>%  colnames() %>% sort(),
+                           choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
                            selected = c('study_accession'),
                            server = TRUE)
     }
@@ -334,8 +355,10 @@ shinyServer(function(input, output, session) {
     gene_scatter_plot <- eventReactive(input$BUTTON_draw_scatter, {
       cat(file=stderr(), paste0(Sys.time(), ' Gene Scatter Plot Call\n'))
       gene <- input$Gene
+      tech <- input$gene_and_meta_scatter_tech
       pt_size <- input$pt_size_gene %>% as.numeric()
       expression_range <- input$gene_scatter_slider
+      mf <- mf %>% filter(Tech == tech)
       p <-  scEiaD_2020_v01 %>% tbl('cpm') %>%
         filter(Gene == gene) %>%
         collect() %>%
@@ -343,11 +366,14 @@ shinyServer(function(input, output, session) {
         filter(cpm > as.numeric(expression_range[1]),
                cpm < as.numeric(expression_range[2])) %>%
         left_join(., meta_filter, by = 'Barcode') %>%
-        filter(!is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
-      if (input$gene_filter_cat != ''){
+        filter(Tech == tech, !is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
+      cat(input$gene_filter_cat)
+      cat(class(input$gene_filter_cat))
+      if (!is_null(input$gene_filter_cat)){
         if (class(input$gene_filter_on) == 'character'){
           p <- p %>%
-            filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
+            #filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
+            filter_at(vars(all_of(input$gene_filter_cat)), all_vars(. %in% input$gene_filter_on))
         } else {
           p <- p %>%
             filter(!!as.symbol(input$gene_filter_cat) >= input$gene_filter_on[1],
@@ -402,8 +428,18 @@ shinyServer(function(input, output, session) {
       cat(file=stderr(), paste0(Sys.time(), ' Meta Plot Call\n'))
       meta_column <- input$meta_column
       transform <- input$meta_column_transform
+
       pt_size <- input$pt_size_meta %>% as.numeric()
       filter_column <- input$meta_column
+      # cut down to match tech selected
+      tech <- input$gene_and_meta_scatter_tech
+      mf <- mf %>% filter(Tech == tech)
+      meta_filter <- meta_filter %>% filter(Tech == tech)
+      celltype_predict_labels <- celltype_predict_labels %>% filter(Tech == tech)
+      celltype_labels <- celltype_labels %>% filter(Tech == tech)
+      tabulamuris_predict_labels <- tabulamuris_predict_labels %>% filter(Tech == tech)
+      cluster_labels <- cluster_labels %>% filter(Tech == tech)
+
       if (transform == 'log2' && is.numeric(meta_filter[,meta_column] %>% pull(1))){
         cat('log2 time')
         meta_filter[,meta_column] <- log2(meta_filter[,meta_column] + 1)
@@ -412,10 +448,11 @@ shinyServer(function(input, output, session) {
         filter(!grepl('Doub|\\/Margin\\/Periocular', CellType)) %>%
         filter(!is.na(!!as.symbol(meta_column)))
       # category filtering
-      if (input$meta_filter_cat != ''){
+      if (!is_null(input$meta_filter_cat)){
         if (class(input$meta_filter_on) == 'character'){
           p_data <- p_data %>%
-            filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
+            #filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
+            filter_at(vars(all_of(input$meta_filter_cat)), all_vars(. %in% input$meta_filter_on))
         } else {
           p_data <- p_data %>%
             filter(!!as.symbol(input$meta_filter_cat) >= input$meta_filter_on[1],
@@ -637,7 +674,8 @@ shinyServer(function(input, output, session) {
           box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
             filter(Gene %in% gene) %>%
             collect() %>%
-            filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+            filter_at(vars(all_of(input$exp_filter_cat)), all_vars(. %in% input$exp_filter_on))
+            #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
         } else {
           box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
             filter(Gene %in% gene) %>%
