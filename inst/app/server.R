@@ -15,11 +15,12 @@ library(pool)
 library(RSQLite)
 library(dplyr)
 library(magick)
+library(stringr)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-
+#scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 # fancy tables
 # they come from `tables.Rmd` in analysis/
 # load('www/formattables.Rdata')
@@ -753,132 +754,11 @@ shinyServer(function(input, output, session) {
     }, height = 700)
 
     ## dotplot ---------
-    make_dotplot <- eventReactive(input$BUTTON_draw_dotplot, {
-      gene <- input$dotplot_Gene
-      grouping_features <- input$dotplot_groups
-
-      if (input$dotplot_filter_cat != ''){
-        dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-          filter(Gene %in% gene) %>%
-          collect() %>%
-          filter(!!as.symbol(input$dotplot_filter_cat) %in% input$dotplot_filter_on)
-
-      } else {
-        dotplot_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-          filter(Gene %in% gene) %>%
-          collect()
-      }
-      validate(
-        need(input$dotplot_groups != '', "Please select at least one grouping feature")
-      )
-
-      dotplot_data <- dotplot_data %>%
-        filter(Gene %in% gene) %>%
-        group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
-        summarise(cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE),
-                  cpm = mean(cpm)) %>%
-        collect() %>%
-        tidyr::drop_na() %>%
-        full_join(., meta_filter %>%
-                    group_by_at(vars(one_of(grouping_features))) %>%
-                    summarise(Count = n())) %>%
-        mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-               Expression = cpm * (`%` / 100)) %>%
-        filter(!is.na(Count),
-               `%` > 2) %>%
-        select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
-        filter(!is.na(Gene))
-      if (length(grouping_features) == 2){
-        colnames(dotplot_data)[c(2,3)] <- c("Group1","Group2")
-        dotplot_data <- dotplot_data %>%
-          mutate(Column = paste(Group1,Group2),
-                 Column = case_when(grepl('^\\d', Column) ~ paste0('X', Column),
-                                    TRUE ~ Column))
-      } else {
-        colnames(dotplot_data)[c(2)] <- c("Group1")
-        dotplot_data <- dotplot_data %>%
-          mutate(Column = Group1,
-                 Column = case_when(grepl('^\\d', Column) ~ paste0('X', Column),
-                                    TRUE ~ Column))
-      }
-
-      # cluster
-      # make data square to calculate euclidean distance
-      mat <- dotplot_data %>%
-        select(Gene, Column, Expression) %>%  # drop unused columns to faciliate widening
-        tidyr::pivot_wider(names_from = Column, values_from = Expression) %>%
-        data.frame() # make df as tibbles -> matrix annoying
-      row.names(mat) <- mat$Gene  # put gene in `row`
-      mat <- mat[,-1] #drop gene column as now in rows
-      mat[is.na(mat)] <- 0
-      h_clust <- hclust(dist(mat %>% as.matrix())) # hclust with distance matrix
-      v_clust <- hclust(dist(mat %>% as.matrix() %>% t())) # hclust with distance matrix
-      dotplot <- dotplot_data %>%
-        mutate(Gene = factor(Gene, levels = h_clust$labels[h_clust$order]),
-               Column = factor(Column, levels = v_clust$labels[v_clust$order] %>%
-                                 gsub('\\.\\.', ' (', .) %>%
-                                 gsub('\\.$', ')', .) %>%
-                                 gsub('\\.', ' ', .))) %>%
-        ggplot(aes(x=Column, y = Gene, size = `%`, color = Expression)) +
-        geom_point() +
-        cowplot::theme_cowplot() +
-        scale_color_viridis_c(option = 'magma') +
-        theme(axis.line  = element_blank()) +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-        ylab('') + xlab('') +
-        theme(axis.ticks = element_blank())
-      # labels
-      order <- left_join(tibble::enframe(v_clust$labels[v_clust$order] %>%
-                                           gsub('\\.\\.', ' (', .) %>%
-                                           gsub('\\.$', ')', .) %>%
-                                           gsub('\\.', ' ', .), value = 'Column'),
-                         dotplot_data)
-
-      group1_labels <- order %>%
-        ggplot() +
-        geom_tile(aes(x = Column, y = 1, fill = Group1)) +
-        scale_fill_manual(name = grouping_features[1],
-                          values = rep(c(pals::alphabet2() %>% unname(),
-                                         pals::alphabet() %>% unname()), times = 10)) +
-        theme_nothing() +
-        aplot::xlim2(dotplot)
-      # remove legend if same size as matrix as will be HUGE
-      if ((dotplot_data$Group1 %>% unique() %>% length()) == ncol(mat)) {
-        group1_legend <- NULL
-      } else {
-        group1_legend <- plot_grid(get_legend(group1_labels + theme(legend.position="bottom")))
-      }
-
-      if (length(grouping_features) == 2){
-        group2_labels <- order %>%
-          ggplot() +
-          geom_tile(aes(x = Column, y = 1, fill = Group2)) +
-          scale_fill_manual(name = grouping_features[2],
-                            values = rep(c(pals::alphabet() %>% unname(),
-                                           pals::alphabet2() %>% unname()), times = 10)) +
-          theme_nothing() +
-          aplot::xlim2(dotplot)
-        if ((dotplot_data$Group2 %>% unique() %>% length()) == ncol(mat)) {
-          group2_legend <- NULL
-        } else {
-          group2_legend <- plot_grid(get_legend(group2_labels + theme(legend.position="bottom")))
-        }
-
-        group2_labels +
-          group1_labels +
-          dotplot +
-          group2_legend +
-          group1_legend +
-          plot_layout(ncol= 1, heights = c(0.1,0.1, 1, 0.1, 0.2))
-      } else {
-        group1_labels +
-          dotplot +
-          group1_legend +
-          plot_layout(ncol= 1, heights = c(0.1, 1, 0.1))
-      }
-    })
+    source('make_dotplot.R')
+    draw_dotplot <- eventReactive(input$BUTTON_draw_dotplot,{make_dotplot(input, scEiaD_2020_v01, meta_filter)}
+                                  )
     output$dotplot <- renderPlot({
-      make_dotplot()
+      draw_dotplot()
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
   })
 
