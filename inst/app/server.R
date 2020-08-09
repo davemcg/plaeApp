@@ -19,8 +19,8 @@ library(stringr)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 
-#scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+# scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 # fancy tables
 # they come from `tables.Rmd` in analysis/
 # load('www/formattables.Rdata')
@@ -93,9 +93,7 @@ shinyServer(function(input, output, session) {
       cat(query$url)
       url <- strsplit(query$url,"\"")[[1]][2]
       cat(url)
-      #species <- strsplit(query$species, "\"")[[1]][2]
       updateTabsetPanel(session, 'nav', query$url)
-      #updateSelectInput(session, 'species',selected = species)
     }
 
     # server help queries ------
@@ -255,6 +253,9 @@ shinyServer(function(input, output, session) {
     }
     # exp_plot plot updateSelect -----
     if (is.null(query[['exp_plot_genes']])){
+      # The java stuffs allw for comma, space, and semicolon
+      # deliminted input
+      # https://github.com/rstudio/shiny/issues/1663
       updateSelectizeInput(session, 'exp_plot_genes',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            #options = list(placeholder = 'Type to search'),
@@ -351,60 +352,9 @@ shinyServer(function(input, output, session) {
     # gene scatter plot ------------
     gene_scatter_ranges <- reactiveValues(x = c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max()),
                                           y = c(meta_filter$UMAP_2 %>% min(), meta_filter$UMAP_2 %>% max()))
-
+    source('make_gene_scatter_umap_plot.R')
     gene_scatter_plot <- eventReactive(input$BUTTON_draw_scatter, {
-      cat(file=stderr(), paste0(Sys.time(), ' Gene Scatter Plot Call\n'))
-      gene <- input$Gene
-      tech <- input$gene_and_meta_scatter_tech
-      pt_size <- input$pt_size_gene %>% as.numeric()
-      expression_range <- input$gene_scatter_slider
-      mf <- mf %>% filter(Tech == tech)
-      p <-  scEiaD_2020_v01 %>% tbl('cpm') %>%
-        filter(Gene == gene) %>%
-        collect() %>%
-        mutate(cpm = cpm - min(cpm) + 1) %>%
-        filter(cpm > as.numeric(expression_range[1]),
-               cpm < as.numeric(expression_range[2])) %>%
-        left_join(., meta_filter, by = 'Barcode') %>%
-        filter(Tech == tech, !is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
-      cat(input$gene_filter_cat)
-      cat(class(input$gene_filter_cat))
-      if (!is_null(input$gene_filter_cat)){
-        if (class(input$gene_filter_on) == 'character'){
-          p <- p %>%
-            #filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
-            filter_at(vars(all_of(input$gene_filter_cat)), all_vars(. %in% input$gene_filter_on))
-        } else {
-          p <- p %>%
-            filter(!!as.symbol(input$gene_filter_cat) >= input$gene_filter_on[1],
-                   !!as.symbol(input$gene_filter_cat) <= input$gene_filter_on[2])
-        }
-      }
-      color_range <- range(p$cpm)
-      plot <- p %>% ggplot() +
-        geom_scattermost(cbind(mf$UMAP_1, mf$UMAP_2), color = '#D3D3D333',
-                         pointsize = pt_size * 1.5,
-                         pixels=c(750,750)) +
-        geom_scattermost(cbind(p$UMAP_1, p$UMAP_2),
-                         color = viridis::magma(100, alpha=0.3)
-                         [1+99*(p$cpm-color_range[1])/diff(color_range)],
-                         pointsize= pt_size,
-                         pixels=c(750,750),
-                         interpolate=FALSE) +
-        geom_point(data=data.frame(x=double(0)), aes(x,x,color=x)) +
-        scale_color_gradientn(  #add the manual guide for the empty aes
-          limits=c(min(p$cpm),max(p$cpm)),
-          colors=viridis::magma(100),
-          name="log2(cpm+1)") +
-        theme_cowplot() +
-        theme(axis.line = element_blank(),
-              axis.title = element_blank(),
-              axis.ticks = element_blank(),
-              axis.text = element_blank()) +
-        annotate("text", -Inf, Inf, label = paste0(gene, ' expression'), hjust = 0, vjust = 1, size = 6)
-
-      suppressWarnings(plot)
-
+      make_gene_scatter_umap_plot(input, scEiaD_2020_v01, mf, meta_filter)
     })
 
     observeEvent(input$gene_scatter_plot_dblclick, {
@@ -675,7 +625,7 @@ shinyServer(function(input, output, session) {
             filter(Gene %in% gene) %>%
             collect() %>%
             filter_at(vars(all_of(input$exp_filter_cat)), all_vars(. %in% input$exp_filter_on))
-            #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
+          #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
         } else {
           box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
             filter(Gene %in% gene) %>%
@@ -793,8 +743,9 @@ shinyServer(function(input, output, session) {
 
     ## dotplot ---------
     source('make_dotplot.R')
-    draw_dotplot <- eventReactive(input$BUTTON_draw_dotplot,{make_dotplot(input, scEiaD_2020_v01, meta_filter)}
-                                  )
+    draw_dotplot <- eventReactive(input$BUTTON_draw_dotplot,
+                                  {make_dotplot(input, scEiaD_2020_v01, meta_filter)}
+    )
     output$dotplot <- renderPlot({
       draw_dotplot()
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
