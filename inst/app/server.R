@@ -381,7 +381,7 @@ shinyServer(function(input, output, session) {
                                   celltype_labels,
                                   tabulamuris_predict_labels,
                                   cluster_labels
-                                  )
+      )
     })
 
     meta_ranges <- reactiveValues(x = c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max()),
@@ -495,73 +495,9 @@ shinyServer(function(input, output, session) {
     }, height = eventReactive(input$BUTTON_draw_filter, {input$facet_height %>% as.numeric()}))
 
     ## exp_plot -----------
+    source('make_exp_plot.R')
     exp_plot <- eventReactive(input$BUTTON_draw_exp_plot, {
-      cat(file=stderr(), paste0(Sys.time(), ' Exp Plot Call\n'))
-      gene <- input$exp_plot_genes
-
-      grouping_features <- input$exp_plot_groups
-
-      if (input$exp_filter_cat != ''){
-        # box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-        #   filter(Gene %in% gene) %>%
-        #   collect() %>%
-        #   filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
-        #
-
-        if (class(input$exp_filter_on) == 'character'){
-          box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-            filter(Gene %in% gene) %>%
-            collect() %>%
-            filter_at(vars(all_of(input$exp_filter_cat)), all_vars(. %in% input$exp_filter_on))
-          #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
-        } else {
-          box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-            filter(Gene %in% gene) %>%
-            collect() %>%
-            #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on) %>%
-            filter(!!as.symbol(input$exp_filter_cat) >= input$exp_filter_on[1],
-                   !!as.symbol(input$exp_filter_cat) <= input$exp_filter_on[2])
-        }
-
-      } else {
-        box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-          filter(Gene %in% gene) %>%
-          collect()
-      }
-      validate(
-        need(input$exp_plot_groups != '', "Please select at least one grouping feature")
-      )
-
-      #cat(input)
-      box_data <- box_data %>%
-        #filter(!is.na(!!as.symbol(grouping_features))) %>%
-        group_by_at(vars(one_of(c('Gene', input$exp_plot_facet, grouping_features)))) %>%
-        summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
-                  cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
-        full_join(., meta_filter %>%
-                    group_by_at(vars(one_of(grouping_features))) %>%
-                    summarise(Count = n())) %>%
-        mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
-        mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-               Expression = round(cpm * (`%` / 100), 2)) %>%
-        select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
-        arrange(-Expression) %>%
-        rename(`Cells # Detected` = cell_exp_ct,
-               `Total Cells` = Count,
-               `Mean CPM` = Expression,
-               `% of Cells Detected` = `%`) %>%
-        tidyr::drop_na()
-      box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)
-
-      box_data %>%
-        ggplot(aes(x=Gene, y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
-        geom_boxplot(color = 'black', outlier.shape = NA) +
-        ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), grouponX = TRUE) +
-        cowplot::theme_cowplot() +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-        scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
-        theme(legend.position="bottom") +
-        facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_x', vars(!!as.symbol(input$exp_plot_facet)))
+      make_exp_plot(input, db, meta_filter)
     })
 
     output$exp_plot <- renderPlot({
@@ -571,60 +507,10 @@ shinyServer(function(input, output, session) {
 
 
     ## temporal plot -----------
+    source('make_temporal_plot.R')
     temporal_plot <- eventReactive(input$BUTTON_draw_temporal, {
-      cat(file=stderr(), paste0(Sys.time(), ' Temporal Plot Call\n'))
-      gene <- input$temporal_gene
-      grouping <- input$temporal_group
-      y_val <- input$temporal_y_val
-      if (grouping == 'CellType (predict)'){grouping <- 'CellType_predict'}
-      if (y_val == 'Mean CPM') {y_val <- 'cpm'} else {y_val <- 'Ratio'}
-      meta_data <- meta_filter %>%
-        group_by(organism, !!as.symbol(grouping), Age) %>%
-        summarise(full_count = n())
-      temporal_data <- scEiaD_2020_v01 %>% tbl('cpm') %>%
-        filter(Gene %in% gene) %>%
-        collect() %>%
-        mutate(cpm = cpm - min(cpm) + 1) %>%
-        left_join(., meta_filter, by = 'Barcode') %>%
-        filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE', !!as.symbol(grouping))) %>%
-        group_by(organism, !!as.symbol(grouping), Age, Gene) %>%
-        summarise(cpm = mean(cpm), count = n()) %>%
-        right_join(., meta_data) %>%
-        mutate(count = ifelse(is.na(count), 0, count)) %>%
-        mutate(Ratio = count/full_count) %>%
-        filter(!is.na(!!as.symbol(grouping)), !is.na(Gene)) %>%
-        ungroup() %>%
-        mutate(Age = case_when(organism == 'Mus musculus' & Age == 1000 ~ 20,
-                               organism == 'Homo sapiens' & Age == 1000 ~ 65,
-                               is.na(Age) ~ 65,
-                               Age == 31360 ~ 65,
-                               TRUE ~ Age))
-
-
-      suppressWarnings(temporal_human <-  temporal_data %>%
-                         filter(organism == 'Homo sapiens') %>%
-                         ggplot(aes(x=Age, y = !!as.symbol(y_val), color = Gene)) +
-                         geom_point(stat = 'identity') +
-                         ggtitle('Human') +
-                         geom_line() + ylab(input$temporal_y_val) +
-                         cowplot::theme_cowplot() + xlab('Age (days from birth)') +
-                         facet_wrap(vars(!!as.symbol(grouping))) +
-                         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-                         scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()))))
-      suppressWarnings(temporal_mouse <- temporal_data %>%
-                         filter(organism == 'Mus musculus') %>%
-                         ggplot(aes(x=Age, y = !!as.symbol(y_val), color = Gene)) +
-                         geom_point(stat = 'identity') +
-                         ggtitle('Mouse') +
-                         geom_line() + ylab(input$temporal_y_val) +
-                         cowplot::theme_cowplot() + xlab('Age (days from birth)') +
-                         facet_wrap(vars(!!as.symbol(grouping))) +
-                         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-                         scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()))))
-      # draw plot
-      temporal_human + temporal_mouse + plot_layout(ncol = 1)
+      make_temporal_plot(input, scEiaD_2020_v01, meta_filter)
     })
-
     output$temporal_plot <- renderPlot({
       temporal_plot()
     }, height = 700)
@@ -641,80 +527,12 @@ shinyServer(function(input, output, session) {
 
   # in situ ----
   # Functions used to generate in situ plots
-
-  ## Function to read in original images
-  get_image <- function(file) {
-    image_read(file.path(paste0('www/insitu_layers/ret_',file, ".png")))
-  }
-
-  ## Function to recolor each individual cell layer based on expression
-  recolor <- function(ret_layer, color){
-    if (length(color) == 0) {
-      recolored_layer <- ret_layer
-    } else {
-      recolored_layer <- ret_layer %>% image_colorize(75,color)
-    }
-    return(recolored_layer)
-  }
-
-  ## Function to gather gene expression data in table
-  get_insitu_table <- function() {
-
-    ### Pull the data for the gene of interest
-    gene <- input$insitu_Gene
-    grouping_features <- "CellType_predict"
-
-    if (input$insitu_filter_cat !=''){
-      validate(
-        need(input$insitu_filter_on != '', "Please select at least one feature to filter on")
-      )}
-
-    ### Filter expression table, if filters active
-    if (input$insitu_filter_cat != ''){
-      filt_cat <- input$insitu_filter_cat
-      filt_on <- input$insitu_filter_on
-      full_table <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-        filter(Gene == gene) %>%
-        filter(!!as.symbol(filt_cat) %in% filt_on) %>%
-        group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
-        summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
-                  cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
-        as_tibble() %>%
-        tidyr::drop_na() %>%
-        full_join(., meta_filter %>%
-                    group_by_at(vars(one_of(grouping_features))) %>%
-                    summarise(Count = n())) %>%
-        mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
-        mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-               Expression = round(cpm * (`%` / 100), 2)) %>%
-        select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
-        arrange(-Expression)
-    }
-
-    ### Or make expression table without filtering if none selected
-    else {
-      full_table <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-        filter(Gene == gene) %>%
-        group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
-        summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
-                  cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
-        as_tibble() %>%
-        tidyr::drop_na() %>%
-        full_join(., meta_filter %>%
-                    group_by_at(vars(one_of(grouping_features))) %>%
-                    summarise(Count = n())) %>%
-        mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
-        mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-               Expression = round(cpm * (`%` / 100), 2)) %>%
-        select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
-        arrange(-Expression)
-    }
-  }
+  source('make_in_situ_plot.R')
   # Event reactives to produce image and table
   ## Reactive that generates data table
   insitu_table_maker <- eventReactive(input$BUTTON_draw_insitu, {
 
-    full_table <- get_insitu_table()
+    full_table <- get_insitu_table(input, scEiaD_2020_v01, meta_filter)
     full_table <- full_table %>%
       rename(`Cells # Detected` = cell_exp_ct,
              `Total Cells` = Count,
@@ -727,82 +545,7 @@ shinyServer(function(input, output, session) {
 
   ## Reactive that generates in situ image
   make_pic <- eventReactive( input$BUTTON_draw_insitu, {
-
-    ### Load unedited images
-    amacrine <- get_image('amacrine')
-    artery <- get_image('artery')
-    astrocyte <- get_image('astrocyte')
-    axons <- get_image('axons')
-    layer_labels <- get_image('background')
-    bipolar <- get_image('bipolar')
-    bruch <- get_image('bruch')
-    choriocap <- get_image('choriocap')
-    cones <- get_image('cones')
-    horizontal <- get_image('horizontal')
-    cell_labels <- get_image('labels')
-    melanocytes <- get_image('melanocytes')
-    microglia <- get_image('microglia')
-    muller <- get_image('muller')
-    rgc <- get_image('rgc')
-    rods <- get_image('rods')
-    rpe <- get_image('rpe')
-    sclera <- get_image('sclera')
-    vein <- get_image('vein')
-
-    full_table <- get_insitu_table()
-
-    ### Create mini table with color codes
-    p <- full_table %>%
-      select(CellType_predict,Expression) %>%
-      tidyr::drop_na() %>%
-      arrange(Expression)
-
-    ### Convert expression to color scale
-    p$col <- viridis(length(p$Expression))
-
-    ### Generate legend plot
-    leg_lab <- seq(min(p$Expression),max(p$Expression),l=5)
-    leg_lab[] <- lapply(leg_lab, round,2)
-    legend <- image_graph(width = 300, height = 600, res = 96)
-    legend_image <- as.raster(matrix(rev(p$col), ncol=1))
-    plot(c(0,3),c(0,1),type = 'n', axes = F,xlab = '', ylab = '', main = expression(bold("Log"[2] * "(CPM + 1)")), cex.main=1.5)
-    text(x=2, y = seq(0,1,l=5), labels = leg_lab[], cex=1.5)
-    rasterImage(legend_image, 0, 0, 1,1)
-    dev.off()
-
-    ### Recolor each layer based on expression
-    amacrine <- recolor(amacrine, p$col[which(p$CellType_predict == "Amacrine Cells")])
-    artery <- recolor(artery,  p$col[which(p$CellType_predict == "Artery")])
-    astrocyte <- recolor(astrocyte,  p$col[which(p$CellType_predict == "Astrocytes")])
-    axons <- recolor(axons, p$col[which(p$CellType_predict == "Axons")])
-    bipolar <- recolor(bipolar, p$col[which(p$CellType_predict == "Bipolar Cells")])
-    bruch <- recolor(bruch, p$col[which(p$CellType_predict == "Bruch Membrane")])
-    cones <- recolor(cones, p$col[which(p$CellType_predict == "Cones")])
-    choriocap <- recolor(choriocap, p$col[which(p$CellType_predict == "Choriocapillaris")])
-    horizontal <- recolor(horizontal, p$col[which(p$CellType_predict == "Horizontal Cells")])
-    melanocytes <- recolor(melanocytes, p$col[which(p$CellType_predict == "Melanocytes")])
-    microglia <- recolor(microglia, p$col[which(p$CellType_predict == "Microglia")])
-    muller <- recolor(muller, p$col[which(p$CellType_predict == "Muller Glia")])
-    rpe <- recolor(rpe, p$col[which(p$CellType_predict == "RPE")])
-    rgc <- recolor(rgc, p$col[which(p$CellType_predict == "Retinal Ganglion Cells")])
-    rods <- recolor(rods, p$col[which(p$CellType_predict == "Rods")])
-    sclera <- recolor(sclera, p$col[which(p$CellType_predict == "Sclera")])
-    vein <- recolor(vein,  p$col[which(p$CellType_predict == "Vein")])
-
-    ### Merge the recolored layers into single image
-    retina_insitu <- c(layer_labels, amacrine, artery, astrocyte,choriocap, bipolar, bruch, cones, horizontal, melanocytes, microglia, muller, axons, rpe, rgc, rods, sclera, vein, cell_labels)
-    ret_img <- retina_insitu %>%
-      image_mosaic() %>%
-      image_flatten()
-
-    ### Append the legend to the side and write a temporary file with the complete image
-    tmpfile <- image_append(c(ret_img,legend), stack=FALSE) %>%
-      image_write(tempfile(fileext='png'), format = 'png')
-
-    ### Return the location of the temporary file
-    return(list(src = tmpfile,
-                height = input$insitu_height,
-                contentType = "image/png"))
+    make_insitu_plot(input, scEiaD_2020_v01, meta_filter)
   })
 
   # Output in situ
