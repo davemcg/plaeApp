@@ -1,10 +1,10 @@
 make_temporal_plot <- function(input, db, meta_filter) {
-  gdata::keep(meta_filter, scEiaD_2020_v01, sure = T)
-  input <- list()
-  db <- scEiaD_2020_v01
-  input[['temporal_gene']] <- c('PAX6','POU4F2', 'RHO')
-  input[['temporal_group']]  <- 'CellType'
-  input[['temporal_y_val']] <- 'Mean CPM'
+  # gdata::keep(meta_filter, scEiaD_2020_v01, sure = T)
+  # input <- list()
+  # db <- scEiaD_2020_v01
+  # input[['temporal_gene']] <- c('PAX6','POU4F2', 'RHO')
+  # input[['temporal_group']]  <- 'CellType'
+  # input[['temporal_y_val']] <- 'Mean CPM'
   cat(file=stderr(), paste0(Sys.time(), ' Temporal Plot Call\n'))
   gene <- input$temporal_gene
   grouping <- input$temporal_group
@@ -16,9 +16,7 @@ make_temporal_plot <- function(input, db, meta_filter) {
     group_by(organism, !!as.symbol(grouping), Stage) %>%
     summarise(full_count = n()) %>%
     mutate(Stage = factor(Stage, levels = c('Early', 'Late', 'Adult')))
-  # meta_data <- meta_filter %>%
-  #   group_by(organism, !!as.symbol(grouping), Age) %>%
-  #   summarise(full_count = n())
+
   temporal_data <- db %>% tbl('cpm') %>%
     filter(Gene %in% gene) %>%
     collect() %>%
@@ -27,7 +25,6 @@ make_temporal_plot <- function(input, db, meta_filter) {
     mutate(Stage = replace(Stage, Age >=17, 'Adult')) %>%
     filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE', !!as.symbol(grouping))) %>%
     group_by(organism, !!as.symbol(grouping), Stage, Gene) %>%
-    #group_by(organism, !!as.symbol(grouping), Age, Gene) %>%
     summarise(cpm = mean(cpm), count = n()) %>%
     right_join(., meta_data) %>%
     mutate(count = ifelse(is.na(count), 0, count)) %>%
@@ -35,17 +32,12 @@ make_temporal_plot <- function(input, db, meta_filter) {
     filter(!is.na(!!as.symbol(grouping)), !is.na(Gene)) %>%
     ungroup() %>%
     mutate(Stage = factor(Stage, levels = c('Early', 'Late', 'Adult')))
-    # mutate(Age = case_when(organism == 'Mus musculus' & Age == 1000 ~ 20,
-    #                        organism == 'Homo sapiens' & Age == 1000 ~ 65,
-    #                        is.na(Age) ~ 65,
-    #                        Age == 31360 ~ 65,
-    #                        TRUE ~ Age))
+
 
 
   suppressWarnings(temporal_human <-  temporal_data %>%
                      filter(organism == 'Homo sapiens') %>%
                      ggplot(aes(x=Stage, y = !!as.symbol(y_val), color = Gene, group=Gene)) +
-                     #ggplot(aes(x=Age, y = !!as.symbol(y_val), color = Gene)) +
                      geom_point(stat = 'identity') +
                      ggtitle('Human') +
                      geom_line() + ylab(input$temporal_y_val) +
@@ -56,7 +48,6 @@ make_temporal_plot <- function(input, db, meta_filter) {
   suppressWarnings(temporal_mouse <- temporal_data %>%
                      filter(organism == 'Mus musculus') %>%
                      ggplot(aes(x=Stage, y = !!as.symbol(y_val), color = Gene, group =Gene)) +
-                     #ggplot(aes(x=Age, y = !!as.symbol(y_val), color = Gene)) +
                      geom_point(stat = 'identity') +
                      ggtitle('Mouse') +
                      geom_line() +
