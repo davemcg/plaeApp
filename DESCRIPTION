@@ -29,6 +29,7 @@ Imports:
   purrr,
   RSQLite,
   shiny (>=1.4.0),
+  shinyalert,
   shinythemes,
   shinyWidgets,
   stringr,

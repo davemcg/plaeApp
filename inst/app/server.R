@@ -16,71 +16,73 @@ library(RSQLite)
 library(dplyr)
 library(magick)
 library(stringr)
+library(shinyalert)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 #****COMMENT OUT BELOW BEFORE PUSHING****
 #----
-# scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-# meta_filter <- scEiaD_2020_v01 %>% tbl('meta_filter') %>% collect
-# tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
-# celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
-# celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
-# cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
-
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+meta_filter <- scEiaD_2020_v01 %>% tbl('meta_filter') %>% collect
+tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
+celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
+celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
+cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
+mf <- meta_filter %>% sample_frac(0.2)
+# get coords for cell labels
 
 #----
 #**UNCOMMENT OUT BELOW BEFORE PUSHING****
 #----
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-
-# fancy tables
-# they come from `tables.Rmd` in analysis/
-# load('www/formattables.Rdata')
-# filter
-meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
-                         scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
-  collect() %>%
-  mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
-         doublet_score_scran = as.numeric(doublet_score_scran)) %>%
-  mutate(PMID = as.character(PMID)) %>%
-  mutate(Tech = case_when(Platform %in% c('10xv2','10xv3','DropSeq') ~ 'Droplet',
-                          TRUE ~ 'Well'))
-
-# cutdown mf for plotting
-mf <- meta_filter %>% sample_frac(0.2)
-# get coords for cell labels
-celltype_predict_labels <-
-  bind_rows(meta_filter %>%
-              filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(CellType_predict) %>%
-              summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Droplet'),
-            meta_filter %>%
-              filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(CellType_predict) %>%
-              summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Well'))
-celltype_labels <- meta_filter %>%
-  group_by(CellType) %>%
-  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-  mutate(Tech = 'Droplet')
-# tabulamuris_labels <- meta_filter %>%
-#   group_by(TabulaMurisCellType) %>%
-#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
-tabulamuris_predict_labels <- meta_filter %>%
-  group_by(TabulaMurisCellType_predict) %>%
-  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-  mutate(Tech = 'Droplet')
-# get coords for cell labels
-cluster_labels <-
-  bind_rows(meta_filter %>%
-              filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Droplet'),
-            meta_filter %>%
-              filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Well'))
+# scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+#
+# # fancy tables
+# # they come from `tables.Rmd` in analysis/
+# # load('www/formattables.Rdata')
+# # filter
+# meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
+#                          scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
+#   collect() %>%
+#   mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
+#          doublet_score_scran = as.numeric(doublet_score_scran)) %>%
+#   mutate(PMID = as.character(PMID)) %>%
+#   mutate(Tech = case_when(Platform %in% c('10xv2','10xv3','DropSeq') ~ 'Droplet',
+#                           TRUE ~ 'Well'))
+#
+# # cutdown mf for plotting
+# mf <- meta_filter %>% sample_frac(0.2)
+# # get coords for cell labels
+# celltype_predict_labels <-
+#   bind_rows(meta_filter %>%
+#               filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(CellType_predict) %>%
+#               summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Droplet'),
+#             meta_filter %>%
+#               filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(CellType_predict) %>%
+#               summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Well'))
+# celltype_labels <- meta_filter %>%
+#   group_by(CellType) %>%
+#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#   mutate(Tech = 'Droplet')
+# # tabulamuris_labels <- meta_filter %>%
+# #   group_by(TabulaMurisCellType) %>%
+# #   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+# tabulamuris_predict_labels <- meta_filter %>%
+#   group_by(TabulaMurisCellType_predict) %>%
+#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#   mutate(Tech = 'Droplet')
+# # get coords for cell labels
+# cluster_labels <-
+#   bind_rows(meta_filter %>%
+#               filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Droplet'),
+#             meta_filter %>%
+#               filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Well'))
 #----
 
 
@@ -371,6 +373,44 @@ shinyServer(function(input, output, session) {
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
+    # HELP button descriptions
+    ## umap
+    observeEvent(input$umap_table_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## exp plot
+    observeEvent(input$exp_plot_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## insitu
+    observeEvent(input$insitu_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## facet umap
+    observeEvent(input$facet_umap_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## temporal plot
+    observeEvent(input$temporal_plot_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## dotplot
+    observeEvent(input$dotplot_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## diff testing
+    observeEvent(input$diff_testing_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+
+
     # BREAK -------
     # gene scatter plot ------------
     gene_scatter_ranges <- reactiveValues(x = c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max()),
@@ -424,6 +464,7 @@ shinyServer(function(input, output, session) {
     output$meta_plot <- renderPlot({
       meta_plot() + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y)
     })
+
 
     # gene cluster table  --------
     gene_cluster_stats_maker <- eventReactive(input$BUTTON_make_gene_table, {
