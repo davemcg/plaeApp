@@ -17,10 +17,16 @@ library(dplyr)
 library(magick)
 library(stringr)
 
+
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 
 # these will be pre-processed and moved
 # into the sqlite db when they are finalized
+#anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
+
+# fancy tables
+# they come from `tables.Rmd` in analysis/
+# load('www/formattables.Rdata')
 # filter
 meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
                          scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
@@ -66,7 +72,7 @@ cluster_labels <-
               filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
               group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
               mutate(Tech = 'Well'))
-
+#----
 
 
 # # attach colors to cell types
@@ -510,7 +516,7 @@ shinyServer(function(input, output, session) {
     })
     output$temporal_plot <- renderPlot({
       temporal_plot()
-    }, height = 700)
+    }, height = as.numeric(input$temporal_plot_height ) )
 
     ## dotplot ---------
     source('make_dotplot.R')
