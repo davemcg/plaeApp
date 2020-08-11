@@ -20,67 +20,67 @@ library(stringr)
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 #****COMMENT OUT BELOW BEFORE PUSHING****
 #----
-# scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-# meta_filter <- scEiaD_2020_v01 %>% tbl('meta_filter') %>% collect
-# tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
-# celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
-# celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
-# cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+meta_filter <- scEiaD_2020_v01 %>% tbl('meta_filter') %>% collect
+tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
+celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
+celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
+cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
 
 
 #----
 #**UNCOMMENT OUT BELOW BEFORE PUSHING****
 #----
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-
-# fancy tables
-# they come from `tables.Rmd` in analysis/
-# load('www/formattables.Rdata')
-# filter
-meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
-                         scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
-  collect() %>%
-  mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
-         doublet_score_scran = as.numeric(doublet_score_scran)) %>%
-  mutate(PMID = as.character(PMID)) %>%
-  mutate(Tech = case_when(Platform %in% c('10xv2','10xv3','DropSeq') ~ 'Droplet',
-                          TRUE ~ 'Well'))
-
-# cutdown mf for plotting
-mf <- meta_filter %>% sample_frac(0.2)
-# get coords for cell labels
-celltype_predict_labels <-
-  bind_rows(meta_filter %>%
-              filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(CellType_predict) %>%
-              summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Droplet'),
-            meta_filter %>%
-              filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(CellType_predict) %>%
-              summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Well'))
-celltype_labels <- meta_filter %>%
-  group_by(CellType) %>%
-  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-  mutate(Tech = 'Droplet')
-# tabulamuris_labels <- meta_filter %>%
-#   group_by(TabulaMurisCellType) %>%
-#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
-tabulamuris_predict_labels <- meta_filter %>%
-  group_by(TabulaMurisCellType_predict) %>%
-  summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-  mutate(Tech = 'Droplet')
-# get coords for cell labels
-cluster_labels <-
-  bind_rows(meta_filter %>%
-              filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Droplet'),
-            meta_filter %>%
-              filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
-              group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
-              mutate(Tech = 'Well'))
+# scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+#
+# # fancy tables
+# # they come from `tables.Rmd` in analysis/
+# # load('www/formattables.Rdata')
+# # filter
+# meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
+#                          scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
+#   collect() %>%
+#   mutate(`Doublet Probability` = as.numeric(`Doublet Probability`),
+#          doublet_score_scran = as.numeric(doublet_score_scran)) %>%
+#   mutate(PMID = as.character(PMID)) %>%
+#   mutate(Tech = case_when(Platform %in% c('10xv2','10xv3','DropSeq') ~ 'Droplet',
+#                           TRUE ~ 'Well'))
+#
+# # cutdown mf for plotting
+# mf <- meta_filter %>% sample_frac(0.2)
+# # get coords for cell labels
+# celltype_predict_labels <-
+#   bind_rows(meta_filter %>%
+#               filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(CellType_predict) %>%
+#               summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Droplet'),
+#             meta_filter %>%
+#               filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(CellType_predict) %>%
+#               summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Well'))
+# celltype_labels <- meta_filter %>%
+#   group_by(CellType) %>%
+#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#   mutate(Tech = 'Droplet')
+# # tabulamuris_labels <- meta_filter %>%
+# #   group_by(TabulaMurisCellType) %>%
+# #   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2))
+# tabulamuris_predict_labels <- meta_filter %>%
+#   group_by(TabulaMurisCellType_predict) %>%
+#   summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#   mutate(Tech = 'Droplet')
+# # get coords for cell labels
+# cluster_labels <-
+#   bind_rows(meta_filter %>%
+#               filter(Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Droplet'),
+#             meta_filter %>%
+#               filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
+#               group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
+#               mutate(Tech = 'Well'))
 #----
 
 
@@ -332,6 +332,17 @@ shinyServer(function(input, output, session) {
                            selected = 'organism',
                            server = TRUE)
     }
+    #facet plot updateSelectizeInput
+    observeEvent(input$facet, {
+      if(input$facet == ''){
+        choice=''
+      }else {
+        choice = meta_filter[,input$facet] %>% pull(1) %>% unique() %>% sort()
+      }
+      updateSelectizeInput(session, 'facet_filter',
+                           choices = choice,
+                           server = TRUE)
+    })
 
     if (is.null(query[['facet_color']])){
       updateSelectizeInput(session, 'facet_color',
@@ -461,46 +472,8 @@ shinyServer(function(input, output, session) {
     output$metadata_stats <- DT::renderDataTable({ metadata_stats()})
 
     # facet plot -----------
-    facet_plot <- eventReactive(input$BUTTON_draw_filter, {
-      cat(file=stderr(), paste0(Sys.time(), ' Facet Plot Call\n'))
-      facet_column <- input$facet
-      color_column <- input$facet_color
-      #transform <- input$facet_column_transform
-      pt_size <- input$pt_size_facet %>% as.numeric()
-
-      gray_data <- meta_filter %>%
-        filter(is.na(!!as.symbol(color_column)))
-      p_data <- meta_filter %>%
-        filter(!is.na(!!as.symbol(facet_column)),
-               !is.na(!!as.symbol(color_column)))
-
-      suppressWarnings(plot <- ggplot(data = p_data) +
-                         geom_scattermore(data = gray_data,
-                                          aes(x = UMAP_1, y = UMAP_2),
-                                          color = 'gray',
-                                          pointsize = pt_size,
-                                          pixels = c(750,750),
-                                          alpha = 0.4) +
-                         geom_scattermore(aes(x = UMAP_1, y = UMAP_2,
-                                              color = !!as.symbol(color_column)) ,
-                                          pointsize= pt_size,
-                                          pixels = c(750,750),
-                                          alpha = 0.6) +
-                         facet_wrap(vars(!!(as.symbol(facet_column)))) +
-                         scale_colour_manual(values = rep(c(pals::alphabet() %>% unname(),
-                                                            pals::alphabet2() %>% unname()),
-                                                          times = 20),
-                                             na.value = 'gray') +
-                         guides(colour = guide_legend(override.aes = list(alpha = 1, size = 7))) +
-                         theme_cowplot() +
-                         theme(axis.line = element_blank(),
-                               axis.title = element_blank(),
-                               axis.ticks = element_blank(),
-                               axis.text = element_blank())
-      )
-      plot
-
-    })
+    source('make_facet_plot.R')
+    facet_plot <- eventReactive(input$BUTTON_draw_filter, {make_facet_plot(input,  meta_filter)})
 
     output$facet_plot <- renderPlot({
       facet_plot()
