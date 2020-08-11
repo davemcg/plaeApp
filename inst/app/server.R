@@ -323,6 +323,17 @@ shinyServer(function(input, output, session) {
                            selected = 'organism',
                            server = TRUE)
     }
+    #facet plot updateSelectizeInput
+    observeEvent(input$facet, {
+      if(input$facet == ''){
+        choice=''
+      }else {
+        choice = meta_filter[,input$facet] %>% pull(1) %>% unique() %>% sort()
+      }
+      updateSelectizeInput(session, 'facet_filter',
+                           choices = choice,
+                           server = TRUE)
+    })
 
     if (is.null(query[['facet_color']])){
       updateSelectizeInput(session, 'facet_color',
@@ -452,46 +463,8 @@ shinyServer(function(input, output, session) {
     output$metadata_stats <- DT::renderDataTable({ metadata_stats()})
 
     # facet plot -----------
-    facet_plot <- eventReactive(input$BUTTON_draw_filter, {
-      cat(file=stderr(), paste0(Sys.time(), ' Facet Plot Call\n'))
-      facet_column <- input$facet
-      color_column <- input$facet_color
-      #transform <- input$facet_column_transform
-      pt_size <- input$pt_size_facet %>% as.numeric()
-
-      gray_data <- meta_filter %>%
-        filter(is.na(!!as.symbol(color_column)))
-      p_data <- meta_filter %>%
-        filter(!is.na(!!as.symbol(facet_column)),
-               !is.na(!!as.symbol(color_column)))
-
-      suppressWarnings(plot <- ggplot(data = p_data) +
-                         geom_scattermore(data = gray_data,
-                                          aes(x = UMAP_1, y = UMAP_2),
-                                          color = 'gray',
-                                          pointsize = pt_size,
-                                          pixels = c(750,750),
-                                          alpha = 0.4) +
-                         geom_scattermore(aes(x = UMAP_1, y = UMAP_2,
-                                              color = !!as.symbol(color_column)) ,
-                                          pointsize= pt_size,
-                                          pixels = c(750,750),
-                                          alpha = 0.6) +
-                         facet_wrap(vars(!!(as.symbol(facet_column)))) +
-                         scale_colour_manual(values = rep(c(pals::alphabet() %>% unname(),
-                                                            pals::alphabet2() %>% unname()),
-                                                          times = 20),
-                                             na.value = 'gray') +
-                         guides(colour = guide_legend(override.aes = list(alpha = 1, size = 7))) +
-                         theme_cowplot() +
-                         theme(axis.line = element_blank(),
-                               axis.title = element_blank(),
-                               axis.ticks = element_blank(),
-                               axis.text = element_blank())
-      )
-      plot
-
-    })
+    source('make_facet_plot.R')
+    facet_plot <- eventReactive(input$BUTTON_draw_filter, {make_facet_plot(input,  meta_filter)})
 
     output$facet_plot <- renderPlot({
       facet_plot()
