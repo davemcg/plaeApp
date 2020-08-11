@@ -18,9 +18,21 @@ library(magick)
 library(stringr)
 
 #anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
-
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+#****COMMENT OUT BELOW BEFORE PUSHING****
+#----
 # scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+# meta_filter <- scEiaD_2020_v01 %>% tbl('meta_filter') %>% collect
+# tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
+# celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
+# celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
+# cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
+
+
+#----
+#**UNCOMMENT OUT BELOW BEFORE PUSHING****
+#----
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+
 # fancy tables
 # they come from `tables.Rmd` in analysis/
 # load('www/formattables.Rdata')
@@ -69,7 +81,7 @@ cluster_labels <-
               filter(!Platform %in% c('10xv2','10xv3','DropSeq')) %>%
               group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
               mutate(Tech = 'Well'))
-
+#----
 
 
 # # attach colors to cell types
@@ -513,7 +525,7 @@ shinyServer(function(input, output, session) {
     })
     output$temporal_plot <- renderPlot({
       temporal_plot()
-    }, height = 700)
+    }, height = as.numeric(input$temporal_plot_height ) )
 
     ## dotplot ---------
     source('make_dotplot.R')
