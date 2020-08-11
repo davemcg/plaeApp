@@ -17,13 +17,10 @@ library(dplyr)
 library(magick)
 library(stringr)
 
-#anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
-
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-# scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-# fancy tables
-# they come from `tables.Rmd` in analysis/
-# load('www/formattables.Rdata')
+
+# these will be pre-processed and moved
+# into the sqlite db when they are finalized
 # filter
 meta_filter <- left_join(scEiaD_2020_v01 %>% tbl('metadata_filter'),
                          scEiaD_2020_v01 %>% tbl('doublets'), by ='Barcode') %>%
@@ -497,7 +494,7 @@ shinyServer(function(input, output, session) {
     ## exp_plot -----------
     source('make_exp_plot.R')
     exp_plot <- eventReactive(input$BUTTON_draw_exp_plot, {
-      make_exp_plot(input, db, meta_filter)
+      make_exp_plot(input, scEiaD_2020_v01, meta_filter)
     })
 
     output$exp_plot <- renderPlot({

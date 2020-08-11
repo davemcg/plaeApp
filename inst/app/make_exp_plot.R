@@ -5,20 +5,20 @@ make_exp_plot <- function(input, db, meta_filter){
   grouping_features <- input$exp_plot_groups
 
   if (input$exp_filter_cat != ''){
-    # box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+    # box_data <- db %>% tbl('grouped_stats') %>%
     #   filter(Gene %in% gene) %>%
     #   collect() %>%
     #   filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
     #
 
     if (class(input$exp_filter_on) == 'character'){
-      box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+      box_data <- db %>% tbl('grouped_stats') %>%
         filter(Gene %in% gene) %>%
         collect() %>%
         filter_at(vars(all_of(input$exp_filter_cat)), all_vars(. %in% input$exp_filter_on))
       #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
     } else {
-      box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+      box_data <- db %>% tbl('grouped_stats') %>%
         filter(Gene %in% gene) %>%
         collect() %>%
         #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on) %>%
@@ -27,7 +27,7 @@ make_exp_plot <- function(input, db, meta_filter){
     }
 
   } else {
-    box_data <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+    box_data <- db %>% tbl('grouped_stats') %>%
       filter(Gene %in% gene) %>%
       collect()
   }
