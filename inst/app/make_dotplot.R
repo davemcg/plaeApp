@@ -11,13 +11,15 @@ library(dplyr)
 library(magick)
 library(stringr)
 
-make_dotplot <- function(input, db, meta_filter){
+make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
   ### this makes it a little easier to test
   # input <- list()
   # input[['dotplot_Gene']] <- c('RHO','WIF1', 'CABP5', 'AIF1', 'ARR3', 'ONECUT1', 'GRIK1', 'GAD1', 'POU4F2')#c('RHO', 'CRX')
-  # input[['dotplot_groups']] <- 'CellType_predict'
-  # input[['dotplot_filter_cat']] <- 'CellType_predict'
-  # input[['dotplot_filter_on']] <- 'Macrophage'
+  # input[['dotplot_groups']] <- c('CellType_predict', 'organism')
+  # input[['dotplot_filter_cat']] <- ''
+  # input[['dotplot_filter_on']] <- ''
+  # db <- scEiaD_2020_v01
+
   gene <- input$dotplot_Gene
   grouping_features <- input$dotplot_groups
   validate(
@@ -119,12 +121,13 @@ make_dotplot <- function(input, db, meta_filter){
                      dotplot_data) %>%
     mutate(Column = Column %>% str_replace_all(':', ' '))
 
-  group1_labels <- order %>%
-    ggplot() +
+  group1_labels_df <- order %>% inner_join(cat_to_color_df %>%
+                                          filter(meta_category ==grouping_features[1]) %>%
+                                          rename(Group1=value)) %>% arrange(Group1)
+    group1_labels <- ggplot(group1_labels_df) +
     geom_tile(aes(x = Column, y = 1, fill = Group1)) +
     scale_fill_manual(name = grouping_features[1],
-                      values = rep(c(pals::alphabet2() %>% unname(),
-                                     pals::alphabet() %>% unname()), times = 10)) +
+                      values = unique(group1_labels_df$color) )+
     theme_nothing() +
     aplot::xlim2(dotplot) +
     coord_flip()
@@ -136,14 +139,16 @@ make_dotplot <- function(input, db, meta_filter){
   }
 
   if (length(grouping_features) == 2){
-    group2_labels <- order %>%
-      ggplot() +
+
+    group2_labels_df <- order %>% inner_join(cat_to_color_df %>%
+                                               filter(meta_category ==grouping_features[2]) %>%
+                                               rename(Group2=value)) %>% arrange(Group2)
+    group2_labels <- ggplot(group2_labels_df) +
       geom_tile(aes(x = Column, y = 1, fill = Group2)) +
       scale_fill_manual(name = grouping_features[2],
-                        values = rep(c(pals::alphabet() %>% unname(),
-                                       pals::alphabet2() %>% unname()), times = 10)) +
+                        values = unique(group2_labels_df$color) )+
       theme_nothing() +
-      aplot::xlim2(dotplot) +
+      #aplot::xlim2(dotplot) +
       coord_flip()
     if ((dotplot_data$Group2 %>% unique() %>% length()) == ncol(mat)) {
       group2_legend <- NULL

@@ -27,12 +27,14 @@ library(shinyalert)
 # celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
 # cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
 # mf <- meta_filter %>% sample_frac(0.2)
-# # get coords for cell labels
+# get coords for cell labels
+
+
 
 #----
 #**UNCOMMENT OUT BELOW BEFORE PUSHING****
 #----
-
+#
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 
 # these will be pre-processed and moved
@@ -88,6 +90,45 @@ cluster_labels <-
               group_by(cluster) %>% summarise(UMAP_1 = mean(UMAP_1), UMAP_2 = mean(UMAP_2)) %>%
               mutate(Tech = 'Well'))
 #----
+
+# generate color_mappings
+
+categorical_columns <- c("Phase","batch","study_accession","library_layout","organism","Platform",
+                         "Covariate","CellType","CellType_predict","TabulaMurisCellType","TabulaMurisCellType_predict",
+                         "GSE","Summary","Design","Citation","PMID","Stage","cluster",
+                         "Doublet","Tech", "SubCellType" )
+#"SubCellType" and subcluster are problems
+meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'))
+map_color <- function(column, meta_filter){
+  master_colorlist <- c(pals::alphabet(), pals::alphabet2())
+  values <- meta_filter %>% pull(!!column) %>% unique %>% sort
+  if(length(values) > length(master_colorlist) ){
+    r= round(length(values) / length(master_colorlist)) +1
+    master_colorlist <- rep(master_colorlist, r)
+  }
+
+  colors <- master_colorlist[1:length(values)]
+  return(tibble(meta_category = column,value = values, color=colors))
+
+}
+
+#this is to avoid a color collision within the same cluster
+sub_cluster_df <- meta_filter %>% select(cluster, subcluster) %>% distinct
+sub_cluster_map <- lapply(sub_cluster_df$cluster, function(x) sub_cluster_df %>%
+                            filter(cluster == x) %>%
+                            map_color('subcluster',.) ) %>% bind_rows
+
+# this could work, but the Celltype  > SubCellType mapping is not 1:1
+# sub_celltype_df <- meta_filter %>% select(CellType_predict, SubCellType) %>% distinct
+# sub_celltype_map <- lapply(sub_celltype_df$CellType_predict, function(x) sub_celltype_df %>%
+#                              filter(CellType_predict == x) %>%
+#                              map_color('SubCellType',.) ) %>% bind_rows %>%
+#   mutate(color = replace(color, value == 'None', '#D3D3D3'))
+
+
+cat_to_color_df <- lapply(categorical_columns, function(col) map_color(col, meta_filter)) %>%
+  bind_rows(sub_cluster_map)
+
 
 
 # # attach colors to cell types
@@ -447,7 +488,8 @@ shinyServer(function(input, output, session) {
                                   celltype_predict_labels,
                                   celltype_labels,
                                   tabulamuris_predict_labels,
-                                  cluster_labels
+                                  cluster_labels,
+                                  cat_to_color_df
       )
     })
 
@@ -548,7 +590,7 @@ shinyServer(function(input, output, session) {
     ## dotplot ---------
     source('make_dotplot.R')
     draw_dotplot <- eventReactive(input$BUTTON_draw_dotplot,
-                                  {make_dotplot(input, scEiaD_2020_v01, meta_filter)}
+                                  {make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)}
     )
     output$dotplot <- renderPlot({
       draw_dotplot()
