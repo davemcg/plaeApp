@@ -80,21 +80,20 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                        annotate("text", -Inf, Inf, label = "Metadata", hjust = 0, vjust = 1, size = 6))
     # metadata CATEGORICAL plot --------------
   } else {
-
     cur_color_df <- cat_to_color_df %>%
       filter( meta_category %in%  meta_column,
               value %in% p_data[[meta_column]]) %>% distinct
 
     color_list <- cur_color_df %>% pull(color)
-    p_color <- cur_color_df %>%
-      rename(!!meta_column := value) %>%
-    inner_join(p_data,.) %>% # it must be joined this way in order to preserver the order of p_data
-      distinct %>%
-      pull(color) %>% paste0(., '33')
-
+    # replaced join with this for speed
+    k <- cur_color_df$color
+    names(k) <- cur_color_df$value
+    np_color <- {k[p_data[[meta_column]] ]} %>% paste0(., '33')
+    names(np_color) <- NULL
     color_data <- cur_color_df  %>%
       select(value) %>%
       mutate( x=0)
+
 
     suppressWarnings(plot <- ggplot() +
                        geom_scattermost(cbind(mf %>%
