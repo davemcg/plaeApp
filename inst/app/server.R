@@ -16,7 +16,22 @@ library(RSQLite)
 library(dplyr)
 library(magick)
 library(stringr)
+library(shinyalert)
 
+#****COMMENT OUT BELOW BEFORE PUSHING****
+#----
+# scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+# meta_filter <- scEiaD_2020_v01 %>% tbl('meta_filter') %>% collect
+# tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
+# celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
+# celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
+# cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
+# mf <- meta_filter %>% sample_frac(0.2)
+# # get coords for cell labels
+
+#----
+#**UNCOMMENT OUT BELOW BEFORE PUSHING****
+#----
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 
@@ -362,6 +377,44 @@ shinyServer(function(input, output, session) {
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
+    # HELP button descriptions
+    ## umap
+    observeEvent(input$umap_table_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## exp plot
+    observeEvent(input$exp_plot_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## insitu
+    observeEvent(input$insitu_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## facet umap
+    observeEvent(input$facet_umap_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## temporal plot
+    observeEvent(input$temporal_plot_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## dotplot
+    observeEvent(input$dotplot_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+    ## diff testing
+    observeEvent(input$diff_testing_help, {
+      # Show a modal when the button is pressed
+      shinyalert("Help", 'help_text', type = "info")
+    })
+
+
     # BREAK -------
     # gene scatter plot ------------
     gene_scatter_ranges <- reactiveValues(x = c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max()),
@@ -415,6 +468,7 @@ shinyServer(function(input, output, session) {
     output$meta_plot <- renderPlot({
       meta_plot() + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y)
     })
+
 
     # gene cluster table  --------
     gene_cluster_stats_maker <- eventReactive(input$BUTTON_make_gene_table, {

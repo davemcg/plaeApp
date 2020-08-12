@@ -8,7 +8,7 @@ library(scattermore)
 library(pals)
 library(shinythemes)
 library(cowplot)
-
+library(shinyalert)
 # header color
 ## orig: #2c3e50
 ## new:  #6439db
@@ -30,13 +30,15 @@ shinyUI(
              navbarMenu('Viz', # UMAP ----------
                         tabPanel('UMAP - Tables',
                                  fluidPage(
+
                                    fluidRow(column(6, radioButtons(
                                      inputId = "gene_and_meta_scatter_tech",
                                      label = "Technology",
                                      choices = c("Droplet", "Well"),
                                      selected = "Droplet",
                                      inline = TRUE,
-                                   ))),
+                                   )),
+                                    actionButton("umap_table_help", "?", class = 'rightAlign')),
                                    fluidRow(
                                      # Gene Scatter  ---------------
                                      column(6,
@@ -145,7 +147,8 @@ shinyUI(
                                                                 selected = 400, multiple = FALSE)),
                                           column(3,
                                                  selectInput('exp_plot_ylab', strong('Value: '),
-                                                             choices = c('Mean CPM', '% of Cells Detected')))),
+                                                             choices = c('Mean CPM', '% of Cells Detected'))),
+                                          actionButton("exp_plot_help", "?", class = 'rightAlign')),
                                         fluidRow(
                                           column(3,
                                                  (selectizeInput('exp_plot_facet', strong('Facet on: '),
@@ -171,6 +174,7 @@ shinyUI(
 
                         # in situ ---------
                         tabPanel('In Situ Projection',
+                                 actionButton("insitu_help", "?", class = 'rightAlign'),
                                  fluidPage(
                                    column(8,
                                           fluidRow(
@@ -178,7 +182,7 @@ shinyUI(
                                                                      choices=NULL, multiple=FALSE)),
                                             column(4, selectizeInput('insitu_height', strong('Plot Height: '),
                                                                      choices = seq(500, 1000, by = 100), selected = 700))
-                                          ),
+                                            ),
                                           fluidRow(
                                             column(4, selectizeInput('insitu_filter_cat', strong('Filter category: '),
                                                                      choices=NULL, multiple=FALSE)),
@@ -200,6 +204,7 @@ shinyUI(
                                                              div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
                                           )))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
+                                 actionButton("facet_umap_help", "?", class = 'rightAlign'),
                                  column(10,
                                         fluidRow(
                                           column(10,
@@ -229,6 +234,7 @@ shinyUI(
                                  )),
                         # temporal plot -----
                         tabPanel('Temporal Gene x Cell Type',
+                                 actionButton("temporal_plot_help", "?", class = 'rightAlign'),
                                  column(10,
                                         fluidRow(
                                           column(10,
@@ -248,6 +254,7 @@ shinyUI(
                                         fluidRow(column(10, plotOutput('temporal_plot')))
                                  )),
                         tabPanel('Dotplot', # Dotplot ---------
+                                 actionButton("dotplot_help", "?", class = 'rightAlign'),
                                  column(8,
                                         fluidRow(
                                           column(4, selectizeInput('dotplot_Gene', strong('Genes: '),
@@ -269,6 +276,7 @@ shinyUI(
              ),
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
+                      actionButton("diff_testing_help", "?", class = 'rightAlign'),
                       fluidPage(column(8,
                                        fluidRow(
                                          selectInput('search_by', strong('Search by: '),
@@ -333,6 +341,7 @@ shinyUI(
                       br(),
                       fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
                       br(), br(), br()
-             ))
+             ), useShinyalert(),
+             tags$head(tags$style(".rightAlign{float:right;}")))
 )
 
