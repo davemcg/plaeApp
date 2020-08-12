@@ -103,7 +103,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                         pointsize = pt_size, color = '#D3D3D333',
                                         pixels = c(750,750)) +
                        geom_scattermost(cbind(p_data$UMAP_1, p_data$UMAP_2),
-                                        color = p_color ,
+                                        color = np_color ,
                                         pointsize= pt_size,
                                         pixels=c(750,750),
                                         interpolate=FALSE) +
