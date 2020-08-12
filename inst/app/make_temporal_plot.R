@@ -12,17 +12,17 @@ make_temporal_plot <- function(input, db, meta_filter) {
   if (grouping == 'CellType (predict)'){grouping <- 'CellType_predict'}
   if (y_val == 'Mean CPM') {y_val <- 'cpm'} else {y_val <- 'Ratio'}
   meta_data <- meta_filter %>%
-    mutate(Stage = replace(Stage, Age >=17, 'Adult')) %>%
-    group_by(organism, !!as.symbol(grouping), Stage) %>%
-    summarise(full_count = n()) %>%
-    mutate(Stage = factor(Stage, levels = c('Early', 'Late', 'Adult')))
+     mutate(Stage = replace(Stage, Age >=17, 'Adult')) %>%
+     group_by(organism, !!as.symbol(grouping), Stage) %>%
+     summarise(full_count = n()) #%>%
+    # mutate(Stage = factor(Stage, levels = c('Early', 'Late', 'Adult')))
 
   temporal_data <- db %>% tbl('cpm') %>%
     filter(Gene %in% gene) %>%
     collect() %>%
     mutate(cpm = cpm - min(cpm) + 1) %>%
     left_join(., meta_filter, by = 'Barcode') %>%
-    mutate(Stage = replace(Stage, Age >=17, 'Adult')) %>%
+    #mutate(Stage = replace(Stage, Age >=17, 'Adult')) %>%
     filter(!is.na(!!as.symbol(grouping)), !grepl('Doub|RPE', !!as.symbol(grouping))) %>%
     group_by(organism, !!as.symbol(grouping), Stage, Gene) %>%
     summarise(cpm = mean(cpm), count = n()) %>%
@@ -31,7 +31,7 @@ make_temporal_plot <- function(input, db, meta_filter) {
     mutate(Ratio = count/full_count) %>%
     filter(!is.na(!!as.symbol(grouping)), !is.na(Gene)) %>%
     ungroup() %>%
-    mutate(Stage = factor(Stage, levels = c('Early', 'Late', 'Adult')))
+    mutate(Stage = factor(Stage, levels = c('Early Dev.', 'Late Dev.', 'Maturing', 'Mature')))
 
 
 

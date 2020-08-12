@@ -37,6 +37,7 @@ make_exp_plot <- function(input, db, meta_filter){
 
   #cat(input)
   box_data <- box_data %>%
+    mutate(Stage = factor(Stage, levels = c('Early Dev.', 'Late Dev.', 'Maturing', 'Mature'))) %>%
     #filter(!is.na(!!as.symbol(grouping_features))) %>%
     group_by_at(vars(one_of(c('Gene', input$exp_plot_facet, grouping_features)))) %>%
     summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
