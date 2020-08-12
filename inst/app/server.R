@@ -18,7 +18,6 @@ library(magick)
 library(stringr)
 library(shinyalert)
 
-#anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 #****COMMENT OUT BELOW BEFORE PUSHING****
 #----
 # scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
@@ -33,7 +32,12 @@ library(shinyalert)
 #----
 #**UNCOMMENT OUT BELOW BEFORE PUSHING****
 #----
+
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+
+# these will be pre-processed and moved
+# into the sqlite db when they are finalized
+#anthology_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-onlyDROPLET-batch-scVI-6-0.1-500-10.sqlite", idleTimeout = 3600000)
 
 # fancy tables
 # they come from `tables.Rmd` in analysis/
