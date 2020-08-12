@@ -2,8 +2,18 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                         celltype_predict_labels,
                                         celltype_labels,
                                         tabulamuris_predict_labels,
-                                        cluster_labels){
+                                        cluster_labels,
+                                        cat_to_color_df
+){
   cat(file=stderr(), paste0(Sys.time(), ' Meta Plot Call\n'))
+  # input <- list()
+  # input[['meta_column']] <- 'SubCellType'
+  # input[['pt_size']] <- 1
+  # input[['gene_and_meta_scatter_tech']] <- 'Droplet'
+  # input[['meta_column_transform']] <- 'None'
+  # input[['meta_filter_cat']] <- 'CellType_predict'
+  # input[['meta_filter_on']] <- 'Bipolar Cells'
+
   meta_column <- input$meta_column
   transform <- input$meta_column_transform
 
@@ -27,6 +37,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
     filter(!is.na(!!as.symbol(meta_column)))
   # category filtering
   if (!is_null(input$meta_filter_cat)){
+    validate( need(input$meta_filter_on != '', 'Please select a value to filter on'  ))
     if (class(input$meta_filter_on) == 'character'){
       p_data <- p_data %>%
         #filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
@@ -69,9 +80,22 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                        annotate("text", -Inf, Inf, label = "Metadata", hjust = 0, vjust = 1, size = 6))
     # metadata CATEGORICAL plot --------------
   } else {
-    group <- p_data[,meta_column] %>% pull(1) %>% as.factor()
-    p_color = rep(c(pals::alphabet(),pals::alphabet2()), times = 20)[group] %>% paste0(., '33') # alpha 0.33
-    color_data <- group %>% levels() %>% tibble::enframe() %>% mutate(x=0)
+
+    cur_color_df <- cat_to_color_df %>%
+      filter( meta_category %in%  meta_column,
+              value %in% p_data[[meta_column]]) %>% distinct
+
+    color_list <- cur_color_df %>% pull(color)
+    p_color <- cur_color_df %>%
+      rename(!!meta_column := value) %>%
+    inner_join(p_data,.) %>% # it must be joined this way in order to preserver the order of p_data
+      distinct %>%
+      pull(color) %>% paste0(., '33')
+
+    color_data <- cur_color_df  %>%
+      select(value) %>%
+      mutate( x=0)
+
     suppressWarnings(plot <- ggplot() +
                        geom_scattermost(cbind(mf %>%
                                                 filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_1),
@@ -86,9 +110,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                         interpolate=FALSE) +
                        geom_point(data=color_data, aes(x,x,color=value), alpha = 0) +
                        scale_colour_manual(name= meta_column,
-                                           values = rep(c(pals::alphabet() %>% unname(),
-                                                          pals::alphabet2() %>% unname()),
-                                                        times = 20)) +
+                                           values = color_list) +
                        guides(colour = guide_legend(override.aes = list(alpha = 1, size = 7))) +
                        theme_cowplot() +
                        theme(axis.line = element_blank(),
