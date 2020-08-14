@@ -7,7 +7,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 ){
   cat(file=stderr(), paste0(Sys.time(), ' Meta Plot Call\n'))
   # input <- list()
-  # input[['meta_column']] <- 'CellType'
+  # input[['meta_column']] <- 'Cell'
   # input[['pt_size']] <- 1
   # input[['gene_and_meta_scatter_tech']] <- 'Droplet'
   # input[['meta_column_transform']] <- 'None'
@@ -48,6 +48,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                !!as.symbol(input$meta_filter_cat) <= input$meta_filter_on[2])
     }
   }
+
 
   # metadata NUMERIC plot --------------
   if (is.numeric(meta_filter[,meta_column] %>% pull(1)) ){
@@ -117,6 +118,10 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                              axis.ticks = element_blank(),
                              axis.text = element_blank()) +
                        annotate("text", -Inf, Inf, label = "Metadata", hjust = 0, vjust = 1, size = 6))
+  }
+  col_size <- {meta_filter[[meta_column]]} %>% n_distinct
+  if(meta_column %in% c('CellType', 'CellType_predict', 'cluster','TabulaMurisCellType_predict' ) | col_size  > 15){
+    plot <- plot+ theme(legend.position = 'none')
   }
 
   more <- NULL

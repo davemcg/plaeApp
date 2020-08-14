@@ -20,7 +20,8 @@ library(shinyalert)
 library(fst)
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_13__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-meta_filter <- read_fst('data/metadata_filter.fst')
+#scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
+meta_filter <- read_fst('metadata_filter.fst') %>% as_tibble
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
@@ -31,7 +32,7 @@ mf <- meta_filter %>% sample_frac(0.2)
 categorical_columns <- c("Phase","batch","study_accession","library_layout","organism","Platform",
                          "Covariate","CellType","CellType_predict","TabulaMurisCellType","TabulaMurisCellType_predict",
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
-                         "Doublet","TechType", "SubCellType" )
+                         "Doublet","TechType", "SubCellType", 'subcluster' )
 #"SubCellType" and subcluster are problems
 meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'))
 map_color <- function(column, meta_filter){
