@@ -1,4 +1,15 @@
 make_exp_plot <- function(input, db, meta_filter){
+  # TESTING VALUES
+  # db <- scEiaD_2020_v01
+  # input <- list()
+  # input$exp_filter_cat <- 'CellType_predict'
+  # input$exp_filter_on <- c('Rods' ,'Cones')
+  # input$exp_plot_facet <- c('CellType_predict')
+  # input$exp_plot_genes <- c('PAX6', 'CRX', 'NRL', 'RHO')
+  # input$exp_plot_groups <- c('Stage')
+  # input$exp_plot_ylab <- 'Mean CPM'
+  # input$exp_plot_col_num <- 10
+
   cat(file=stderr(), paste0(Sys.time(), ' Exp Plot Call\n'))
   gene <- input$exp_plot_genes
 

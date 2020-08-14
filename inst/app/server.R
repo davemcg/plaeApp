@@ -21,7 +21,7 @@ library(fst)
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_13__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
-meta_filter <- read_fst('metadata_filter.fst') %>% as_tibble
+meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
@@ -317,14 +317,23 @@ shinyServer(function(input, output, session) {
                            server = TRUE)
     }
     #facet plot updateSelectizeInput
-    observeEvent(input$facet, {
-      if(input$facet == ''){
-        choice=''
-      }else {
-        choice = meta_filter[,input$facet] %>% pull(1) %>% unique() %>% sort()
+    if (is.null(query[['facet_filter_cat']])){
+      updateSelectizeInput(session, 'facet_filter_cat',
+                           choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
+                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
+                           selected = 'CellType',
+                           server = TRUE)
+    }
+    observeEvent(input$facet_filter_cat, {
+      if (input$exp_filter_cat == ''){
+        choice = ''
+      } else {
+        choice = meta_filter[,input$facet_filter_cat] %>% t() %>% c() %>% unique() %>% sort()
       }
-      updateSelectizeInput(session, 'facet_filter',
+
+      updateSelectizeInput(session, 'facet_filter_on',
                            choices = choice,
+                           selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
                            server = TRUE)
     })
 

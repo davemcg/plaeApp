@@ -5,11 +5,22 @@ make_facet_plot <- function(input, meta_filter){
   #transform <- input$facet_column_transform
   pt_size <- input$pt_size_facet %>% as.numeric()
 
-  gray_data <- meta_filter %>%
-    filter(is.na(!!as.symbol(color_column)))
-  p_data <- meta_filter %>%
-    filter(!is.na(!!as.symbol(facet_column)),
-           !is.na(!!as.symbol(color_column)))
+
+  if (input$facet_filter_cat != ''){
+    gray_data <- meta_filter %>%
+      filter(is.na(!!as.symbol(color_column))) %>%
+      filter_at(vars(all_of(input$facet_filter_cat)), all_vars(. %in% input$facet_filter_on))
+    p_data <- meta_filter %>%
+      filter(!is.na(!!as.symbol(facet_column)),
+             !is.na(!!as.symbol(color_column))) %>%
+      filter_at(vars(all_of(input$facet_filter_cat)), all_vars(. %in% input$facet_filter_on))
+  } else {
+    gray_data <- meta_filter %>%
+      filter(is.na(!!as.symbol(color_column)))
+    p_data <- meta_filter %>%
+      filter(!is.na(!!as.symbol(facet_column)),
+             !is.na(!!as.symbol(color_column)))
+  }
   if(!is.null(input$facet_filter) | any(input$facet_filter != '') ){
     p_data <- p_data %>% filter(!!as.symbol(facet_column) %in% input$facet_filter)
   }

@@ -7,7 +7,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 ){
   cat(file=stderr(), paste0(Sys.time(), ' Meta Plot Call\n'))
   # input <- list()
-  # input[['meta_column']] <- 'Cell'
+  # input[['meta_column']] <- 'Age'
   # input[['pt_size']] <- 1
   # input[['gene_and_meta_scatter_tech']] <- 'Droplet'
   # input[['meta_column_transform']] <- 'None'
@@ -126,20 +126,20 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 
   more <- NULL
   if ('1' %in% input$label_toggle){
-    more <- geom_text(data = celltype_labels, bg.color = 'white',
+    more <- geom_text_repel(data = celltype_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = CellType))
   }
   if ('2' %in% input$label_toggle){
-    more <- geom_text(data = celltype_predict_labels, bg.color = 'white',
+    more <- geom_text_repel(data = celltype_predict_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = CellType_predict))
   }
   if ('3' %in% input$label_toggle){
-    more <- geom_text(data = cluster_labels, bg.color = 'white',
+    more <- geom_text_repel(data = cluster_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = cluster),
                             max.iter = 20)
   }
   if ('4' %in% input$label_toggle){
-    more <- geom_text(data = tabulamuris_predict_labels, bg.color = 'white',
+    more <- geom_text_repel(data = tabulamuris_predict_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = TabulaMurisCellType_predict),
                             max.iter = 20)
   }
