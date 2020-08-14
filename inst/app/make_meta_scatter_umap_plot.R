@@ -7,7 +7,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 ){
   cat(file=stderr(), paste0(Sys.time(), ' Meta Plot Call\n'))
   # input <- list()
-  # input[['meta_column']] <- 'SubCellType'
+  # input[['meta_column']] <- 'CellType'
   # input[['pt_size']] <- 1
   # input[['gene_and_meta_scatter_tech']] <- 'Droplet'
   # input[['meta_column_transform']] <- 'None'
@@ -21,12 +21,12 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
   filter_column <- input$meta_column
   # cut down to match tech selected
   tech <- input$gene_and_meta_scatter_tech
-  mf <- mf %>% filter(Tech == tech)
-  meta_filter <- meta_filter %>% filter(Tech == tech)
-  celltype_predict_labels <- celltype_predict_labels %>% filter(Tech == tech)
-  celltype_labels <- celltype_labels %>% filter(Tech == tech)
-  tabulamuris_predict_labels <- tabulamuris_predict_labels %>% filter(Tech == tech)
-  cluster_labels <- cluster_labels %>% filter(Tech == tech)
+  mf <- mf %>% filter(TechType == tech)
+  meta_filter <- meta_filter %>% filter(TechType == tech)
+  celltype_predict_labels <- celltype_predict_labels %>% filter(TechType == tech)
+  celltype_labels <- celltype_labels %>% filter(TechType == tech)
+  tabulamuris_predict_labels <- tabulamuris_predict_labels %>% filter(TechType == tech)
+  cluster_labels <- cluster_labels %>% filter(TechType == tech)
 
   if (transform == 'log2' && is.numeric(meta_filter[,meta_column] %>% pull(1))){
     cat('log2 time')
@@ -121,20 +121,20 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 
   more <- NULL
   if ('1' %in% input$label_toggle){
-    more <- geom_text_repel(data = celltype_labels, bg.color = 'white',
+    more <- geom_text(data = celltype_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = CellType))
   }
   if ('2' %in% input$label_toggle){
-    more <- geom_text_repel(data = celltype_predict_labels, bg.color = 'white',
+    more <- geom_text(data = celltype_predict_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = CellType_predict))
   }
   if ('3' %in% input$label_toggle){
-    more <- geom_text_repel(data = cluster_labels, bg.color = 'white',
+    more <- geom_text(data = cluster_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = cluster),
                             max.iter = 20)
   }
   if ('4' %in% input$label_toggle){
-    more <- geom_text_repel(data = tabulamuris_predict_labels, bg.color = 'white',
+    more <- geom_text(data = tabulamuris_predict_labels, bg.color = 'white',
                             aes(x = UMAP_1, y = UMAP_2, label = TabulaMurisCellType_predict),
                             max.iter = 20)
   }

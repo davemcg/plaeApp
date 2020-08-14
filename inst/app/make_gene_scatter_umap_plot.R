@@ -4,7 +4,7 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   tech <- input$gene_and_meta_scatter_tech
   pt_size <- input$pt_size_gene %>% as.numeric()
   expression_range <- input$gene_scatter_slider
-  mf <- mf %>% filter(Tech == tech)
+  mf <- mf %>% filter(TechType == tech)
   p <-  db %>% tbl('cpm') %>%
     filter(Gene == gene) %>%
     collect() %>%
@@ -12,7 +12,7 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
     filter(cpm > as.numeric(expression_range[1]),
            cpm < as.numeric(expression_range[2])) %>%
     left_join(., meta_filter, by = 'Barcode') %>%
-    filter(Tech == tech, !is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
+    filter(TechType == tech, !is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
   cat(input$gene_filter_cat)
   cat(class(input$gene_filter_cat))
   if (!is_null(input$gene_filter_cat)){
