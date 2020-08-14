@@ -17,10 +17,10 @@ library(dplyr)
 library(magick)
 library(stringr)
 library(shinyalert)
-
+library(fst)
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_13__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
-meta_filter <- scEiaD_2020_v01 %>% tbl('metadata_filter') %>% collect
+meta_filter <- read_fst('data/metadata_filter.fst')
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect

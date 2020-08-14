@@ -19,6 +19,7 @@ Imports:
   dplyr,
   DT,
   formattable,
+  fst,
   ggbeeswarm,
   ggplot2,
   ggrepel,
