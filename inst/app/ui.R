@@ -89,7 +89,8 @@ shinyUI(
                                                      column(2,
                                                             radioButtons('meta_column_transform',
                                                                          label = 'Numeric Transform', inline = FALSE,
-                                                                         choices = list("None" = "None", "log2" = "log2")))
+                                                                         choices = list("None" = "None", "log2" = "log2"))),
+                                                     column(2, actionButton('BUTTON_show_meta_legend', 'Display Legend', style='background-color: #3399ff; color: #ffffff')),
                                             ),
                                             fluidRow(column(5,
                                                             selectizeInput('meta_filter_cat', strong('Filter Category: '),
@@ -163,7 +164,6 @@ shinyUI(
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = TRUE)),
-                                          #column(3, uiOutput('exp_filter_on_dynamicUI')),
                                           column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
                                                                    choices = NULL, multiple = TRUE)),
                                         ),

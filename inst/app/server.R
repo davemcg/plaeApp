@@ -364,11 +364,31 @@ shinyServer(function(input, output, session) {
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
-    # HELP button descriptions
+    # Meta Plot modal ----------
+    observeEvent(input$BUTTON_show_meta_legend, {
+      # Show a modal when the button is pressed
+      showModal(shinyjqui::draggableModalDialog(size = 'l', title = 'Click to Drag',
+                                                plotOutput('meta_plot_legend'),
+                                                easyClose = TRUE))
+    })
+    # HELP button descriptions ----------
     ## umap
     observeEvent(input$umap_table_help, {
       # Show a modal when the button is pressed
-      shinyalert("Help", 'help_text', type = "info")
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
+                            title = "Notes",
+                            HTML("<p>The UMAP is a 2D Projection of a higher dimensional space which tries to bring together
+                            closely related elements while maintaining the overall structure. The higher dimensional space
+                            is built from the gene expression patterns of each cell. The left panel shows the expression pattern
+                            of a gene in the UMAP space. The right panel shows metadata associated with each cell, including
+                            predicted cell type.</p>
+
+                            Tips:
+                            <ul>
+                              <li>You can click and drag to set a box, then double click to zoom in!</li>
+                              <li>Double click again to zoom back</li>
+                            </ul>"),
+                            easyClose = TRUE))
     })
     ## exp plot
     observeEvent(input$exp_plot_help, {
@@ -454,7 +474,15 @@ shinyServer(function(input, output, session) {
     })
 
     output$meta_plot <- renderPlot({
-      meta_plot() + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y)
+      plot <- meta_plot()
+      meta_plot() + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
+        theme(legend.position = 'none')
+    })
+
+    output$meta_plot_legend <- renderPlot({
+      plot <- meta_plot()
+      legend <- cowplot::get_legend(plot)
+      plot_grid(legend)
     })
 
 

@@ -31,6 +31,7 @@ Imports:
   RSQLite,
   shiny (>= 1.4.0),
   shinyalert,
+  shinyjqui,
   shinythemes,
   shinyWidgets,
   stringr,
