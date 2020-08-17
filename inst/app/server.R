@@ -376,8 +376,8 @@ shinyServer(function(input, output, session) {
     observeEvent(input$umap_table_help, {
       # Show a modal when the button is pressed
       showModal(shinyjqui::draggableModalDialog(size = 'm',
-                            title = "Notes",
-                            HTML("<p>The UMAP is a 2D Projection of a higher dimensional space which tries to bring together
+                                                title = "Notes",
+                                                HTML("<p>The UMAP is a 2D Projection of a higher dimensional space which tries to bring together
                             closely related elements while maintaining the overall structure. The higher dimensional space
                             is built from the gene expression patterns of each cell. The left panel shows the expression pattern
                             of a gene in the UMAP space. The right panel shows metadata associated with each cell, including
@@ -388,7 +388,7 @@ shinyServer(function(input, output, session) {
                               <li>You can click and drag to set a box, then double click to zoom in!</li>
                               <li>Double click again to zoom back</li>
                             </ul>"),
-                            easyClose = TRUE))
+                                                easyClose = TRUE))
     })
     ## exp plot
     observeEvent(input$exp_plot_help, {
@@ -424,8 +424,17 @@ shinyServer(function(input, output, session) {
 
     # BREAK -------
     # gene scatter plot ------------
-    gene_scatter_ranges <- reactiveValues(x = c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max()),
-                                          y = c(meta_filter$UMAP_2 %>% min(), meta_filter$UMAP_2 %>% max()))
+    if (input$gene_and_meta_scatter_tech == 'Droplet'){
+      temp_filter <- meta_filter %>% filter(TechType == 'Droplet')
+      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
+      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
+    } else {
+      temp_filter <- meta_filter %>% filter(TechType == 'Well')
+      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
+      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
+    }
+    gene_scatter_ranges <- reactiveValues(x = x_range,
+                                          y = y_range)
     source('make_gene_scatter_umap_plot.R')
     gene_scatter_plot <- eventReactive(input$BUTTON_draw_scatter, {
       make_gene_scatter_umap_plot(input, scEiaD_2020_v01, mf, meta_filter)
@@ -438,8 +447,8 @@ shinyServer(function(input, output, session) {
         gene_scatter_ranges$y <- c(brush$ymin, brush$ymax)
 
       } else {
-        gene_scatter_ranges$x <- c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max())
-        gene_scatter_ranges$y <- c(meta_filter$UMAP_2 %>% min(), meta_filter$UMAP_2 %>% max())
+        gene_scatter_ranges$x <- x_range
+        gene_scatter_ranges$y <- y_range
       }
     })
     output$gene_scatter_plot <- renderPlot({
@@ -458,9 +467,17 @@ shinyServer(function(input, output, session) {
                                   cat_to_color_df
       )
     })
-
-    meta_ranges <- reactiveValues(x = c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max()),
-                                  y = c(meta_filter$UMAP_2 %>% min(), meta_filter$UMAP_2 %>% max()))
+    if (input$gene_and_meta_scatter_tech == 'Droplet'){
+      temp_filter <- meta_filter %>% filter(TechType == 'Droplet')
+      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
+      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
+    } else {
+      temp_filter <- meta_filter %>% filter(TechType == 'Well')
+      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
+      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
+    }
+    meta_ranges <- reactiveValues(x = x_range,
+                                  y = y_range)
     observeEvent(input$meta_plot_dblclick, {
       brush <- input$meta_plot_brush
       if (!is.null(brush)) {
@@ -468,8 +485,8 @@ shinyServer(function(input, output, session) {
         meta_ranges$y <- c(brush$ymin, brush$ymax)
 
       } else {
-        meta_ranges$x <- c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max())
-        meta_ranges$y <- c(meta_filter$UMAP_2 %>% min(), meta_filter$UMAP_2 %>% max())
+        meta_ranges$x <- x_range
+        meta_ranges$y <- y_range
       }
     })
 
