@@ -367,7 +367,7 @@ shinyServer(function(input, output, session) {
     # Meta Plot modal ----------
     observeEvent(input$BUTTON_show_meta_legend, {
       # Show a modal when the button is pressed
-      showModal(shinyjqui::draggableModalDialog(size = 'l', title = 'Click to Drag',
+      showModal(shinyjqui::draggableModalDialog(size = 'l', title = 'Please wait for Legend to load - Click to Drag',
                                                 plotOutput('meta_plot_legend'),
                                                 easyClose = TRUE))
     })
@@ -491,13 +491,17 @@ shinyServer(function(input, output, session) {
     })
 
     output$meta_plot <- renderPlot({
-      plot <- meta_plot()
-      meta_plot() + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
-        theme(legend.position = 'none')
+      plot_data <- meta_plot()
+      if (plot_data$col_size < 10) {
+        plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y)
+      } else {
+        plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
+          theme(legend.position = 'none')
+      }
     })
 
     output$meta_plot_legend <- renderPlot({
-      plot <- meta_plot()
+      plot <- meta_plot()$plot
       legend <- cowplot::get_legend(plot)
       plot_grid(legend)
     })
