@@ -15,7 +15,7 @@ make_exp_plot <- function(input, db, meta_filter){
 
   grouping_features <- input$exp_plot_groups
 
-  if (input$exp_filter_cat != ''){
+  if (!is.null(input$exp_filter_cat)){
     # box_data <- db %>% tbl('grouped_stats') %>%
     #   filter(Gene %in% gene) %>%
     #   collect() %>%

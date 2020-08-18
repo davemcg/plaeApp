@@ -7,7 +7,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 ){
   cat(file=stderr(), paste0(Sys.time(), ' Meta Plot Call\n'))
   # input <- list()
-  # input[['meta_column']] <- 'Age'
+  # input[['meta_column']] <- 'CellType'
   # input[['pt_size']] <- 1
   # input[['gene_and_meta_scatter_tech']] <- 'Droplet'
   # input[['meta_column_transform']] <- 'None'
@@ -72,8 +72,8 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                   max(p_data[,meta_column] %>% pull(1))),
                          colors=viridis::viridis(100),
                          name=meta_column) +
-                       guides(colour = guide_legend(override.aes = list(alpha = 1))) +
                        theme_cowplot() +
+                       guides(colour = guide_legend(override.aes = list(size=7, alpha = 1))) +
                        theme(axis.line = element_blank(),
                              axis.title = element_blank(),
                              axis.ticks = element_blank(),
@@ -94,7 +94,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
     color_data <- cur_color_df  %>%
       select(value) %>%
       mutate( x=0)
-
+    names(color_list) <- color_data$value
 
     suppressWarnings(plot <- ggplot() +
                        geom_scattermost(cbind(mf %>%
@@ -108,21 +108,20 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                         pointsize= pt_size,
                                         pixels=c(750,750),
                                         interpolate=FALSE) +
-                       geom_point(data=color_data, aes(x,x,color=value), alpha = 0) +
+                       #geom_point(data=data.frame(x=double(0)), aes(x,x,color=x))  +
+                       geom_point(data=color_data, aes(x,x,color=value)) +
                        scale_colour_manual(name= meta_column,
                                            values = color_list) +
-                       guides(colour = guide_legend(override.aes = list(alpha = 1, size = 7))) +
                        theme_cowplot() +
                        theme(axis.line = element_blank(),
                              axis.title = element_blank(),
                              axis.ticks = element_blank(),
                              axis.text = element_blank()) +
-                       annotate("text", -Inf, Inf, label = "Metadata", hjust = 0, vjust = 1, size = 6))
+                       guides(colour = guide_legend(override.aes = list(alpha = 1, size = 7)))
+                     )
+
   }
-  col_size <- {meta_filter[[meta_column]]} %>% n_distinct
-  if(meta_column %in% c('CellType', 'CellType_predict', 'cluster','TabulaMurisCellType_predict' ) | col_size  > 15){
-    plot <- plot+ theme(legend.position = 'none')
-  }
+
 
   more <- NULL
   if ('1' %in% input$label_toggle){
@@ -143,9 +142,9 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                             aes(x = UMAP_1, y = UMAP_2, label = TabulaMurisCellType_predict),
                             max.iter = 20)
   }
-  if (meta_column %in% c('cluster','subcluster', 'TabulaMurisCellType', 'TabulaMurisCellType_predict')){
-    suppressWarnings(plot + more + theme(legend.position = 'none'))
-  } else {
-    suppressWarnings(plot + more)
-  }
+  col_size <- {meta_filter[[meta_column]]} %>% n_distinct
+  out <- list()
+  out$plot <- plot + more
+  out$col_size <- col_size
+  out
 }
