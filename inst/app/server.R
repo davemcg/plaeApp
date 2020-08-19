@@ -367,8 +367,8 @@ shinyServer(function(input, output, session) {
     # Meta Plot modal ----------
     observeEvent(input$BUTTON_show_meta_legend, {
       # Show a modal when the button is pressed
-      showModal(shinyjqui::draggableModalDialog(size = 'l', title = 'Please wait for Legend to load - Click to Drag',
-                                                plotOutput('meta_plot_legend'),
+      showModal(shinyjqui::draggableModalDialog(size = 'l', title = 'Click to Drag',
+                                                plotOutput('meta_plot_legend') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'),
                                                 easyClose = TRUE))
     })
     # HELP button descriptions ----------
@@ -530,7 +530,7 @@ shinyServer(function(input, output, session) {
                `Total Cells` = Count,
                `log2(cpm+1)` = Expression)
 
-      table %>% DT::datatable(extensions = 'Buttons', rownames = F,
+      table %>% DT::datatable(extensions = 'Buttons',
                               filter = list(position = 'bottom', clear = FALSE),
                               options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
     })
@@ -547,7 +547,7 @@ shinyServer(function(input, output, session) {
         arrange(-Count) %>%
         rename(`Total Cells` = Count)
 
-      table %>% DT::datatable(extensions = 'Buttons', rownames = F,
+      table %>% DT::datatable(extensions = 'Buttons',
                               filter = list(position = 'bottom', clear = FALSE),
                               options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
     })
@@ -605,7 +605,7 @@ shinyServer(function(input, output, session) {
              `Total Cells` = Count,
              `log2(cpm+1)` = Expression) %>%
       tidyr::drop_na()
-    full_table %>% DT::datatable(extensions = 'Buttons', rownames = F,
+    full_table %>% DT::datatable(extensions = 'Buttons',
                                  filter = list(position = 'bottom', clear = FALSE),
                                  options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
   })
@@ -669,7 +669,7 @@ shinyServer(function(input, output, session) {
              FDR = as.numeric(FDR),
              PValue = format(PValue, digits = 3),
              PValue = as.numeric(PValue)) %>%
-      DT::datatable(extensions = 'Buttons', rownames = F,
+      DT::datatable(extensions = 'Buttons',
                     filter = list(position = 'bottom', clear = FALSE),
                     options = list(pageLength = 10,
                                    dom = 'frtBip', buttons = c('pageLength','copy', 'csv'))) %>%

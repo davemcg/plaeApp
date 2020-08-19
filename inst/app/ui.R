@@ -46,7 +46,7 @@ shinyUI(
                                                        dblclick = "gene_scatter_plot_dblclick",
                                                        brush = brushOpts(
                                                          id = "gene_scatter_plot_brush",
-                                                         resetOnNew = TRUE)),
+                                                         resetOnNew = TRUE)) %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'),
                                             fluidRow(column(5,
                                                             selectizeInput('Gene', strong('Gene: '),
                                                                            choices=NULL, multiple=FALSE)),
@@ -70,7 +70,7 @@ shinyUI(
                                                        dblclick = "meta_plot_dblclick",
                                                        brush = brushOpts(
                                                          id = "meta_plot_brush",
-                                                         resetOnNew = TRUE)),
+                                                         resetOnNew = TRUE)) %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'),
                                             fluidRow(column(5,
                                                             selectizeInput('meta_column', strong('Color: '),
                                                                            choices= NULL, selected = 'CellType_predict')),
@@ -170,7 +170,7 @@ shinyUI(
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                          style='background-color: #3399ff; color: #ffffff'))),
                                         br(),
-                                        fluidRow(column(10, plotOutput('exp_plot'))))),
+                                        fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'))))),
 
                         # in situ ---------
                         tabPanel('In Situ Projection',
@@ -231,7 +231,7 @@ shinyUI(
                                                  fluidRow(column(10, actionButton('BUTTON_draw_filter','Draw Plot', icon = icon("arrow-down"),
                                                                                   style='background-color: #3399ff; color: #ffffff'))),
                                                  br(),
-                                                 plotOutput('facet_plot'))
+                                                 plotOutput('facet_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'))
                                         )
 
                                  )),
@@ -275,7 +275,7 @@ shinyUI(
                                         actionButton('BUTTON_draw_dotplot','Draw Dotplot!', icon = icon("arrow-down"),
                                                      style='background-color: #3399ff; color: #ffffff'),
                                         br(), br(),
-                                        plotOutput('dotplot')))
+                                        plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white')))
              ),
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
