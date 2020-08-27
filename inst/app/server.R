@@ -19,7 +19,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_13__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_20__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
@@ -376,7 +376,7 @@ shinyServer(function(input, output, session) {
     observeEvent(input$umap_table_help, {
       # Show a modal when the button is pressed
       showModal(shinyjqui::draggableModalDialog(size = 'm',
-                                                title = "Notes",
+                                                title = "UMAP - Tables",
                                                 HTML("<p>The UMAP is a 2D Projection of a higher dimensional space which tries to bring together
                             closely related elements while maintaining the overall structure. The higher dimensional space
                             is built from the gene expression patterns of each cell. The left panel shows the expression pattern
@@ -390,6 +390,100 @@ shinyServer(function(input, output, session) {
                             </ul>"),
                                                 easyClose = TRUE))
     })
+    observeEvent(input$exp_plot_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "Expression Plot",
+                                                HTML("<p>This highly flexible scatter plot view allows you to plot gene expression by Cell Type
+                                                (published), Cell Type (our inferred cell labels), or cluster (unsupervised grouping
+                                                of the single cell transcriptomes). You can control how the data is displayed by
+                                                selecting how the data points are colored and you have advanced filtering
+                                                functionality that lets you select what fields (e.g. Citation) to filter on.</p>
+
+                            There are two fundamental ways to view the data:
+                            <ul>
+                              <li>Expression, which is log2 scaled CPM (counts per million) </li>
+                              <li>% Cells Detected, which is the proportion of cells that have any detectable transcript</li>
+                            </ul>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$insitu_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "In Situ Projection",
+                                                HTML("<p>As developmental biologists may be more experienced in viewing
+                                                stained cross-sections of the retina, we have created this visualization
+                                                which colors each of the major cell type (e.g. Rods, Cones) by the intensity
+                                                of the expression of user selected gene. Like elsewhere in PLAE, you can
+                                                filter to only show data by flexible criteria (e.g. only show gene / cell
+                                                expression infrmation from mouse)</p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$facet_umap_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "Facet UMAP",
+                                                HTML("<p>Because some of the information you are interested in
+                                                     may be overlapping, it sometimes is useful to be able to split
+                                                     the UMAP visualization into separate plots by some field (e.g.
+                                                     organism) of interest.</p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$dotplot_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "Dotplot",
+                                                HTML("<p>The dotplot visualization is highly space efficent as it displays
+                                                     both amount of expression (by color intensity) and percent cells
+                                                     that detect the transcript (by size of dot) with a user selected
+                                                     combination of grouping features (e.g. organism and CellType).</p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$diff_testing_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 'l',
+                                                title = "Differential Testing",
+                                                HTML("<p>We have pre-computed 12 different differential expression tests. They
+                                                     can be grouped into 3 categories:
+                                                     <ul>
+                              <li>[ ] against Remaining, which tests [ ] against all other cells. The effect of organism is controlled
+                              by giving it as a covariate in the test</li>
+                              <li>Pairwise [ ] against [ ], which tests genes differentially expressed in pairwise combinations
+                              (for example Rods against Cones, ignoring all other cells)</li>
+                              <li>Organism specific test within [ ]. For example you can search for genes differentially expressed
+                              between mouse and human WITHIN rods.</li>
+                            </ul>
+                            <p>[ ] is either:</p>
+                            <ul>
+                              <li>CellType, which are based on published cell type assignments</li>
+                              <li>CellType (predict), which uses ML to project CellType labels onto (nearly) all of the cells</li>
+                              <li>Cluster (droplet or well), which groups the droplet or well (e.g. 10X or SmartSeq) based cells into clusters in an
+                              unsupervised manner. Well and droplet were clustered separately as the integration performance
+                              was suboptimal when combining these two technologies.</li>
+                            </ul></p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$diff_testing_help2, {
+      showModal(shinyjqui::draggableModalDialog(size = 'l',
+                                                title = "PseudoBulk Design",
+                                                HTML("<p>What is pseudobulk? Most scRNA-seq diff testing is done with complicated
+                                                     and computationally expensive tests designed to maximize signal in relatively
+                                                     homogenous data. As the scEiaD dataset includes a great many biological
+                                                     replicates we have chosen to maximize the power of the replicates by summing
+                                                     the counts data into groups (e.g. sum all CRX counts in labelled Rods for Clark et al.,
+                                                     Lu et al., etc). This makes the data bulk (traditional) RNA-seq like in its
+                                                     statistical properties, which allows us to use more established tools (like edgeR)
+                                                     for the differential testing.</p>
+
+                                                     <p>Model design for [ ] against Remaining and Pairwise [ ] against [ ]</p>
+                                                     <ul>
+                                                     <li>design <- model.matrix(~0+group+org_covariate) where group is CellType/Cluster and
+                                                     org_covariate is Human/Mouse/Macaque</li>
+                                                     </ul>
+                                                     <p>Model design for Organism specific test within [ ]</p>
+                                                     <ul>
+                                                     <li>design <- model.matrix(~0+group) where group is Human/Mouse/Macaque and
+                                                     the test is limited by contrasts to a specific CellType or Cluster</li>
+                                                     </ul>
+                                                     <p>The edgeR glmQLFTest is used to fit the linear model for the differential testing.</p>"),
+                                                easyClose = TRUE))
+    })
+
     ## exp plot
     observeEvent(input$exp_plot_help, {
       # Show a modal when the button is pressed

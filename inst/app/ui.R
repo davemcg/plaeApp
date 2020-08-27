@@ -9,6 +9,7 @@ library(pals)
 library(shinythemes)
 library(cowplot)
 library(shinyalert)
+library(magrittr)
 # header color
 ## orig: #2c3e50
 ## new:  #6439db
@@ -280,6 +281,7 @@ shinyUI(
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
                       actionButton("diff_testing_help", "?", class = 'rightAlign'),
+                      actionButton("diff_testing_help2", "PB?", class = 'rightAlign'),
                       fluidPage(column(8,
                                        fluidRow(
                                          selectInput('search_by', strong('Search by: '),
@@ -331,6 +333,7 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/counts.Rdata", "Kallisto counts, R sparse matrix")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/cpm.Rdata", "Kallisto counts, cpm scaled, R sparse matrix")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix")))),
+                      br(),br(),br(),
                       ),
 
              navbarMenu('Info',
