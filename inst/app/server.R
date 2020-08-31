@@ -736,7 +736,7 @@ shinyServer(function(input, output, session) {
     #cat(diff_table)
     if (input$search_by == 'Gene'){
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(Gene %in% gene) %>%
+        filter(Gene %in% gene, FDR < 0.05, abs(logFC) > 0.5) %>%
         arrange(FDR)
     } else {
       # isolate({
@@ -744,7 +744,7 @@ shinyServer(function(input, output, session) {
       test_val <- input$diff_term
       filter_term <- input$search_by
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(test == test_val) %>%
+        filter(test == test_val, FDR < 0.05, abs(logFC) > 0.5) %>%
         arrange(FDR) %>%
         collect() %>%
         filter(PB_Test == filter_term)

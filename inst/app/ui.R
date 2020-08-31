@@ -340,7 +340,7 @@ shinyUI(
              navbarMenu('Info',
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('PLAE v0.36'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('PLAE v0.37'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('Overview'))),
                                    fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. PLAE is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
@@ -353,6 +353,8 @@ shinyUI(
                                  br(), br()),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.37 (2020-08-24): Help pop section populated with text. Put white halo back around text in UMAP - Meta section. Loading circles added to plots. Row names added to tables. Diff testing filtered to only return results with FDR < 0.05 and abs(logFC) > 0.5.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.36 (2020-08-17): Data download section added. Change log moved to separate section. CSS tweaked to show links in blue. First overview table updated to improve contrast. UMAP plots axis fixed.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.35 (2020-08-14): Moved Overview tables to html for improved rendering and switched over color-blind friendly palette. Temporarily removed Temporal Plotting section. Improved filtering for Facet Plot. DotPlot plotting fixed and improved. Back-end server.R code moved into separate functions. Colors fixed so they stay consistent when filtering/subsetting the plots. Site now starts from scratch in under 5 seconds with improved fst-based data loading and pre-calculating more operations.')),
