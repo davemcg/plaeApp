@@ -2,6 +2,7 @@ print('UI Start')
 print(Sys.time())
 
 library(shiny)
+library(magrittr)
 library(Cairo)
 library(ggplot2)
 library(scattermore)
