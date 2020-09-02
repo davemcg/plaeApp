@@ -13,7 +13,7 @@ library(shinyalert)
 library(magrittr)
 # header color
 ## orig: #2c3e50
-## new:  #6439db
+## new:  #6633ff
 # header select color
 ## orig: #1a242f
 ## new: #400a91
@@ -334,7 +334,8 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/counts.Rdata", "Kallisto counts, R sparse matrix")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/cpm.Rdata", "Kallisto counts, cpm scaled, R sparse matrix")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix")))),
-                      br(),br(),br(),
+                      br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
+                      fluidRow(includeHTML("www/footer.html"))
                       ),
 
              navbarMenu('Info',
@@ -350,7 +351,8 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, h1('Extracted Cell Type Labels'))),
                                    fluidRow(column(width = 5, offset = 1, includeHTML("www/table_02.html"))),
                                    fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
-                                 br(), br()),
+                                 br(),br(),
+                                 fluidRow(includeHTML("www/footer.html"))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
                                  fluidRow(column(width = 8, offset = 1, '0.37 (2020-08-24): Help pop section populated with text. Put white halo back around text in UMAP - Meta section. Loading circles added to plots. Row names added to tables. Diff testing filtered to only return results with FDR < 0.05 and abs(logFC) > 0.5.')),
@@ -376,7 +378,8 @@ shinyUI(
                                  fluidRow(column(width = 8, offset = 1, '0.21 (2020-06-15): Added subcluster diff testing tables, temporal gene expression by celltype plot section.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
-                                 br(), br(), br()
+                                 br(), br(),
+                                 fluidRow(includeHTML("www/footer.html"))
                         )),
              tags$head(tags$style(".rightAlign{float:right;}")))
 )

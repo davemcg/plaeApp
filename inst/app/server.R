@@ -19,7 +19,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_20__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-TabulaDroplet-batch-scVI-50-0.1-15-0.4.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
@@ -34,7 +34,8 @@ categorical_columns <- c("Phase","batch","study_accession","library_layout","org
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
                          "Doublet","TechType", "SubCellType", 'subcluster' )
 #"SubCellType" and subcluster are problems
-meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'))
+meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'),
+                                      subcluster = as.character(subcluster))
 map_color <- function(column, meta_filter){
   master_colorlist <- c(pals::alphabet(), pals::alphabet2())
   values <- meta_filter %>% pull(!!column) %>% unique %>% sort
