@@ -6935,7 +6935,11 @@ footer{
       font-size: 12px;
   }
 
-.footer_image {
-  float: left;
+.footer {
+  text-align: center;
+}
+.footer img {
+  position: absolute;
+  left: 10px;
   height: 50px;
 }

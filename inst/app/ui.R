@@ -135,7 +135,9 @@ shinyUI(
                                             br(),
                                             div(DT::dataTableOutput('metadata_stats'), style='font-size:75%'))
                                    )
-                                 )
+                                 ),
+                                 br(), br(), br(), br(), br(), br(), br(), br(),
+                                 fluidRow(includeHTML("www/footer.html"))
                         ),
                         # exp_plots ------
                         tabPanel('Expression Plot',
@@ -172,7 +174,24 @@ shinyUI(
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                          style='background-color: #3399ff; color: #ffffff'))),
                                         br(),
-                                        fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'))))),
+                                        fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white')))),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 fluidRow(includeHTML("www/footer.html"))),
 
                         # in situ ---------
                         tabPanel('In Situ Projection',
@@ -204,7 +223,18 @@ shinyUI(
                                                            hr(),
                                                            fluidRow(
                                                              div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
-                                          )))),
+                                          )),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
                                  actionButton("facet_umap_help", "?", class = 'rightAlign'),
                                  column(10,
@@ -234,9 +264,14 @@ shinyUI(
                                                                                   style='background-color: #3399ff; color: #ffffff'))),
                                                  br(),
                                                  plotOutput('facet_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'))
-                                        )
-
-                                 )),
+                                        )),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 fluidRow(includeHTML("www/footer.html"))),
                         # temporal plot -----
                         # tabPanel('Temporal Gene x Cell Type',
                         #          actionButton("temporal_plot_help", "?", class = 'rightAlign'),
@@ -277,7 +312,18 @@ shinyUI(
                                         actionButton('BUTTON_draw_dotplot','Draw Dotplot!', icon = icon("arrow-down"),
                                                      style='background-color: #3399ff; color: #ffffff'),
                                         br(), br(),
-                                        plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white')))
+                                        plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white')),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                 fluidRow(includeHTML("www/footer.html")))
              ),
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
@@ -313,7 +359,9 @@ shinyUI(
                                                                          multiple = TRUE))
                                        )),
                                 column(8,
-                                       div(DT::dataTableOutput('make_diff_table'), style='font-size:75%')))),
+                                       div(DT::dataTableOutput('make_diff_table'), style='font-size:75%'))),
+                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                      fluidRow(includeHTML("www/footer.html"))),
              tabPanel('Data', # Data ---------
                       fluidRow(column(width = 8, offset = 1, h1("Run PLAE Locally"))),
                       fluidRow(column(width = 8, offset = 1, 'If you have 200GB of free hard drive space, you can run PLAE on your own computer. Go ', tags$a(href="https://www.github.com/davemcg/plaeApp", "here"), 'for installation instructions (this is the codebase for the app you are using now).')),
@@ -338,10 +386,10 @@ shinyUI(
                       fluidRow(includeHTML("www/footer.html"))
                       ),
 
-             navbarMenu('Info',
+             navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('PLAE v0.37'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('PLAE v0.38'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('Overview'))),
                                    fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. PLAE is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
@@ -353,8 +401,16 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
                                  br(),br(),
                                  fluidRow(includeHTML("www/footer.html"))),
+                        tabPanel('Contact', # Contact ------
+                                 fluidPage(
+                                   fluidRow(column(width = 8, offset = 1, h1('Contact'))),
+                                   fluidRow(column(width = 8, offset = 1, tags$a(href="https://www.nei.nih.gov/research/research-labs-and-branches/ophthalmic-genetics-and-visual-function-branch/bioinformatics-group", "David McGaughey, Ph.D")))),
+                                   br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
+                                   fluidRow(includeHTML("www/footer.html"))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.38 (2020-09-02): Contact section and footer added for compliance.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.37 (2020-08-24): Help pop section populated with text. Put white halo back around text in UMAP - Meta section. Loading circles added to plots. Row names added to tables. Diff testing filtered to only return results with FDR < 0.05 and abs(logFC) > 0.5.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.36 (2020-08-17): Data download section added. Change log moved to separate section. CSS tweaked to show links in blue. First overview table updated to improve contrast. UMAP plots axis fixed.')),
