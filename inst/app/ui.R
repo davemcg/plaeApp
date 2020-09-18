@@ -369,11 +369,12 @@ shinyUI(
                         tabPanel('Contact', # Contact ------
                                  fluidPage(
                                    fluidRow(column(width = 8, offset = 1, h1('Contact'))),
-                                   fluidRow(column(width = 8, offset = 1, "Please contact ", tags$a(href="https://www.nei.nih.gov/research/research-labs-and-branches/ophthalmic-genetics-and-visual-function-branch/bioinformatics-group", "David McGaughey, Ph.D"), " if you have any questions about scEiaD or the PLAE application.")),
-                                 linebreaks(2),
+                                   fluidRow(column(width = 8, offset = 1, "If you have questions about scEiaD dataset or the PLAE application, please contact ", tags$a(href="https://www.nei.nih.gov/research/research-labs-and-branches/ophthalmic-genetics-and-visual-function-branch/bioinformatics-group", "David McGaughey, Ph.D"), " .")),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, "Otherwise the National Eye Institute's Office of Science Communications, Public Liaison and Education responds directly to requests for information on eye diseases and vision research in English and Spanish. We cannot provide personalized medical advice to individuals about their condition or treatment.")),
                                  br(),
-                                 fluidRow(column(width = 8, offset = 1, tags$a(href="mailto:2020@nei.nih.gov", "2020@nei.nih.gov"))),
+                                 fluidRow(column(width = 8, offset = 1, tags$a(href="mailto:2020@nei.nih.gov",
+                                                                               "2020@nei.nih.gov"))),
                                  fluidRow(column(width = 8, offset = 1, "Phone: 301-496-5248 — English and Spanish")),
                                  fluidRow(column(width = 8, offset = 1, "Mail: National Eye Institute")),
                                  fluidRow(column(width = 8, offset = 1, "Information Office")),
@@ -383,6 +384,8 @@ shinyUI(
                                  fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.39 (2020-09-18): Fixed calculation error in dotplot where expression not scaled by number of cells in grouping variable.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.38 (2020-09-02): Contact section and footer added for compliance.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.37 (2020-08-24): Help pop section populated with text. Put white halo back around text in UMAP - Meta section. Loading circles added to plots. Row names added to tables. Diff testing filtered to only return results with FDR < 0.05 and abs(logFC) > 0.5.')),
