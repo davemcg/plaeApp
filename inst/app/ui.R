@@ -42,7 +42,7 @@ shinyUI(
                                      selected = "Droplet",
                                      inline = TRUE,
                                    )),
-                                   actionButton("umap_table_help", "?", class = 'rightAlign')),
+                                   actionButton("umap_table_help", "?", class = 'helpAlign')),
                                    fluidRow(
                                      # Gene Scatter  ---------------
                                      column(6,
@@ -170,7 +170,7 @@ shinyUI(
                                           column(3,
                                                  selectInput('exp_plot_ylab', strong('Value: '),
                                                              choices = c('Mean CPM', '% of Cells Detected'))),
-                                          actionButton("exp_plot_help", "?", class = 'rightAlign')),
+                                          actionButton("exp_plot_help", "?", class = 'helpAlign')),
                                         fluidRow(
                                           column(3,
                                                  (selectizeInput('exp_plot_facet', strong('Facet on: '),
@@ -197,7 +197,7 @@ shinyUI(
 
                         # in situ ---------
                         tabPanel('In Situ Projection',
-                                 actionButton("insitu_help", "?", class = 'rightAlign'),
+                                 actionButton("insitu_help", "?", class = 'helpAlign'),
                                  fluidPage(
                                    column(8,
                                           fluidRow(column(6, tags$h1('In Situ Projection'))),
@@ -231,7 +231,7 @@ shinyUI(
                                  linebreaks(120),
                                  fluidRow(includeHTML("www/footer.html"))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
-                                 actionButton("facet_umap_help", "?", class = 'rightAlign'),
+                                 actionButton("facet_umap_help", "?", class = 'helpAlign'),
                                  column(10,
                                         fluidRow(column(6, tags$h1('Facet UMAP'))),
                                         fluidRow(
@@ -265,7 +265,7 @@ shinyUI(
                                  fluidRow(includeHTML("www/footer.html"))),
                         # temporal plot -----
                         # tabPanel('Temporal Gene x Cell Type',
-                        #          actionButton("temporal_plot_help", "?", class = 'rightAlign'),
+                        #          actionButton("temporal_plot_help", "?", class = 'helpAlign'),
                         #          column(10,
                         #                 fluidRow(
                         #                   column(10,
@@ -285,9 +285,9 @@ shinyUI(
                         #                 fluidRow(column(10, plotOutput('temporal_plot')))
                         #          )),
                         tabPanel('Dotplot', # Dotplot ---------
-                                 actionButton("dotplot_help", "?", class = 'rightAlign'),
+                                 actionButton("dotplot_help", "?", class = 'helpAlign'),
                                  column(8,
-                                        fluidRow(column(6, tags$h1('Dotpot'))),
+                                        fluidRow(column(6, tags$h1('Dotplot'))),
                                         fluidRow(
                                           column(4, selectizeInput('dotplot_Gene', strong('Genes: '),
                                                                    choices=NULL, multiple=TRUE)),
@@ -310,8 +310,8 @@ shinyUI(
              ),
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
-                      actionButton("diff_testing_help", "?", class = 'rightAlign'),
-                      actionButton("diff_testing_help2", "PB?", class = 'rightAlign'),
+                      actionButton("diff_testing_help", "?", class = 'helpAlign'),
+                      actionButton("diff_testing_help2", "PB?", class = 'helpAlign'),
                       fluidPage(column(8,
                                        fluidRow(tags$h1('Diff Testing')),
                                        fluidRow(
@@ -374,7 +374,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('PLAE v0.38'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('PLAE v0.40'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('Overview'))),
                                    fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the mammalian eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. PLAE is a meta-analysis project over 1.2 million single-cell transcriptomes across 28 studies, 18 publications, and 3 species encompassing the back of the eye. Deep metadata minining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
@@ -404,6 +404,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.40 (2020-10-01): UI and text labels tweaked in UMAP-Tables to improve tab selection order. Dot plot given a bar plot to show category size. Error handling improrved when user fails to provide a category value to filter on.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.39 (2020-09-18): Fixed calculation error in dotplot where expression not scaled by number of cells in grouping variable.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.38 (2020-09-02): Contact section and footer added for compliance.')),
@@ -434,7 +436,7 @@ shinyUI(
                                  linebreaks(2),
                                  fluidRow(includeHTML("www/footer.html"))
                         )),
-             tags$head(tags$style(".rightAlign{float:right;}"))
+             tags$head(tags$style(".helpAlign{float:right;}"))
   )
 )
 
