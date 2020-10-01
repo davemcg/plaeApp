@@ -104,7 +104,7 @@ figure {
 }
 hr {
   box-sizing: content-box;
-  height: 0;
+  height: 1;
 }
 pre {
   overflow: auto;
@@ -1257,27 +1257,27 @@ h6 .small,
 }
 h1,
 .h1 {
-  font-size: 39px;
+  font-size: 28px;
 }
 h2,
 .h2 {
-  font-size: 32px;
+  font-size: 20px;
 }
 h3,
 .h3 {
-  font-size: 26px;
+  font-size: 15px;
 }
 h4,
 .h4 {
-  font-size: 19px;
+  font-size: 13px;
 }
 h5,
 .h5 {
-  font-size: 15px;
+  font-size: 11px;
 }
 h6,
 .h6 {
-  font-size: 13px;
+  font-size: 9px;
 }
 p {
   margin: 0 0 10.5px;
