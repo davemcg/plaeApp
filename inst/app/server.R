@@ -19,7 +19,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-2000-counts-TabulaDroplet-batch-scVI-50-0.1-15-0.4.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_20__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
@@ -118,11 +118,11 @@ shinyServer(function(input, output, session) {
       }
       output$gene_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
-          selectizeInput('gene_filter_on', strong('Filter on: '),
+          selectizeInput('gene_filter_on', strong('Gene Filter on: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
           shinyWidgets::setSliderColor(c("#3399ff"), c(1))
-          sliderInput("gene_filter_on", label = strong("Filter Range: "), min = min(choice),
+          sliderInput("gene_filter_on", label = strong("Gene Filter Range: "), min = min(choice),
                       max = max(choice), value = c(min(choice), max(choice)))
         }
       })
@@ -154,11 +154,11 @@ shinyServer(function(input, output, session) {
       }
       output$meta_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
-          selectizeInput('meta_filter_on', strong('Filter on: '),
+          selectizeInput('meta_filter_on', strong('Meta Filter on: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
           shinyWidgets::setSliderColor(c("#3399ff"), c(1))
-          sliderInput("meta_filter_on", label = strong("Filter Range: "), min = min(choice),
+          sliderInput("meta_filter_on", label = strong("Meta Filter Range: "), min = min(choice),
                       max = max(choice), value = c(min(choice), max(choice)))
         }
       })
@@ -650,6 +650,7 @@ shinyServer(function(input, output, session) {
 
     # facet plot -----------
     source('make_facet_plot.R')
+
     facet_plot <- eventReactive(input$BUTTON_draw_filter, {make_facet_plot(input,  meta_filter)})
 
     output$facet_plot <- renderPlot({

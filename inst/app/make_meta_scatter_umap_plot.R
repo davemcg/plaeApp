@@ -37,7 +37,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
     filter(!is.na(!!as.symbol(meta_column)))
   # category filtering
   if (!is_null(input$meta_filter_cat)){
-    validate( need(input$meta_filter_on != '', 'Please select a value to filter on'  ))
+    validate( need(input$meta_filter_on != '', 'Please select at laest one value in "Scatter Filter on" '  ))
     if (class(input$meta_filter_on) == 'character'){
       p_data <- p_data %>%
         #filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)

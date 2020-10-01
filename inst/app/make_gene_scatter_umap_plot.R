@@ -16,6 +16,7 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   cat(input$gene_filter_cat)
   cat(class(input$gene_filter_cat))
   if (!is_null(input$gene_filter_cat)){
+    validate( need(input$gene_filter_on != '', 'Please select at least one value in "Gene Filter on" '  ))
     if (class(input$gene_filter_on) == 'character'){
       p <- p %>%
         #filter(!!as.symbol(input$gene_filter_cat) %in% input$gene_filter_on)
@@ -26,6 +27,8 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
                !!as.symbol(input$gene_filter_cat) <= input$gene_filter_on[2])
     }
   }
+
+
   color_range <- range(p$cpm)
   plot <- p %>% ggplot() +
     geom_scattermost(cbind(mf$UMAP_1, mf$UMAP_2), color = '#D3D3D333',
