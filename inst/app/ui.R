@@ -33,7 +33,7 @@ shinyUI(
              selected = 'Overview',
              navbarMenu('Viz', # UMAP ----------
                         tabPanel('UMAP - Tables',
-                                 fluidPage(
+                                 fluidPage(tags$html(lang="en"),
                               fluidRow(column(6, tags$h1("UMAP"))),
                                    fluidRow(column(6, radioButtons(
                                      inputId = "gene_and_meta_scatter_tech",
@@ -72,7 +72,7 @@ shinyUI(
                                                                         max = 15, value = c(1, 15))
                                             )),
                                             fluidRow(column(5,
-                                                            selectizeInput('gene_filter_cat', strong('Scatter Filter Category: '),
+                                                            selectizeInput('gene_filter_cat', label = strong('Scatter Filter Category: '),
                                                                            choices = NULL, selected = NULL, multiple = TRUE)),
                                                      column(5,
                                                             uiOutput('gene_filter_on_dynamicUI'))),
@@ -208,9 +208,9 @@ shinyUI(
                                                                      choices = seq(500, 1000, by = 100), selected = 700))
                                           ),
                                           fluidRow(
-                                            column(4, selectizeInput('insitu_filter_cat', strong('Filter category: '),
+                                            column(4, selectizeInput('insitu_filter_cat', label = strong('Filter category: '),
                                                                      choices=NULL, multiple=FALSE)),
-                                            column(4, selectizeInput('insitu_filter_on', strong('Filter on: '),
+                                            column(4, selectizeInput('insitu_filter_on', label = strong('Filter on: '),
                                                                      choices=NULL, multiple=TRUE)),
                                           ),
                                           fluidRow(

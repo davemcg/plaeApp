@@ -105,6 +105,7 @@ shinyServer(function(input, output, session) {
     # gene plot category filtering ----
     if (is.null(query[['gene_filter_cat']])){
       updateSelectizeInput(session, 'gene_filter_cat',
+                           label = 'Scatter Filter Category: ',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            selected = '',
@@ -131,6 +132,7 @@ shinyServer(function(input, output, session) {
     # meta plot updateSelectizeInput ------
     if (is.null(query[['meta_column']])){
       updateSelectizeInput(session, 'meta_column',
+                           label = 'Meta Color:',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
@@ -140,6 +142,7 @@ shinyServer(function(input, output, session) {
     # meta plot category filtering ----
     if (is.null(query[['meta_filter_cat']])){
       updateSelectizeInput(session, 'meta_filter_cat',
+                           label = 'Meta Filter Category:',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            selected = '',
@@ -168,6 +171,7 @@ shinyServer(function(input, output, session) {
     # dotplot updateSelectizeInput ----
     if (is.null(query[['dotplot_Gene']])){
       updateSelectizeInput(session, 'dotplot_Gene',
+                           label = 'Genes: ',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = c('RHO','WIF1','CABP5', 'AIF1','AQPT4','ARR3','ONECUT1','GRIK1','GAD1','POU4F2'),
@@ -175,6 +179,7 @@ shinyServer(function(input, output, session) {
     }
     if (is.null(query[['dotplot_groups']])){
       updateSelectizeInput(session, 'dotplot_groups',
+                           label = 'Group by (two max): ',
                            choices = meta_filter %>%
                              select(-Barcode) %>%
                              select_if(purrr::negate(is.numeric)) %>%
@@ -186,6 +191,7 @@ shinyServer(function(input, output, session) {
     }
     if (is.null(query[['dotplot_filter_cat']])){
       updateSelectizeInput(session, 'dotplot_filter_cat',
+                           label = 'Filter Category: ',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            selected = '',
@@ -198,6 +204,7 @@ shinyServer(function(input, output, session) {
         choice = meta_filter[,input$dotplot_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
       updateSelectizeInput(session, 'dotplot_filter_on',
+                           label = 'Filter on: ',
                            choices = choice,
                            server = TRUE)
     })
@@ -213,6 +220,7 @@ shinyServer(function(input, output, session) {
 
     if (is.null(query[['insitu_filter_cat']])){
       updateSelectizeInput(session, 'insitu_filter_cat',
+                           label = 'Filter category: ',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
                              select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
                            selected = '',
@@ -225,6 +233,7 @@ shinyServer(function(input, output, session) {
         choice = meta_filter[,input$insitu_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
       updateSelectizeInput(session, 'insitu_filter_on',
+                           label = "Filter on: ",
                            choices = choice,
                            server = TRUE)
     })
