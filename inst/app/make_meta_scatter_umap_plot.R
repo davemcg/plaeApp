@@ -58,12 +58,12 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                                 filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_1),
                                               mf %>%
                                                 filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_2)),
-                                        pointsize = pt_size, color = '#D3D3D333',
+                                        pointsize = pt_size - 1, color = '#D3D3D333',
                                         pixels = c(750,750)) +
                        geom_scattermost(cbind(p_data$UMAP_1, p_data$UMAP_2),
                                         color = viridis::viridis(100, alpha=0.3)
                                         [1+99*((p_data[,meta_column] %>% pull(1))-color_range[1])/diff(color_range)],
-                                        pointsize= pt_size,
+                                        pointsize= pt_size - 1,
                                         pixels=c(750,750),
                                         interpolate=FALSE) +
                        geom_point(data=data.frame(x=double(0)), aes(x,x,color=x))  +

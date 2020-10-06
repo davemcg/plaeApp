@@ -37,7 +37,7 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
     geom_scattermost(cbind(p$UMAP_1, p$UMAP_2),
                      color = viridis::magma(100, alpha=0.3)
                      [1+99*(p$cpm-color_range[1])/diff(color_range)],
-                     pointsize= pt_size,
+                     pointsize= pt_size - 1,
                      pixels=c(750,750),
                      interpolate=FALSE) +
     geom_point(data=data.frame(x=double(0)), aes(x,x,color=x)) +
