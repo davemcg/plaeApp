@@ -585,7 +585,13 @@ shinyServer(function(input, output, session) {
     output$gene_scatter_plot <- renderPlot({
       gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
     })
-
+    # gene scatter plot download ------
+    output$BUTTON_download_scatter <- downloadHandler(
+      filename = function() { ('plae_gene_scatter.png') },
+      content = function(file) {
+        ggsave(file, plot = gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y), device = "png")
+      }
+    )
 
     # metadata plot --------------
     source('make_meta_scatter_umap_plot.R')
@@ -614,7 +620,6 @@ shinyServer(function(input, output, session) {
       if (!is.null(brush)) {
         meta_ranges$x <- c(brush$xmin, brush$xmax)
         meta_ranges$y <- c(brush$ymin, brush$ymax)
-
       } else {
         meta_ranges$x <- x_range
         meta_ranges$y <- y_range
@@ -631,6 +636,17 @@ shinyServer(function(input, output, session) {
       }
     })
 
+    output$BUTTON_download_meta <- downloadHandler(
+      filename = function() { ('plae_meta.png') },
+      content = function(file) {
+        if (meta_plot()$col_size < 10) {
+          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y), device = "png")
+        } else {
+          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
+                   theme(legend.position = 'none'), device = "png")
+        }
+      }
+    )
     output$meta_plot_legend <- renderPlot({
       plot <- meta_plot()$plot
       legend <- cowplot::get_legend(plot)
@@ -692,7 +708,15 @@ shinyServer(function(input, output, session) {
     output$facet_plot <- renderPlot({
       facet_plot()
     }, height = eventReactive(input$BUTTON_draw_filter, {input$facet_height %>% as.numeric()}))
-
+    output$BUTTON_download_facet <- downloadHandler(
+      filename = function() { ('plae_facet.png') },
+      content = function(file) {
+        ggsave(file, plot = facet_plot(),
+               height = as.numeric(input$facet_height) / 50,
+               width = 15,
+               device = "png")
+      }
+    )
     ## exp_plot -----------
     source('make_exp_plot.R')
     exp_plot <- eventReactive(input$BUTTON_draw_exp_plot, {
@@ -703,16 +727,24 @@ shinyServer(function(input, output, session) {
       exp_plot()
     }, height = eventReactive(input$BUTTON_draw_exp_plot, {as.numeric(input$exp_plot_height)}))
 
+    output$BUTTON_download_exp <- downloadHandler(
+      filename = function() { ('plae_exp.png') },
+      content = function(file) {
+        ggsave(file, plot = make_exp_plot(input, scEiaD_2020_v01, meta_filter),
+               height = as.numeric(input$exp_plot_height) / 50,
+               width = 15,
+               device = "png")
+      }
+    )
 
-
-    ## temporal plot -----------
-    source('make_temporal_plot.R')
-    temporal_plot <- eventReactive(input$BUTTON_draw_temporal, {
-      make_temporal_plot(input, scEiaD_2020_v01, meta_filter)
-    })
-    output$temporal_plot <- renderPlot({
-      temporal_plot()
-    }, height = as.numeric(input$temporal_plot_height ) )
+    # ## temporal plot -----------
+    # source('make_temporal_plot.R')
+    # temporal_plot <- eventReactive(input$BUTTON_draw_temporal, {
+    #   make_temporal_plot(input, scEiaD_2020_v01, meta_filter)
+    # })
+    # output$temporal_plot <- renderPlot({
+    #   temporal_plot()
+    # }, height = as.numeric(input$temporal_plot_height ) )
 
     ## dotplot ---------
     source('make_dotplot.R')
@@ -723,6 +755,16 @@ shinyServer(function(input, output, session) {
       draw_dotplot()
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
   })
+  output$BUTTON_download_dotplot <- downloadHandler(
+    filename = function() { ('plae_dotplot.png') },
+    content = function(file) {
+      ggsave(file, plot = make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df),
+             height =
+               input$dotplot_height %>% as.numeric() / 50,
+             width = 12,
+             device = "png")
+    }
+  )
 
   # in situ ----
   # Functions used to generate in situ plots
