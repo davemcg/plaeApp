@@ -23,135 +23,145 @@ library(magrittr)
 
 
 # button and slider styling
-# #3399ff
+# #3366ff
 
 linebreaks <- function(n){HTML(strrep(br(), n))}
 
 shinyUI(
-  navbarPage('Ocular PLAE',id = 'nav',
+  navbarPage('PLAE',id = 'nav',
              theme = 'flatly_mod.css',
              selected = 'Overview',
+             tags$head(
+               tags$style(HTML("
+      .shiny-output-error-validation {
+        color: #242526;
+        font-weight: bold;
+      }
+         "))
+             ),
              navbarMenu('Viz', # UMAP ----------
                         tabPanel('UMAP - Tables',
                                  fluidPage(tags$html(lang="en"),
-                              fluidRow(column(6, tags$h1("UMAP"))),
-                                   fluidRow(column(6, radioButtons(
-                                     inputId = "gene_and_meta_scatter_tech",
-                                     label = "Technology",
-                                     choices = c("Droplet", "Well"),
-                                     selected = "Droplet",
-                                     inline = TRUE,
-                                   )),
-                                   actionButton("umap_table_help", "?", class = 'helpAlign')),
-                                   fluidRow(
-                                     # Gene Scatter  ---------------
-                                     column(6,
-                                            plotOutput('gene_scatter_plot',
-                                                       dblclick = "gene_scatter_plot_dblclick",
-                                                       brush = brushOpts(
-                                                         id = "gene_scatter_plot_brush",
-                                                         resetOnNew = TRUE)) %>%
-                                              shinycssloaders::withSpinner(type = 3, size = 0.5,
-                                                                           color = "#3399ff",
-                                                                           color.background = 'white'),
-                                            fluidRow(
-                                              column(12, actionButton('BUTTON_draw_scatter','
+                                           fluidRow(column(6, tags$h1("UMAP"))),
+                                           fluidRow(column(6, radioButtons(
+                                             inputId = "gene_and_meta_scatter_tech",
+                                             label = "Technology",
+                                             choices = c("Droplet", "Well"),
+                                             selected = "Droplet",
+                                             inline = TRUE,
+                                           ))),
+                                           fluidRow(
+                                             # Gene Scatter  ---------------
+                                             column(6,
+                                                    plotOutput('gene_scatter_plot',
+                                                               dblclick = "gene_scatter_plot_dblclick",
+                                                               brush = brushOpts(
+                                                                 id = "gene_scatter_plot_brush",
+                                                                 resetOnNew = TRUE)) %>%
+                                                      shinycssloaders::withSpinner(type = 3, size = 0.5,
+                                                                                   color = "#3366ff",
+                                                                                   color.background = 'white'),
+                                                    fluidRow(
+                                                      column(12, actionButton('BUTTON_draw_scatter','
                                                                       Draw Scatter Plot', icon = icon("arrow-up"),
-                                                                      style='background-color: #3399ff; color: #ffffff'))),
-                                            br(),
-                                            fluidRow(column(5,
-                                                            selectizeInput('Gene', strong('Scatter Gene: '),
-                                                                           choices=NULL, multiple=FALSE)),
-                                                     column(5,
-                                                            selectizeInput('pt_size_gene', strong('Scatter Point Size: '),
-                                                                           choices=c(1,3,5,10),
-                                                                           selected = 1, multiple=FALSE))),
-                                            shinyWidgets::setSliderColor(c("#3399ff"), c(1)),
-                                            fluidRow(column(5,
-                                                            sliderInput("gene_scatter_slider", label = strong("Scatter Expression Range: "), min = 1,
-                                                                        max = 15, value = c(1, 15))
-                                            )),
-                                            fluidRow(column(5,
-                                                            selectizeInput('gene_filter_cat', label = strong('Scatter Filter Category: '),
-                                                                           choices = NULL, selected = NULL, multiple = TRUE)),
-                                                     column(5,
-                                                            uiOutput('gene_filter_on_dynamicUI'))),
+                                                                              style='background-color: #3366ff; color: #ffffff'))),
+                                                    br(),
+                                                    fluidRow(column(5,
+                                                                    selectizeInput('Gene', strong('Scatter Gene: '),
+                                                                                   choices=NULL, multiple=FALSE)),
+                                                             column(5,
+                                                                    selectizeInput('pt_size_gene', strong('Scatter Point Size: '),
+                                                                                   choices=c(1,3,5,10),
+                                                                                   selected = 1, multiple=FALSE))),
+                                                    shinyWidgets::setSliderColor(c("#3366ff"), c(1)),
+                                                    fluidRow(column(5,
+                                                                    sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(cpm + 1)): "), min = 1,
+                                                                                max = 15, value = c(1, 15))
+                                                    )),
+                                                    fluidRow(column(5,
+                                                                    selectizeInput('gene_filter_cat', label = strong('Scatter Filter Category: '),
+                                                                                   choices = NULL, selected = NULL, multiple = TRUE)),
+                                                             column(5,
+                                                                    uiOutput('gene_filter_on_dynamicUI'))),
 
-                                            br()),
-                                     # Meta Plot ------
-                                     column(6,
-                                            plotOutput('meta_plot',
-                                                       dblclick = "meta_plot_dblclick",
-                                                       brush = brushOpts(
-                                                         id = "meta_plot_brush",
-                                                         resetOnNew = TRUE)) %>%
-                                              shinycssloaders::withSpinner(type = 3,
-                                                                           size = 0.5,
-                                                                           color = "#3399ff",
-                                                                           color.background = 'white'),
-                                            fluidRow(
-                                              column(12,
-                                                     actionButton('BUTTON_draw_meta',' Draw Meta Plot', icon = icon("arrow-up"),
-                                                                  style='background-color: #3399ff; color: #ffffff'))),
-                                            br(),
-                                            fluidRow(column(5,
-                                                            selectizeInput('meta_column', strong('Meta Color: '),
-                                                                           choices= NULL, selected = 'CellType_predict')),
-                                                     column(5,
-                                                            selectizeInput('pt_size_meta', strong('Meta Point Size: '),
-                                                                           choices=c(1,3,5),
-                                                                           selected = 1, multiple=FALSE))),
-                                            fluidRow(column(5,
-                                                            selectInput("label_toggle", label = strong("Meta Label: "),
-                                                                        choices = list("None" = 0,
-                                                                                       "CellType (published)" = 1,
-                                                                                       "CellType (predict)" = 2,
-                                                                                       "Cluster" = 3,
-                                                                                       "Tabula Muris" = 4), multiple = FALSE,
-                                                                        selected = 2)),
-                                                     column(2,
-                                                            radioButtons('meta_column_transform',
-                                                                         label = 'Meta Numeric Transform', inline = FALSE,
-                                                                         choices = list("None" = "None", "log2" = "log2"))),
-                                                     column(2, actionButton('BUTTON_show_meta_legend', 'Meta Legend', style='background-color: #3399ff; color: #ffffff')),
-                                            ),
-                                            fluidRow(column(5,
-                                                            selectizeInput('meta_filter_cat', strong('Meta Filter Category: '),
-                                                                           choices = NULL, selected = NULL, multiple = TRUE)),
-                                                     column(5,
-                                                            uiOutput('meta_filter_on_dynamicUI'))),
+                                                    br()),
+                                             # Meta Plot ------
+                                             column(6,
+                                                    plotOutput('meta_plot',
+                                                               dblclick = "meta_plot_dblclick",
+                                                               brush = brushOpts(
+                                                                 id = "meta_plot_brush",
+                                                                 resetOnNew = TRUE)) %>%
+                                                      shinycssloaders::withSpinner(type = 3,
+                                                                                   size = 0.5,
+                                                                                   color = "#3366ff",
+                                                                                   color.background = 'white'),
+                                                    fluidRow(
+                                                      column(12,
+                                                             actionButton('BUTTON_draw_meta',' Draw Meta Plot', icon = icon("arrow-up"),
+                                                                          style='background-color: #3366ff; color: #ffffff'))),
+                                                    br(),
+                                                    fluidRow(column(5,
+                                                                    selectizeInput('meta_column', strong('Meta Color: '),
+                                                                                   choices= NULL, selected = 'CellType_predict')),
+                                                             column(5,
+                                                                    selectizeInput('pt_size_meta', strong('Meta Point Size: '),
+                                                                                   choices=c(1,3,5),
+                                                                                   selected = 1, multiple=FALSE))),
+                                                    fluidRow(column(5,
+                                                                    selectInput("label_toggle", label = strong("Meta Label: "),
+                                                                                choices = list("None" = 0,
+                                                                                               "CellType (published)" = 1,
+                                                                                               "CellType (predict)" = 2,
+                                                                                               "Cluster" = 3,
+                                                                                               "Tabula Muris" = 4), multiple = FALSE,
+                                                                                selected = 2)),
+                                                             column(2,
+                                                                    radioButtons('meta_column_transform',
+                                                                                 label = 'Meta Numeric Transform', inline = FALSE,
+                                                                                 choices = list("None" = "None", "log2" = "log2"))),
+                                                             column(2, actionButton('BUTTON_show_meta_legend', 'Meta Legend', style='background-color: #3366ff; color: #ffffff')),
+                                                    ),
+                                                    fluidRow(column(5,
+                                                                    selectizeInput('meta_filter_cat', strong('Meta Filter Category: '),
+                                                                                   choices = NULL, selected = NULL, multiple = TRUE)),
+                                                             column(5,
+                                                                    uiOutput('meta_filter_on_dynamicUI'))),
 
-                                            br()
-                                            # selectizeInput('meta_filter_on', strong('Filter on: '),
-                                            #                choices = NULL, selected = NULL, multiple = TRUE)))
-                                     )
-                                   ),
-                              fluidRow(column(6, tags$h1("Tables"))),
-                                   # tags$head(
-                                   #   tags$style(HTML("hr {border-top: 1px dashed #0f0f0f;}"))
-                                   # ),
-                                   # fluidRow(tags$hr()),
-                                   fluidRow(
-                                     column(6,
-                                            selectizeInput('grouping_features', strong('Gene Table Grouping(s)'),
-                                                           choices = NULL,
-                                                           multiple = TRUE),
-                                            actionButton('BUTTON_make_gene_table',' Make Gene Table', icon = icon("arrow-down"),
-                                                         style='background-color: #3399ff; color: #ffffff'),
-                                            div(DT::dataTableOutput('gene_cluster_stats'), style='font-size:75%')),
-                                     column(6,
-                                            selectizeInput('meta_groupings', strong('Metadata Table Groupings '),
-                                                           choices = NULL,
-                                                           multiple = TRUE),
-                                            fluidRow(
-                                              column(12,
-                                                     actionButton('BUTTON_make_meta_table',' Make Meta Table', icon = icon("arrow-down"),
-                                                                  style='background-color: #3399ff; color: #ffffff'))
-                                            ),
-                                            br(),
-                                            div(DT::dataTableOutput('metadata_stats'), style='font-size:75%'))
-                                   )
-                                 ),
+                                                    br()
+                                                    # selectizeInput('meta_filter_on', strong('Filter on: '),
+                                                    #                choices = NULL, selected = NULL, multiple = TRUE)))
+                                             )
+                                           ),
+                                           fluidRow(column(6, tags$h1("Tables"))),
+                                           # tags$head(
+                                           #   tags$style(HTML("hr {border-top: 1px dashed #0f0f0f;}"))
+                                           # ),
+                                           # fluidRow(tags$hr()),
+                                           fluidRow(
+                                             column(5,
+                                                    selectizeInput('grouping_features', strong('Gene Table Grouping(s)'),
+                                                                   choices = NULL,
+                                                                   multiple = TRUE),
+                                                    actionButton('BUTTON_make_gene_table',' Make Gene Table', icon = icon("arrow-down"),
+                                                                 style='background-color: #3366ff; color: #ffffff'),
+                                                    br(),
+                                                    div(DT::dataTableOutput('gene_cluster_stats', width = '80%'), style='font-size:75%')),
+                                             column(5,
+                                                    selectizeInput('meta_groupings', strong('Metadata Table Groupings '),
+                                                                   choices = NULL,
+                                                                   multiple = TRUE),
+                                                    fluidRow(
+                                                      column(12,
+                                                             actionButton('BUTTON_make_meta_table',' Make Meta Table', icon = icon("arrow-down"),
+                                                                          style='background-color: #3366ff; color: #ffffff'))
+                                                    ),
+                                                    br(),
+                                                    div(DT::dataTableOutput('metadata_stats', width = '80%'), style='font-size:75%'))
+                                           ),
+                                           fluidRow(column(6,
+                                                           actionButton("umap_table_help", "Page Pop Up Info"),
+                                                           actionButton("data_table_help1", "Data Table Pop Up Info")))),
                                  linebreaks(8),
                                  fluidRow(includeHTML("www/footer.html"))
                         ),
@@ -160,17 +170,17 @@ shinyUI(
                                  column(12,
                                         fluidRow(column(6, tags$h1('Expression Plot'))),
                                         fluidRow(
-                                          column(3,
+                                          column(4,
                                                  (selectizeInput('exp_plot_genes', strong('Gene(s): '),
                                                                  choices = NULL, multiple = TRUE))),
-                                          column(3,
+                                          column(2,
                                                  selectizeInput('exp_plot_height', strong('Plot Height: '),
                                                                 choices = seq(200, 4000, by = 100),
                                                                 selected = 400, multiple = FALSE)),
                                           column(3,
                                                  selectInput('exp_plot_ylab', strong('Value: '),
-                                                             choices = c('Mean CPM', '% of Cells Detected'))),
-                                          actionButton("exp_plot_help", "?", class = 'helpAlign')),
+                                                             choices = c('Mean CPM', '% of Cells Detected')))
+                                        ),
                                         fluidRow(
                                           column(3,
                                                  (selectizeInput('exp_plot_facet', strong('Facet on: '),
@@ -189,49 +199,52 @@ shinyUI(
                                                                    choices = NULL, multiple = TRUE)),
                                         ),
                                         fluidRow(column(10, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
-                                                                         style='background-color: #3399ff; color: #ffffff'))),
+                                                                         style='background-color: #3366ff; color: #ffffff'))),
                                         br(),
-                                        fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white')))),
-                                 linebreaks(2000),
+                                        fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3366ff", color.background = 'white'))),
+                                        br(),
+                                        actionButton("exp_plot_help", "Page Pop Up Info"),),
+                                 linebreaks(160),
                                  fluidRow(includeHTML("www/footer.html"))),
 
                         # in situ ---------
                         tabPanel('In Situ Projection',
-                                 actionButton("insitu_help", "?", class = 'helpAlign'),
                                  fluidPage(
                                    column(8,
                                           fluidRow(column(6, tags$h1('In Situ Projection'))),
                                           fluidRow(
-                                            column(4, selectizeInput('insitu_Gene', strong('Genes: '),
+                                            column(5, selectizeInput('insitu_Gene', strong('Genes: '),
                                                                      choices=NULL, multiple=FALSE)),
-                                            column(4, selectizeInput('insitu_height', strong('Plot Height: '),
+                                            column(5, selectizeInput('insitu_height', strong('Plot Height: '),
                                                                      choices = seq(500, 1000, by = 100), selected = 700))
                                           ),
                                           fluidRow(
-                                            column(4, selectizeInput('insitu_filter_cat', label = strong('Filter category: '),
+                                            column(5, selectizeInput('insitu_filter_cat', label = strong('Filter category: '),
                                                                      choices=NULL, multiple=FALSE)),
-                                            column(4, selectizeInput('insitu_filter_on', label = strong('Filter on: '),
+                                            column(5, selectizeInput('insitu_filter_on', label = strong('Filter on: '),
                                                                      choices=NULL, multiple=TRUE)),
                                           ),
                                           fluidRow(
-                                            column(4,actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
-                                                                  style='background-color: #3399ff; color: #ffffff')),
-                                            column(4,radioButtons('RADIO_show_insitu_table', "Show data table?", choices = c("Yes"="yes", "No"="no"), selected = "yes", inline=TRUE))
+                                            column(5,actionButton('BUTTON_draw_insitu','Draw In Situ Projection!', icon = icon("arrow-down"),
+                                                                  style='background-color: #3366ff; color: #ffffff')),
+                                            column(5,radioButtons('RADIO_show_insitu_table', "Show data table?",
+                                                                  choices = c("Yes"="yes", "No"="no"), selected = "yes", inline=TRUE))
                                           ),
-
                                           fluidRow(
                                             plotOutput('insitu_img', height = "auto")
                                           ),
                                           conditionalPanel(condition = "input.RADIO_show_insitu_table == 'yes'",
-                                                           hr(),
+                                                           br(),
                                                            fluidRow(
                                                              div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
-                                          )
+                                          ),
+                                          actionButton("insitu_help", "Page Pop Up Info"),
+                                          actionButton("data_table_help2", "Data Table Pop Up Info")
                                    )),
                                  linebreaks(120),
                                  fluidRow(includeHTML("www/footer.html"))),
                         tabPanel('Facet UMAP', # Facet UMAP ---------
-                                 actionButton("facet_umap_help", "?", class = 'helpAlign'),
+
                                  column(10,
                                         fluidRow(column(6, tags$h1('Facet UMAP'))),
                                         fluidRow(
@@ -257,15 +270,17 @@ shinyUI(
                                                                                 choices = c(100,200,300,400,600, 800),
                                                                                 selected = 400, multiple = FALSE))),
                                                  fluidRow(column(10, actionButton('BUTTON_draw_filter','Draw Plot', icon = icon("arrow-down"),
-                                                                                  style='background-color: #3399ff; color: #ffffff'))),
+                                                                                  style='background-color: #3366ff; color: #ffffff'))),
                                                  br(),
-                                                 plotOutput('facet_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'))
-                                        )),
+                                                 plotOutput('facet_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3366ff", color.background = 'white'))
+                                        ),
+                                        br(),
+                                        actionButton("facet_umap_help", "Page Pop Up Info")),
                                  linebreaks(72),
                                  fluidRow(includeHTML("www/footer.html"))),
                         # temporal plot -----
                         # tabPanel('Temporal Gene x Cell Type',
-                        #          actionButton("temporal_plot_help", "?", class = 'helpAlign'),
+                        #          actionButton("temporal_plot_help", "Page Pop Up Info"),
                         #          column(10,
                         #                 fluidRow(
                         #                   column(10,
@@ -280,16 +295,15 @@ shinyUI(
                         #                                                         choices = seq(400, 2000, 200)) )))),
                         #                 fluidRow(column(5,
                         #                                 actionButton('BUTTON_draw_temporal','Draw Plot', icon = icon("arrow-down"),
-                        #                                              style='background-color: #3399ff; color: #ffffff'))),
+                        #                                              style='background-color: #3366ff; color: #ffffff'))),
                         #                 br(), br(),
                         #                 fluidRow(column(10, plotOutput('temporal_plot')))
                         #          )),
                         tabPanel('Dotplot', # Dotplot ---------
-                                 actionButton("dotplot_help", "?", class = 'helpAlign'),
                                  column(8,
                                         fluidRow(column(6, tags$h1('Dotplot'))),
                                         fluidRow(
-                                          column(4, selectizeInput('dotplot_Gene', strong('Genes: '),
+                                          column(6, selectizeInput('dotplot_Gene', strong('Genes: '),
                                                                    choices=NULL, multiple=TRUE)),
                                           column(4, selectizeInput('dotplot_height', strong('Plot Height: '),
                                                                    choices = seq(400, 2000, by = 100), selected = 800))),
@@ -302,16 +316,14 @@ shinyUI(
                                                                    choices=NULL, multiple=TRUE)),
                                         ),
                                         actionButton('BUTTON_draw_dotplot','Draw Dotplot!', icon = icon("arrow-down"),
-                                                     style='background-color: #3399ff; color: #ffffff'),
+                                                     style='background-color: #3366ff; color: #ffffff'), actionButton("dotplot_help", "Page Pop Up Info"),
                                         br(), br(),
-                                        plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white')),
+                                        plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3366ff", color.background = 'white')),
                                  linebreaks(120),
                                  fluidRow(includeHTML("www/footer.html")))
              ),
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
-                      actionButton("diff_testing_help", "?", class = 'helpAlign'),
-                      actionButton("diff_testing_help2", "PB?", class = 'helpAlign'),
                       fluidPage(column(8,
                                        fluidRow(tags$h1('Diff Testing')),
                                        fluidRow(
@@ -343,13 +355,18 @@ shinyUI(
                                                                          multiple = TRUE))
                                        )),
                                 column(8,
-                                       div(DT::dataTableOutput('make_diff_table'), style='font-size:75%'))),
-                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                       div(DT::dataTableOutput('make_diff_table'), style='font-size:75%')),
+                                br(),
+                                fluidRow(column(6,
+                                                actionButton("diff_testing_help", "Page Pop Up Info"),
+                                                actionButton("diff_testing_help2", "PB?"),
+                                                actionButton("data_table_help3", "Data Table Pop Up Info")))),
+                      linebreaks(10),
                       fluidRow(includeHTML("www/footer.html"))),
              tabPanel('Data', # Data ---------
                       fluidRow(column(width = 8, offset = 1, h1("Data"))),
                       fluidRow(column(width = 8, offset = 1, h2("Run PLAE Locally"))),
-                      fluidRow(column(width = 8, offset = 1, 'If you have 200GB of free hard drive space, you can run PLAE on your own computer. Go ', tags$a(href="https://www.github.com/davemcg/plaeApp", "here"), 'for installation instructions (this is the codebase for the app you are using now).')),
+                      fluidRow(column(width = 8, offset = 1, 'If you have 200GB of free hard drive space, you can run PLAE on your own computer. ', tags$a(href="https://www.github.com/davemcg/plaeApp", "Installation instructions are available in our Github repository"), ' (this is the codebase for the app you are using now).')),
                       fluidRow(column(width = 8, offset = 1, h2("Seurat Objects"))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/scEiaD_droplet_seurat_v3.Rdata", "Droplet")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_08_13/scEiaD_well_seurat_v3.Rdata", "Well")))),
@@ -404,7 +421,7 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
-                                 fluidRow(column(width = 8, offset = 1, '0.40 (2020-10-01): UI and text labels tweaked in UMAP-Tables to improve tab selection order. Dot plot given a bar plot to show category size. Error handling improrved when user fails to provide a category value to filter on.')),
+                                 fluidRow(column(width = 8, offset = 1, '0.40 (2020-10-05): UI and text labels tweaked in UMAP-Tables to improve tab selection order. Dot plot given a bar plot to show category size. Error handling improved when user fails to provide a category value to filter on. Data Table help button added. Help buttons moved to bottom of page with consistent visual - tabbing order. Colors of UI elements tweaked to improve contrast.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.39 (2020-09-18): Fixed calculation error in dotplot where expression not scaled by number of cells in grouping variable.')),
                                  br(),
@@ -435,8 +452,8 @@ shinyUI(
                                  fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
                                  linebreaks(2),
                                  fluidRow(includeHTML("www/footer.html"))
-                        )),
-             tags$head(tags$style(".helpAlign{float:right;}"))
+                        ))
+             #tags$head(tags$style(".helpAlign{float:right;}"))
   )
 )
 

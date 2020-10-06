@@ -19,7 +19,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_20__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-0-2000-counts-TabulaDroplet-batch-scVI-8-0.001-500-0.6.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
@@ -99,7 +99,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'Gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = 'CRX',
+                           selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
     }
     # gene plot category filtering ----
@@ -174,7 +174,7 @@ shinyServer(function(input, output, session) {
                            label = 'Genes: ',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = c('RHO','WIF1','CABP5', 'AIF1','AQPT4','ARR3','ONECUT1','GRIK1','GAD1','POU4F2'),
+                           selected = c('ARR3 (ENSG00000120500)','AIF1L (ENSG00000126878)','GAD1 (ENSG00000128683)','POU4F2 (ENSG00000151615)','WIF1 (ENSG00000156076)','RHO (ENSG00000163914)','ONECUT1 (ENSG00000169856)','GRIK1 (ENSG00000171189)','AIF1 (ENSG00000204472)'),
                            server = TRUE)
     }
     if (is.null(query[['dotplot_groups']])){
@@ -186,7 +186,7 @@ shinyServer(function(input, output, session) {
                              colnames() %>% sort(),
                            options = list(placeholder = 'Type to search',
                                           maxItems = 2),
-                           selected = c('CellType_predict','organism'),
+                           selected = c('CellType_predict'),
                            server = TRUE)
     }
     if (is.null(query[['dotplot_filter_cat']])){
@@ -214,7 +214,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'insitu_Gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = c('RHO'),
+                           selected = c('RHO (ENSG00000163914)'),
                            server = TRUE)
     }
 
@@ -265,7 +265,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'exp_plot_genes',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            #options = list(placeholder = 'Type to search'),
-                           selected = c('PAX6','POU4F2','CRX','NRL'),
+                           selected = c('PAX6 (ENSG00000007372)','CRX (ENSG00000105392)','NRL (ENSG00000129535)','POU4F2 (ENSG00000151615)'),
                            options = list(
                              placeholder = 'Type to search',
                              splitOn = I("(function() { return /[, ;]/; })()"),
@@ -312,7 +312,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'temporal_gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = c('PAX6','POU4F2'),
+                           selected = c('PAX6 (ENSG00000007372)','POU4F2 (ENSG00000151615)'),
                            server = TRUE)
     }
 
@@ -360,7 +360,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'diff_gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = 'CRX',
+                           selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
     }
     if (is.null(query[['diff_term']])){
@@ -382,6 +382,33 @@ shinyServer(function(input, output, session) {
                                                 easyClose = TRUE))
     })
     # HELP button descriptions ----------
+    ## table
+    dt_help_html <- "<p>The data tables in this app are reactive and searchable. The first (top right) field searches across all columns. If you need to search on individual columns, below each column is a search field that lets you search by typing. If the column is numeric, a slider appears allowing you to set a range of values to filter to. There are two ways to export information from a table:
+                                                <ul>
+                                                <li> Click \"copy\" and paste into Excel </li>
+                                                <li> Click \"CSV\" and a comma separated file will download </li> </ul></p>
+                                                     <p>The tables tend to be huge in size, so only 10 (by default) rows are shown at a time. You can click on the \"Show 10 rows\" button and select up to 100 rows to display</p>"
+    observeEvent(input$data_table_help1, {
+      # Show a modal when the button is pressed
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
+                                                title = "Data Tables",
+                                                HTML(dt_help_html),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$data_table_help2, {
+      # Show a modal when the button is pressed
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
+                                                title = "Data Tables",
+                                                HTML(dt_help_html),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$data_table_help3, {
+      # Show a modal when the button is pressed
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
+                                                title = "Data Tables",
+                                                HTML(dt_help_html),
+                                                easyClose = TRUE))
+    })
     ## umap
     observeEvent(input$umap_table_help, {
       # Show a modal when the button is pressed
@@ -390,7 +417,7 @@ shinyServer(function(input, output, session) {
                                                 HTML("<p>The UMAP is a 2D Projection of a higher dimensional space which tries to bring together
                             closely related elements while maintaining the overall structure. The higher dimensional space
                             is built from the gene expression patterns of each cell. The left panel shows the expression pattern
-                            of a gene in the UMAP space. The right panel shows metadata associated with each cell, including
+                            of a gene in the UMAP space. You can remove cells with low or high expression of your gene of choice by using the slider in \"Filter Gene Expression\" to select a range. The right panel shows metadata associated with each cell, including
                             predicted cell type.</p>
 
                             Tips:
