@@ -325,7 +325,7 @@ shinyUI(
              # # diff testing  tables ------------
              tabPanel('Diff Testing',
                       fluidPage(column(8,
-                                       fluidRow(tags$h1('Diff Testing')),
+                                       fluidRow(tags$h1('Pseudo Bulk Diff Testing')),
                                        fluidRow(
                                          selectInput('search_by', strong('Search by: '),
                                                      choices = c('Gene',
@@ -355,11 +355,11 @@ shinyUI(
                                                                          multiple = TRUE))
                                        )),
                                 column(8,
-                                       div(DT::dataTableOutput('make_diff_table'), style='font-size:75%')),
-                                br(),
-                                fluidRow(column(6,
+                                       div(DT::dataTableOutput('make_diff_table'), style='font-size:75%'),
+                                       br()),
+                                fluidRow(column(12,
                                                 actionButton("diff_testing_help", "Page Pop Up Info"),
-                                                actionButton("diff_testing_help2", "PB?"),
+                                                actionButton("diff_testing_help2", "Pseudo Bulk?"),
                                                 actionButton("data_table_help3", "Data Table Pop Up Info")))),
                       linebreaks(10),
                       fluidRow(includeHTML("www/footer.html"))),
