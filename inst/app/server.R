@@ -675,11 +675,13 @@ shinyServer(function(input, output, session) {
         arrange(-Expression) %>%
         rename(`Cells # Detected` = cell_exp_ct,
                `Total Cells` = Count,
-               `log2(cpm+1)` = Expression)
+               `log2(cpm+1)` = Expression) %>%
+        ungroup() %>%
+        select(-Gene)
 
       table %>% DT::datatable(extensions = 'Buttons',
-                              filter = list(position = 'bottom', clear = FALSE),
-                              options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+                              filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                              options = list(pageLength = 10, scrollX = T, searchHighlight = TRUE, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
     })
     output$gene_cluster_stats <- DT::renderDataTable({ gene_cluster_stats_maker()})
 
@@ -695,8 +697,8 @@ shinyServer(function(input, output, session) {
         rename(`Total Cells` = Count)
 
       table %>% DT::datatable(extensions = 'Buttons',
-                              filter = list(position = 'bottom', clear = FALSE),
-                              options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+                              filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                              options = list(pageLength = 10, scrollX = T, searchHighlight = TRUE, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
     })
     output$metadata_stats <- DT::renderDataTable({ metadata_stats()})
 
@@ -780,8 +782,8 @@ shinyServer(function(input, output, session) {
              `log2(cpm+1)` = Expression) %>%
       tidyr::drop_na()
     full_table %>% DT::datatable(extensions = 'Buttons',
-                                 filter = list(position = 'bottom', clear = FALSE),
-                                 options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+                                 filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                                 options = list(pageLength = 10, searchHighlight = TRUE, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
   })
 
   ## Reactive that generates in situ image
@@ -844,7 +846,7 @@ shinyServer(function(input, output, session) {
              PValue = format(PValue, digits = 3),
              PValue = as.numeric(PValue)) %>%
       DT::datatable(extensions = 'Buttons',
-                    filter = list(position = 'bottom', clear = FALSE),
+                    filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
                                    dom = 'frtBip', buttons = c('pageLength','copy', 'csv'))) %>%
       DT::formatRound(columns = c('logFC','logCPM','F'), digits = 2) %>%
