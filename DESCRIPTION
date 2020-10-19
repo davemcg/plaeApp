@@ -30,6 +30,7 @@ Imports:
   RSQLite,
   shiny (>= 1.4.0),
   shinyalert,
+  shinycssloaders,
   shinyjqui,
   shinythemes,
   shinyWidgets,

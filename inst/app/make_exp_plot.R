@@ -16,6 +16,11 @@ make_exp_plot <- function(input, db, meta_filter){
   grouping_features <- input$exp_plot_groups
 
   if (!is.null(input$exp_filter_cat)){
+    validate(
+      need(input$exp_filter_on != '', "Please select at least one feature to filter on")
+    )}
+
+  if (!is.null(input$exp_filter_cat)){
     # box_data <- db %>% tbl('grouped_stats') %>%
     #   filter(Gene %in% gene) %>%
     #   collect() %>%
@@ -42,9 +47,11 @@ make_exp_plot <- function(input, db, meta_filter){
       filter(Gene %in% gene) %>%
       collect()
   }
-  validate(
-    need(input$exp_plot_groups != '', "Please select at least one grouping feature")
-  )
+  # validate(
+  #   need(input$exp_plot_groups != '', "Please select at least one grouping feature")
+  # )
+
+
 
   #cat(input)
   box_data <- box_data %>%

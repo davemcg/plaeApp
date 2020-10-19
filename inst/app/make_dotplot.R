@@ -44,13 +44,14 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
   dotplot_data <- dotplot_data %>%
     filter(Gene %in% gene) %>%
     group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
-    summarise(cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE),
-              cpm = mean(cpm)) %>%
+    summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
+              cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
     collect() %>%
     tidyr::drop_na() %>%
     full_join(., meta_filter %>%
                 group_by_at(vars(one_of(grouping_features))) %>%
                 summarise(Count = n())) %>%
+    mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
     mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
            Expression = cpm * (`%` / 100)) %>%
     filter(!is.na(Count),
@@ -112,7 +113,15 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
     ylab('') + xlab('') +
     scale_y_discrete(position = 'right')+
     coord_flip()
-
+  # bar plot of group counts
+  ct <- dotplot_data %>%
+    mutate(Gene = factor(Gene, levels = {h_clust$labels[h_clust$order]} %>%
+                           str_split('-') %>% sapply(function(x) x[1]) %>% unique ),
+           Column = factor(Column %>% str_replace_all(':',' ') , levels = v_clust$labels[v_clust$order] %>%
+                             str_replace_all(':', ' '))) %>%
+    ggplot(aes(x=Column, y = Count)) +
+    geom_bar(stat='identity', width = 0.5) + coord_flip() +
+      theme_void()
   dp_legened <- get_legend(dotplot)
   dotplot <- dotplot+
     theme(axis.ticks = element_blank(), axis.text.x= element_text(angle = -45), legend.position = 'none')
@@ -165,10 +174,11 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
 
 
     top <- dotplot |
+      ct |
       group1_labels |
       group2_labels|
       plot_spacer() |
-      dp_legened |plot_spacer() |plot_layout(nrow = 1, widths = c(1,.05,.05,.05,.05,.05))
+      dp_legened |plot_spacer() |plot_layout(nrow = 1, widths = c(1,0.1, .05,.05,.05,.05,.05))
     bottom <- (group1_legend +plot_spacer())/plot_spacer()/group2_legend
     top/plot_spacer()/bottom +plot_layout(ncol = 1, heights = c(1,.05, .2))
 
@@ -178,9 +188,10 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
     #   group1_legend +
     #   plot_layout(nrow= 1, heights = c(0.1, 1, 0.1))
     top <- dotplot |
+      ct |
       group1_labels |
       plot_spacer() |
-      dp_legened |plot_spacer() | plot_layout(nrow = 1, widths = c(1,.05,.05, .05,.05))
+      dp_legened |plot_spacer() | plot_layout(nrow = 1, widths = c(1,0.1, .05,.05, .05,.05))
     top/plot_spacer() / group1_legend +plot_layout(ncol = 1, heights = c(1,.05, .2))
   }
 }

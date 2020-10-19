@@ -19,7 +19,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/scEiaD__2020_08_13__Mus_musculus_Macaca_fascicularis_Homo_sapiens-5000-counts-TabulaDroplet-batch-scVI-8-0.1-15-7.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-0-2000-counts-TabulaDroplet-batch-scVI-8-0.001-500-0.6.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
@@ -34,7 +34,8 @@ categorical_columns <- c("Phase","batch","study_accession","library_layout","org
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
                          "Doublet","TechType", "SubCellType", 'subcluster' )
 #"SubCellType" and subcluster are problems
-meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'))
+meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'),
+                                      subcluster = as.character(subcluster))
 map_color <- function(column, meta_filter){
   master_colorlist <- c(pals::alphabet(), pals::alphabet2())
   values <- meta_filter %>% pull(!!column) %>% unique %>% sort
@@ -98,12 +99,13 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'Gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = 'CRX',
+                           selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
     }
     # gene plot category filtering ----
     if (is.null(query[['gene_filter_cat']])){
       updateSelectizeInput(session, 'gene_filter_cat',
+                           label = 'Scatter Filter Category: ',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            selected = '',
@@ -117,11 +119,11 @@ shinyServer(function(input, output, session) {
       }
       output$gene_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
-          selectizeInput('gene_filter_on', strong('Filter on: '),
+          selectizeInput('gene_filter_on', strong('Gene Filter on: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
           shinyWidgets::setSliderColor(c("#3399ff"), c(1))
-          sliderInput("gene_filter_on", label = strong("Filter Range: "), min = min(choice),
+          sliderInput("gene_filter_on", label = strong("Gene Filter Range: "), min = min(choice),
                       max = max(choice), value = c(min(choice), max(choice)))
         }
       })
@@ -130,6 +132,7 @@ shinyServer(function(input, output, session) {
     # meta plot updateSelectizeInput ------
     if (is.null(query[['meta_column']])){
       updateSelectizeInput(session, 'meta_column',
+                           label = 'Meta Color:',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
@@ -139,6 +142,7 @@ shinyServer(function(input, output, session) {
     # meta plot category filtering ----
     if (is.null(query[['meta_filter_cat']])){
       updateSelectizeInput(session, 'meta_filter_cat',
+                           label = 'Meta Filter Category:',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            selected = '',
@@ -153,11 +157,11 @@ shinyServer(function(input, output, session) {
       }
       output$meta_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
-          selectizeInput('meta_filter_on', strong('Filter on: '),
+          selectizeInput('meta_filter_on', strong('Meta Filter on: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
           shinyWidgets::setSliderColor(c("#3399ff"), c(1))
-          sliderInput("meta_filter_on", label = strong("Filter Range: "), min = min(choice),
+          sliderInput("meta_filter_on", label = strong("Meta Filter Range: "), min = min(choice),
                       max = max(choice), value = c(min(choice), max(choice)))
         }
       })
@@ -167,24 +171,27 @@ shinyServer(function(input, output, session) {
     # dotplot updateSelectizeInput ----
     if (is.null(query[['dotplot_Gene']])){
       updateSelectizeInput(session, 'dotplot_Gene',
+                           label = 'Genes: ',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = c('RHO','WIF1','CABP5', 'AIF1','AQPT4','ARR3','ONECUT1','GRIK1','GAD1','POU4F2'),
+                           selected = c('ARR3 (ENSG00000120500)','AIF1L (ENSG00000126878)','GAD1 (ENSG00000128683)','POU4F2 (ENSG00000151615)','WIF1 (ENSG00000156076)','RHO (ENSG00000163914)','ONECUT1 (ENSG00000169856)','GRIK1 (ENSG00000171189)','AIF1 (ENSG00000204472)'),
                            server = TRUE)
     }
     if (is.null(query[['dotplot_groups']])){
       updateSelectizeInput(session, 'dotplot_groups',
+                           label = 'Group by (two max): ',
                            choices = meta_filter %>%
                              select(-Barcode) %>%
                              select_if(purrr::negate(is.numeric)) %>%
                              colnames() %>% sort(),
                            options = list(placeholder = 'Type to search',
                                           maxItems = 2),
-                           selected = c('CellType_predict','organism'),
+                           selected = c('CellType_predict'),
                            server = TRUE)
     }
     if (is.null(query[['dotplot_filter_cat']])){
       updateSelectizeInput(session, 'dotplot_filter_cat',
+                           label = 'Filter Category: ',
                            choices = meta_filter %>%
                              dplyr::select(nCount_RNA:doublet_score_scran) %>% colnames() %>% sort(),
                            selected = '',
@@ -197,6 +204,7 @@ shinyServer(function(input, output, session) {
         choice = meta_filter[,input$dotplot_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
       updateSelectizeInput(session, 'dotplot_filter_on',
+                           label = 'Filter on: ',
                            choices = choice,
                            server = TRUE)
     })
@@ -206,12 +214,13 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'insitu_Gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% as_tibble() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = c('RHO'),
+                           selected = c('RHO (ENSG00000163914)'),
                            server = TRUE)
     }
 
     if (is.null(query[['insitu_filter_cat']])){
       updateSelectizeInput(session, 'insitu_filter_cat',
+                           label = 'Filter category: ',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
                              select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
                            selected = '',
@@ -224,6 +233,7 @@ shinyServer(function(input, output, session) {
         choice = meta_filter[,input$insitu_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
       updateSelectizeInput(session, 'insitu_filter_on',
+                           label = "Filter on: ",
                            choices = choice,
                            server = TRUE)
     })
@@ -255,7 +265,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'exp_plot_genes',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            #options = list(placeholder = 'Type to search'),
-                           selected = c('PAX6','POU4F2','CRX','NRL'),
+                           selected = c('PAX6 (ENSG00000007372)','CRX (ENSG00000105392)','NRL (ENSG00000129535)','POU4F2 (ENSG00000151615)'),
                            options = list(
                              placeholder = 'Type to search',
                              splitOn = I("(function() { return /[, ;]/; })()"),
@@ -302,7 +312,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'temporal_gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = c('PAX6','POU4F2'),
+                           selected = c('PAX6 (ENSG00000007372)','POU4F2 (ENSG00000151615)'),
                            server = TRUE)
     }
 
@@ -350,7 +360,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'diff_gene',
                            choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = 'CRX',
+                           selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
     }
     if (is.null(query[['diff_term']])){
@@ -367,20 +377,47 @@ shinyServer(function(input, output, session) {
     # Meta Plot modal ----------
     observeEvent(input$BUTTON_show_meta_legend, {
       # Show a modal when the button is pressed
-      showModal(shinyjqui::draggableModalDialog(size = 'l', title = 'Please wait for Legend to load - Click to Drag',
-                                                plotOutput('meta_plot_legend'),
+      showModal(shinyjqui::draggableModalDialog(size = 'l', title = 'Click to Drag',
+                                                plotOutput('meta_plot_legend') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3399ff", color.background = 'white'),
                                                 easyClose = TRUE))
     })
     # HELP button descriptions ----------
+    ## table
+    dt_help_html <- "<p>The data tables in this app are reactive and searchable. The first (top right) field searches across all columns. If you need to search on individual columns, below each column is a search field that lets you search by typing. If the column is numeric, a slider appears allowing you to set a range of values to filter to. There are two ways to export information from a table:
+                                                <ul>
+                                                <li> Click \"copy\" and paste into Excel </li>
+                                                <li> Click \"CSV\" and a comma separated file will download </li> </ul></p>
+                                                     <p>The tables tend to be huge in size, so only 10 (by default) rows are shown at a time. You can click on the \"Show 10 rows\" button and select up to 100 rows to display</p>"
+    observeEvent(input$data_table_help1, {
+      # Show a modal when the button is pressed
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
+                                                title = "Data Tables",
+                                                HTML(dt_help_html),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$data_table_help2, {
+      # Show a modal when the button is pressed
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
+                                                title = "Data Tables",
+                                                HTML(dt_help_html),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$data_table_help3, {
+      # Show a modal when the button is pressed
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
+                                                title = "Data Tables",
+                                                HTML(dt_help_html),
+                                                easyClose = TRUE))
+    })
     ## umap
     observeEvent(input$umap_table_help, {
       # Show a modal when the button is pressed
       showModal(shinyjqui::draggableModalDialog(size = 'm',
-                                                title = "Notes",
+                                                title = "UMAP - Tables",
                                                 HTML("<p>The UMAP is a 2D Projection of a higher dimensional space which tries to bring together
                             closely related elements while maintaining the overall structure. The higher dimensional space
                             is built from the gene expression patterns of each cell. The left panel shows the expression pattern
-                            of a gene in the UMAP space. The right panel shows metadata associated with each cell, including
+                            of a gene in the UMAP space. You can remove cells with low or high expression of your gene of choice by using the slider in \"Filter Gene Expression\" to select a range. The right panel shows metadata associated with each cell, including
                             predicted cell type.</p>
 
                             Tips:
@@ -390,6 +427,100 @@ shinyServer(function(input, output, session) {
                             </ul>"),
                                                 easyClose = TRUE))
     })
+    observeEvent(input$exp_plot_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "Expression Plot",
+                                                HTML("<p>This highly flexible scatter plot view allows you to plot gene expression by Cell Type
+                                                (published), Cell Type (our inferred cell labels), or cluster (unsupervised grouping
+                                                of the single cell transcriptomes). You can control how the data is displayed by
+                                                selecting how the data points are colored and you have advanced filtering
+                                                functionality that lets you select what fields (e.g. Citation) to filter on.</p>
+
+                            There are two fundamental ways to view the data:
+                            <ul>
+                              <li>Expression, which is log2 scaled CPM (counts per million) </li>
+                              <li>% Cells Detected, which is the proportion of cells that have any detectable transcript</li>
+                            </ul>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$insitu_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "In Situ Projection",
+                                                HTML("<p>As developmental biologists may be more experienced in viewing
+                                                stained cross-sections of the retina, we have created this visualization
+                                                which colors each of the major cell type (e.g. Rods, Cones) by the intensity
+                                                of the expression of user selected gene. Like elsewhere in PLAE, you can
+                                                filter to only show data by flexible criteria (e.g. only show gene / cell
+                                                expression infrmation from mouse)</p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$facet_umap_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "Facet UMAP",
+                                                HTML("<p>Because some of the information you are interested in
+                                                     may be overlapping, it sometimes is useful to be able to split
+                                                     the UMAP visualization into separate plots by some field (e.g.
+                                                     organism) of interest.</p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$dotplot_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "Dotplot",
+                                                HTML("<p>The dotplot visualization is highly space efficent as it displays
+                                                     both amount of expression (by color intensity) and percent cells
+                                                     that detect the transcript (by size of dot) with a user selected
+                                                     combination of grouping features (e.g. organism and CellType).</p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$diff_testing_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 'l',
+                                                title = "Differential Testing",
+                                                HTML("<p>We have pre-computed 12 different differential expression tests. They
+                                                     can be grouped into 3 categories:
+                                                     <ul>
+                              <li>[ ] against Remaining, which tests [ ] against all other cells. The effect of organism is controlled
+                              by giving it as a covariate in the test</li>
+                              <li>Pairwise [ ] against [ ], which tests genes differentially expressed in pairwise combinations
+                              (for example Rods against Cones, ignoring all other cells)</li>
+                              <li>Organism specific test within [ ]. For example you can search for genes differentially expressed
+                              between mouse and human WITHIN rods.</li>
+                            </ul>
+                            <p>[ ] is either:</p>
+                            <ul>
+                              <li>CellType, which are based on published cell type assignments</li>
+                              <li>CellType (predict), which uses ML to project CellType labels onto (nearly) all of the cells</li>
+                              <li>Cluster (droplet or well), which groups the droplet or well (e.g. 10X or SmartSeq) based cells into clusters in an
+                              unsupervised manner. Well and droplet were clustered separately as the integration performance
+                              was suboptimal when combining these two technologies.</li>
+                            </ul></p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$diff_testing_help2, {
+      showModal(shinyjqui::draggableModalDialog(size = 'l',
+                                                title = "PseudoBulk Design",
+                                                HTML("<p>What is pseudobulk? Most scRNA-seq diff testing is done with complicated
+                                                     and computationally expensive tests designed to maximize signal in relatively
+                                                     homogenous data. As the scEiaD dataset includes a great many biological
+                                                     replicates we have chosen to maximize the power of the replicates by summing
+                                                     the counts data into groups (e.g. sum all CRX counts in labelled Rods for Clark et al.,
+                                                     Lu et al., etc). This makes the data bulk (traditional) RNA-seq like in its
+                                                     statistical properties, which allows us to use more established tools (like edgeR)
+                                                     for the differential testing.</p>
+
+                                                     <p>Model design for [ ] against Remaining and Pairwise [ ] against [ ]</p>
+                                                     <ul>
+                                                     <li>design <- model.matrix(~0+group+org_covariate) where group is CellType/Cluster and
+                                                     org_covariate is Human/Mouse/Macaque</li>
+                                                     </ul>
+                                                     <p>Model design for Organism specific test within [ ]</p>
+                                                     <ul>
+                                                     <li>design <- model.matrix(~0+group) where group is Human/Mouse/Macaque and
+                                                     the test is limited by contrasts to a specific CellType or Cluster</li>
+                                                     </ul>
+                                                     <p>The edgeR glmQLFTest is used to fit the linear model for the differential testing.</p>"),
+                                                easyClose = TRUE))
+    })
+
     ## exp plot
     observeEvent(input$exp_plot_help, {
       # Show a modal when the button is pressed
@@ -454,7 +585,13 @@ shinyServer(function(input, output, session) {
     output$gene_scatter_plot <- renderPlot({
       gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
     })
-
+    # gene scatter plot download ------
+    output$BUTTON_download_scatter <- downloadHandler(
+      filename = function() { ('plae_gene_scatter.png') },
+      content = function(file) {
+        ggsave(file, plot = gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y), device = "png")
+      }
+    )
 
     # metadata plot --------------
     source('make_meta_scatter_umap_plot.R')
@@ -483,7 +620,6 @@ shinyServer(function(input, output, session) {
       if (!is.null(brush)) {
         meta_ranges$x <- c(brush$xmin, brush$xmax)
         meta_ranges$y <- c(brush$ymin, brush$ymax)
-
       } else {
         meta_ranges$x <- x_range
         meta_ranges$y <- y_range
@@ -500,6 +636,17 @@ shinyServer(function(input, output, session) {
       }
     })
 
+    output$BUTTON_download_meta <- downloadHandler(
+      filename = function() { ('plae_meta.png') },
+      content = function(file) {
+        if (meta_plot()$col_size < 10) {
+          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y), device = "png")
+        } else {
+          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
+                   theme(legend.position = 'none'), device = "png")
+        }
+      }
+    )
     output$meta_plot_legend <- renderPlot({
       plot <- meta_plot()$plot
       legend <- cowplot::get_legend(plot)
@@ -528,11 +675,13 @@ shinyServer(function(input, output, session) {
         arrange(-Expression) %>%
         rename(`Cells # Detected` = cell_exp_ct,
                `Total Cells` = Count,
-               `log2(cpm+1)` = Expression)
+               `log2(cpm+1)` = Expression) %>%
+        ungroup() %>%
+        select(-Gene)
 
-      table %>% DT::datatable(extensions = 'Buttons', rownames = F,
-                              filter = list(position = 'bottom', clear = FALSE),
-                              options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+      table %>% DT::datatable(extensions = 'Buttons',
+                              filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                              options = list(pageLength = 10, scrollX = T, searchHighlight = TRUE, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
     })
     output$gene_cluster_stats <- DT::renderDataTable({ gene_cluster_stats_maker()})
 
@@ -547,20 +696,29 @@ shinyServer(function(input, output, session) {
         arrange(-Count) %>%
         rename(`Total Cells` = Count)
 
-      table %>% DT::datatable(extensions = 'Buttons', rownames = F,
-                              filter = list(position = 'bottom', clear = FALSE),
-                              options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+      table %>% DT::datatable(extensions = 'Buttons',
+                              filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                              options = list(pageLength = 10, scrollX = T, searchHighlight = TRUE, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
     })
     output$metadata_stats <- DT::renderDataTable({ metadata_stats()})
 
     # facet plot -----------
     source('make_facet_plot.R')
+
     facet_plot <- eventReactive(input$BUTTON_draw_filter, {make_facet_plot(input,  meta_filter)})
 
     output$facet_plot <- renderPlot({
       facet_plot()
     }, height = eventReactive(input$BUTTON_draw_filter, {input$facet_height %>% as.numeric()}))
-
+    output$BUTTON_download_facet <- downloadHandler(
+      filename = function() { ('plae_facet.png') },
+      content = function(file) {
+        ggsave(file, plot = facet_plot(),
+               height = as.numeric(input$facet_height) / 50,
+               width = 15,
+               device = "png")
+      }
+    )
     ## exp_plot -----------
     source('make_exp_plot.R')
     exp_plot <- eventReactive(input$BUTTON_draw_exp_plot, {
@@ -571,16 +729,24 @@ shinyServer(function(input, output, session) {
       exp_plot()
     }, height = eventReactive(input$BUTTON_draw_exp_plot, {as.numeric(input$exp_plot_height)}))
 
+    output$BUTTON_download_exp <- downloadHandler(
+      filename = function() { ('plae_exp.png') },
+      content = function(file) {
+        ggsave(file, plot = make_exp_plot(input, scEiaD_2020_v01, meta_filter),
+               height = as.numeric(input$exp_plot_height) / 50,
+               width = 15,
+               device = "png")
+      }
+    )
 
-
-    ## temporal plot -----------
-    source('make_temporal_plot.R')
-    temporal_plot <- eventReactive(input$BUTTON_draw_temporal, {
-      make_temporal_plot(input, scEiaD_2020_v01, meta_filter)
-    })
-    output$temporal_plot <- renderPlot({
-      temporal_plot()
-    }, height = as.numeric(input$temporal_plot_height ) )
+    # ## temporal plot -----------
+    # source('make_temporal_plot.R')
+    # temporal_plot <- eventReactive(input$BUTTON_draw_temporal, {
+    #   make_temporal_plot(input, scEiaD_2020_v01, meta_filter)
+    # })
+    # output$temporal_plot <- renderPlot({
+    #   temporal_plot()
+    # }, height = as.numeric(input$temporal_plot_height ) )
 
     ## dotplot ---------
     source('make_dotplot.R')
@@ -591,6 +757,16 @@ shinyServer(function(input, output, session) {
       draw_dotplot()
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
   })
+  output$BUTTON_download_dotplot <- downloadHandler(
+    filename = function() { ('plae_dotplot.png') },
+    content = function(file) {
+      ggsave(file, plot = make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df),
+             height =
+               input$dotplot_height %>% as.numeric() / 50,
+             width = 12,
+             device = "png")
+    }
+  )
 
   # in situ ----
   # Functions used to generate in situ plots
@@ -605,9 +781,9 @@ shinyServer(function(input, output, session) {
              `Total Cells` = Count,
              `log2(cpm+1)` = Expression) %>%
       tidyr::drop_na()
-    full_table %>% DT::datatable(extensions = 'Buttons', rownames = F,
-                                 filter = list(position = 'bottom', clear = FALSE),
-                                 options = list(pageLength = 10, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
+    full_table %>% DT::datatable(extensions = 'Buttons',
+                                 filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                                 options = list(pageLength = 10, searchHighlight = TRUE, dom = 'frtBip', buttons = c('pageLength','copy', 'csv')))
   })
 
   ## Reactive that generates in situ image
@@ -642,7 +818,7 @@ shinyServer(function(input, output, session) {
     #cat(diff_table)
     if (input$search_by == 'Gene'){
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(Gene %in% gene) %>%
+        filter(Gene %in% gene, FDR < 0.05, abs(logFC) > 0.5) %>%
         arrange(FDR)
     } else {
       # isolate({
@@ -650,7 +826,7 @@ shinyServer(function(input, output, session) {
       test_val <- input$diff_term
       filter_term <- input$search_by
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(test == test_val) %>%
+        filter(test == test_val, FDR < 0.05, abs(logFC) > 0.5) %>%
         arrange(FDR) %>%
         collect() %>%
         filter(PB_Test == filter_term)
@@ -669,8 +845,8 @@ shinyServer(function(input, output, session) {
              FDR = as.numeric(FDR),
              PValue = format(PValue, digits = 3),
              PValue = as.numeric(PValue)) %>%
-      DT::datatable(extensions = 'Buttons', rownames = F,
-                    filter = list(position = 'bottom', clear = FALSE),
+      DT::datatable(extensions = 'Buttons',
+                    filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
                                    dom = 'frtBip', buttons = c('pageLength','copy', 'csv'))) %>%
       DT::formatRound(columns = c('logFC','logCPM','F'), digits = 2) %>%
