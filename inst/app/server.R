@@ -19,9 +19,9 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___Mus_musculus_Macaca_fascicularis_Homo_sapiens-0-2000-counts-TabulaDroplet-batch-scVI-8-0.001-500-0.6.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data1/scEiaD_2020_10_18__Mus_musculus_Macaca_fascicularis_Homo_sapiens-0-2000-counts-TabulaDroplet-batch-scVI-8-0.001-500-0.6.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
-meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
+meta_filter <- read_fst('www/meta_filter.fst') %>% as_tibble()
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% collect
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
@@ -827,8 +827,8 @@ shinyServer(function(input, output, session) {
       filter_term <- input$search_by
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
         filter(test == test_val, FDR < 0.05, abs(logFC) > 0.5) %>%
-        arrange(FDR) %>%
-        collect() %>%
+        head(2000) %>% 
+     #   collect() %>%
         filter(PB_Test == filter_term)
       #})
     }
