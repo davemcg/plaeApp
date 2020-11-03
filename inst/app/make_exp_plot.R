@@ -55,6 +55,9 @@ make_exp_plot <- function(input, db, meta_filter){
 
   #cat(input)
   box_data <- box_data %>%
+    mutate(CellType_predict = case_when(CellType_predict == 'RPC' ~ 'RPCs',
+                                        CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
+                                        TRUE ~ CellType_predict)) %>%
     mutate(Stage = factor(Stage, levels = c('Early Dev.', 'Late Dev.', 'Maturing', 'Mature'))) %>%
     #filter(!is.na(!!as.symbol(grouping_features))) %>%
     group_by_at(vars(one_of(c('Gene', input$exp_plot_facet, grouping_features)))) %>%
