@@ -267,7 +267,7 @@ shinyUI(
                                                                  selectizeInput('facet_filter_on', strong('Filter On: '),
                                                                                 choices = NULL, multiple=TRUE)),
                                                           column(5,
-                                                                 selectizeInput('pt_size_facet', strong('GenePoint Size: '),
+                                                                 selectizeInput('pt_size_facet', strong('Point Size: '),
                                                                                 choices=c(1,3,5,10),
                                                                                 selected = 1, multiple=FALSE)),
                                                           column(5,
