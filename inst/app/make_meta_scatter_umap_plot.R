@@ -34,7 +34,8 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
   }
   p_data <- meta_filter %>%
     filter(!grepl('Doub|\\/Margin\\/Periocular', CellType)) %>%
-    filter(!is.na(!!as.symbol(meta_column)))
+    filter(!is.na(!!as.symbol(meta_column))) %>%
+    sample_frac(0.3)
   # category filtering
   if (!is_null(input$meta_filter_cat)){
     validate( need(input$meta_filter_on != '', 'Please select at least one value in "Meta Filter on" '  ))
