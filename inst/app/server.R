@@ -21,7 +21,7 @@ library(fst)
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data1/scEiaD_2020_10_18__Mus_musculus_Macaca_fascicularis_Homo_sapiens-0-2000-counts-TabulaDroplet-batch-scVI-8-0.001-500-0.6.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
-meta_filter <- read_fst('www/metadata_filter.fst') %>% as_tibble()
+meta_filter <- read_fst('www/meta_filter.fst') %>% as_tibble()
 # temporarily fix two issues:
 ## the well data RPCs were labelled as RPC by mistake
 ## remove the well based label "Mesenchymal/RPE/Endothelial" for now until I figure out
