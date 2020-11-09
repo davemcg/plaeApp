@@ -809,44 +809,22 @@ shinyServer(function(input, output, session) {
     make_pic()
   }, deleteFile = TRUE)
 
-  ## diff testing table ----
-  # diff_table <- reactive({
-  #   req(input$diff_table_select)
-  #   if (input$diff_table_select == 'Cluster'){
-  #     out <- 'diff_testing_A'
-  #   } else if (input$diff_table_select == 'CellType') {
-  #     out <- 'diff_testing_E'
-  #   } else if (input$diff_table_select == 'SubCluster') {
-  #     out <- 'diff_testing_G'
-  #   } else {out <- 'diff_testing_C'}
-  #   return(out)
-  # })
-
   output$make_diff_table <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
-    #cat(diff_table)
     if (input$search_by == 'Gene'){
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
         filter(Gene %in% gene, FDR < 0.05, abs(logFC) > 0.5) %>%
         arrange(FDR)
     } else {
-      # isolate({
       req(input$diff_term)
       test_val <- input$diff_term
       filter_term <- input$search_by
       out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
         filter(test == test_val, FDR < 0.05, abs(logFC) > 0.5) %>%
         head(2000) %>%
-     #   collect() %>%
         filter(PB_Test == filter_term)
-      #})
     }
     out %>%
-      # mutate(`AUC Score` = round(count / 55, 1),
-      #        mean_auc = round(mean_auc, 2)) %>%
-      # select(-status, -model_component, -count, -med_auc, -estimate, -test_val, -p_value) %>%
-      # collect() %>%
-      # filter(!grepl('Doub|RPE|Astro|Red|Vascular', term)) %>%
       collect() %>%
       select(-comparison) %>%
       mutate(PB_Test = as.factor(PB_Test)) %>%
@@ -857,12 +835,40 @@ shinyServer(function(input, output, session) {
       DT::datatable(extensions = 'Buttons',
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
-                                   dom = 'frtBip', buttons = c('pageLength','copy', 'csv'))) %>%
+                                   dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatRound(columns = c('logFC','logCPM','F'), digits = 2) %>%
       DT::formatStyle(columns = c(8), width='250px')
 
   })
+  output$diff_table_download <- downloadHandler(
+    filename = function() {
+      paste("plae_diff_table_", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      gene <- input$diff_gene
+      if (input$search_by == 'Gene'){
+        out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
+          filter(Gene %in% gene, FDR < 0.05, abs(logFC) > 0.5) %>%
+          arrange(FDR)
+      } else {
+        req(input$diff_term)
+        test_val <- input$diff_term
+        filter_term <- input$search_by
+        out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
+          filter(test == test_val, FDR < 0.05, abs(logFC) > 0.5) %>%
+          head(2000) %>%
+          filter(PB_Test == filter_term)
+      }
+      out <- out %>%
+        collect() %>%
+        select(-comparison) %>%
+        mutate(PB_Test = as.factor(PB_Test)) %>%
+        mutate(FDR = format(FDR, digits = 3),
+               FDR = as.numeric(FDR),
+               PValue = format(PValue, digits = 3),
+               PValue = as.numeric(PValue))
+      write.csv(out, file)
+    }
+  )
 
-  # output$formattable01 <- renderFormattable({formattable_01})
-  # output$formattable02 <- renderFormattable({formattable_02})
 })
