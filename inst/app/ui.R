@@ -410,7 +410,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.42'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.43'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -452,6 +452,7 @@ shinyUI(
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
                                  fluidRow(column(width = 8, offset = 1, '0.43 (2020-11-09): Downloadable diff results added to "Data." The diff results reactive data table now has a "Download all ..." button which replaces the "CSV" button that only downloaded the viewable data (100 max).')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.42 (2020-10-16): Alt text added to each button, tweaked UMAP-Tables layout again. Slide logo added. Site went public at the version on 2020-11-02!')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.41 (2020-10-06): Download buttons added for each plot.')),
