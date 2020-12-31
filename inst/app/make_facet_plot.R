@@ -3,11 +3,13 @@ make_facet_plot <- function(input, meta_filter){
   # # testing
   # input <- list()
   # input$pt_size_facet = 1
-  # input$facet <- 'organism'
-  # input$facet_color <- 'CellType'
+  # input$facet <- 'CellType_predict'
+  # input$facet_color <- 'CellType_predict'
+  # input$facet_filter_cat <- 'organism'
+  # input$facet_filter_on <- 'Homo sapiens'
   facet_column <- input$facet
   color_column <- input$facet_color
-  pt_size <- input$pt_size_facet %>% as.numeric()
+  pt_size <- input$pt_size_facet %>% as.numeric() - 1
 
 
   if (!is.null(input$facet_filter_cat)){
