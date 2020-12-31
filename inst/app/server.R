@@ -1,4 +1,5 @@
 # server.R
+# if running locally: setwd('inst/app')
 time <- Sys.time()
 cat(file = stderr(), 'Server Go!\n')
 #options(shiny.trace=TRUE)
@@ -19,22 +20,28 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data1/scEiaD_2020_10_18__Mus_musculus_Macaca_fascicularis_Homo_sapiens-0-2000-counts-TabulaDroplet-batch-scVI-8-0.001-500-0.6.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-500-0.6.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
-meta_filter <- read_fst('www/meta_filter.fst') %>% as_tibble()
+meta_filter <- read_fst('www/meta_filter.fst') %>%
+  as_tibble() %>%
+  mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
+                   TRUE ~ CellType_predict)) %>%
+  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
 # temporarily fix two issues:
 ## the well data RPCs were labelled as RPC by mistake
 ## remove the well based label "Mesenchymal/RPE/Endothelial" for now until I figure out
 ## better what this population is
-meta_filter <- meta_filter %>% mutate(CellType_predict = case_when(CellType_predict == 'RPC' ~ 'RPCs',
-                                                                   CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
-                                                                   TRUE ~ CellType_predict))
-tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect
-celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels') %>% mutate(CellType_predict = case_when(CellType_predict == 'RPC' ~ 'RPCs',
-                                                                                                                     CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
-                                                                                                                     TRUE ~ CellType_predict)) %>% collect
-celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect
-cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels')
+# meta_filter <- meta_filter %>% mutate(CellType_predict = case_when(CellType_predict == 'RPC' ~ 'RPCs',
+#                                                                    CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
+#                                                                    TRUE ~ CellType_predict))
+tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
+  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>% collect %>%
+  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
+  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
+  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
 mf <- meta_filter %>% sample_frac(0.2)
 
 # generate color_mappings
@@ -46,7 +53,9 @@ categorical_columns <- c("Phase","batch","study_accession","library_layout","org
 meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'),
                                       subcluster = as.character(subcluster))
 map_color <- function(column, meta_filter){
-  master_colorlist <- c(pals::alphabet(), pals::alphabet2())
+  #master_colorlist <- c(pals::polychrome()[3:length(pals::polychrome())], pals::alphabet2())
+  #master_colorlist <- c(pals::glasbey()[-c(3,4,8,18)],pals::alphabet2()[-c(5,7,8,9,23,24)])
+  master_colorlist <- c(pals::cols25()[1:23],pals::alphabet())
   values <- meta_filter %>% pull(!!column) %>% unique %>% sort
   if(length(values) > length(master_colorlist) ){
     r= round(length(values) / length(master_colorlist)) +1
@@ -564,15 +573,10 @@ shinyServer(function(input, output, session) {
 
     # BREAK -------
     # gene scatter plot ------------
-    if (input$gene_and_meta_scatter_tech == 'Droplet'){
-      temp_filter <- meta_filter %>% filter(TechType == 'Droplet')
-      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
-      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
-    } else {
-      temp_filter <- meta_filter %>% filter(TechType == 'Well')
-      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
-      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
-    }
+
+    x_range =  c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max())
+    y_range = c(meta_filter$UMAP_2 %>% min(), meta_filter$UMAP_2 %>% max())
+
     gene_scatter_ranges <- reactiveValues(x = x_range,
                                           y = y_range)
     source('make_gene_scatter_umap_plot.R')
@@ -613,15 +617,10 @@ shinyServer(function(input, output, session) {
                                   cat_to_color_df
       )
     })
-    if (input$gene_and_meta_scatter_tech == 'Droplet'){
-      temp_filter <- meta_filter %>% filter(TechType == 'Droplet')
-      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
-      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
-    } else {
-      temp_filter <- meta_filter %>% filter(TechType == 'Well')
-      x_range =  c(temp_filter$UMAP_1 %>% min(), temp_filter$UMAP_1 %>% max())
-      y_range = c(temp_filter$UMAP_2 %>% min(), temp_filter$UMAP_2 %>% max())
-    }
+
+    x_range =  c(meta_filter$UMAP_1 %>% min(), meta_filter$UMAP_1 %>% max())
+    y_range = c(meta_filter$UMAP_2 %>% min(), meta_filter$UMAP_2 %>% max())
+
     meta_ranges <- reactiveValues(x = x_range,
                                   y = y_range)
     observeEvent(input$meta_plot_dblclick, {

@@ -7,8 +7,8 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 ){
   cat(file=stderr(), paste0(Sys.time(), ' Meta Plot Call\n'))
   # input <- list()
-  # input[['meta_column']] <- 'CellType'
-  # input[['pt_size']] <- 1
+  # input[['meta_column']] <- 'CellType_predict'
+  # input[['pt_size_meta']] <- 1
   # input[['gene_and_meta_scatter_tech']] <- 'Droplet'
   # input[['meta_column_transform']] <- 'None'
   # input[['meta_filter_cat']] <- 'CellType_predict'
@@ -19,15 +19,6 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
 
   pt_size <- input$pt_size_meta %>% as.numeric()
   filter_column <- input$meta_column
-  # cut down to match tech selected
-  tech <- input$gene_and_meta_scatter_tech
-  mf <- mf %>% filter(TechType == tech)
-  meta_filter <- meta_filter %>% filter(TechType == tech)
-  celltype_predict_labels <- celltype_predict_labels %>% filter(TechType == tech)
-  celltype_labels <- celltype_labels %>% filter(TechType == tech)
-  tabulamuris_predict_labels <- tabulamuris_predict_labels %>% filter(TechType == tech)
-  cluster_labels <- cluster_labels %>% filter(TechType == tech)
-
   if (transform == 'log2' && is.numeric(meta_filter[,meta_column] %>% pull(1))){
     cat('log2 time')
     meta_filter[,meta_column] <- log2(meta_filter[,meta_column] + 1)
@@ -60,12 +51,12 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                               mf %>%
                                                 filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_2)),
                                         pointsize = pt_size - 1, color = '#D3D3D333',
-                                        pixels = c(750,750)) +
+                                        pixels = c(1000,1000)) +
                        geom_scattermost(cbind(p_data$UMAP_1, p_data$UMAP_2),
-                                        color = viridis::viridis(100, alpha=0.3)
+                                        color = viridis::viridis(100, alpha=0.2)
                                         [1+99*((p_data[,meta_column] %>% pull(1))-color_range[1])/diff(color_range)],
                                         pointsize= pt_size - 1,
-                                        pixels=c(750,750),
+                                        pixels=c(1000,1000),
                                         interpolate=FALSE) +
                        geom_point(data=data.frame(x=double(0)), aes(x,x,color=x))  +
                        scale_color_gradientn(  #add the manual guide for the empty aes
@@ -103,11 +94,11 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                                               mf %>%
                                                 filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_2)),
                                         pointsize = pt_size, color = '#D3D3D333',
-                                        pixels = c(750,750)) +
+                                        pixels = c(1000,1000)) +
                        geom_scattermost(cbind(p_data$UMAP_1, p_data$UMAP_2),
                                         color = np_color ,
                                         pointsize= pt_size,
-                                        pixels=c(750,750),
+                                        pixels=c(1000,1000),
                                         interpolate=FALSE) +
                        #geom_point(data=data.frame(x=double(0)), aes(x,x,color=x))  +
                        geom_point(data=color_data, aes(x,x,color=value)) +

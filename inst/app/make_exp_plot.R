@@ -81,7 +81,7 @@ make_exp_plot <- function(input, db, meta_filter){
   box_data %>%
     ggplot(aes(x=Gene, y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
     geom_boxplot(color = 'black', outlier.shape = NA) +
-    ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), grouponX = TRUE) +
+    ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), groupOnX = TRUE) +
     cowplot::theme_cowplot() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
     scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
