@@ -414,7 +414,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.43'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.50'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -455,6 +455,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.50 (2020-12-31): Goodbye 2020! Major update to the scVI-based UMAP projection which improves data quality. Removed non-tissue samples (e.g. organoid/cell lines). They will be added back later once I figure out a logical/simple way to do it. Fixed major bug in QC filtering which failed to remove high mitochondrial count (likely apoptosing cells) cells. Dot plot tweaked to improve relative dot sizes. Cowan et al. dataset added.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.43 (2020-11-09): Downloadable diff results added to "Data." The diff results reactive data table now has a "Download all ..." button which replaces the "CSV" button that only downloaded the viewable data (100 max).')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.42 (2020-10-16): Alt text added to each button, tweaked UMAP-Tables layout again. Slide logo added. Site went public at the version on 2020-11-02!')),
