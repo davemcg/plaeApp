@@ -1,10 +1,10 @@
 make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   cat(file=stderr(), paste0(Sys.time(), ' Gene Scatter Plot Call\n'))
   gene <- input$Gene
-  tech <- input$gene_and_meta_scatter_tech
+
   pt_size <- input$pt_size_gene %>% as.numeric()
   expression_range <- input$gene_scatter_slider
-  mf <- mf %>% filter(TechType == tech)
+
   p <-  db %>% tbl('cpm') %>%
     filter(Gene == gene) %>%
     collect() %>%
@@ -12,7 +12,7 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
     filter(cpm > as.numeric(expression_range[1]),
            cpm < as.numeric(expression_range[2])) %>%
     left_join(., meta_filter, by = 'Barcode') %>%
-    filter(TechType == tech, !is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
+    filter(!is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
   cat(input$gene_filter_cat)
   cat(class(input$gene_filter_cat))
   if (!is_null(input$gene_filter_cat)){
@@ -33,12 +33,12 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   plot <- p %>% ggplot() +
     geom_scattermost(cbind(mf$UMAP_1, mf$UMAP_2), color = '#D3D3D333',
                      pointsize = pt_size ,
-                     pixels=c(750,750)) +
+                     pixels=c(1000,1000)) +
     geom_scattermost(cbind(p$UMAP_1, p$UMAP_2),
-                     color = viridis::magma(100, alpha=0.3)
+                     color = viridis::magma(100, alpha=0.2)
                      [1+99*(p$cpm-color_range[1])/diff(color_range)],
                      pointsize= pt_size - 1,
-                     pixels=c(750,750),
+                     pixels=c(1000,1000),
                      interpolate=FALSE) +
     geom_point(data=data.frame(x=double(0)), aes(x,x,color=x)) +
     scale_color_gradientn(  #add the manual guide for the empty aes
