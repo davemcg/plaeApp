@@ -432,9 +432,13 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, h1('Data Sources'))),
 
                                    fluidRow(column(width = 8, offset = 1, includeHTML("www/table_01.html"))),
-                                   fluidRow(column(width = 8, offset = 1, h1('Extracted Cell Type Labels'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('scEiaD Curated Published Cell Type Labels'))),
                                    fluidRow(column(width = 5, offset = 1, includeHTML("www/table_02.html"))),
-                                   fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.'))),
+                                   fluidRow(column(width = 8, offset = 1, 'Labelled cell types from published papers were pulled, where possible, from a combination of the Sequence Read Archive (SRA), lab web sites, and personal correspondence, then adjusted to be consistent (e.g. MG to Muller Glia) between all studies.')),
+                                   br(),br(),
+                                   fluidRow(column(width = 8, offset = 1, h1('scEiaD Machine Learned Cell Type Labels'))),
+                                   fluidRow(column(width = 5, offset = 1, includeHTML("www/table_02x.html"))),
+                                   fluidRow(column(width = 8, offset = 1, 'The labels above were used to create a machine learning modeled which was used to relabel all* cells in the scEiaD ((above a confidence threshold).'))),
                                  br(),br(),
                                  fluidRow(includeHTML("www/footer.html"))),
                         tabPanel('Contact', # Contact ------
