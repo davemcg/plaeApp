@@ -45,17 +45,11 @@ shinyUI(
                                              "))
                                            ),
                                            fluidRow(column(6, tags$h1("UMAP"))),
-                                           fluidRow(column(6, radioButtons(
-                                             inputId = "gene_and_meta_scatter_tech",
-                                             label = "Technology",
-                                             choices = c("Droplet", "Well"),
-                                             selected = "Droplet",
-                                             inline = TRUE,
-                                           ))),
                                            fluidRow(
                                              # Gene Scatter  ---------------
                                              column(6,
                                                     plotOutput('gene_scatter_plot',
+                                                               height = '500px',
                                                                dblclick = "gene_scatter_plot_dblclick",
                                                                brush = brushOpts(
                                                                  id = "gene_scatter_plot_brush",
@@ -90,6 +84,7 @@ shinyUI(
                                              # Meta Plot ------
                                              column(6,
                                                     plotOutput('meta_plot',
+                                                               height = '500px',
                                                                dblclick = "meta_plot_dblclick",
                                                                brush = brushOpts(
                                                                  id = "meta_plot_brush",
@@ -345,16 +340,13 @@ shinyUI(
                                                      choices = c('Gene',
                                                                  "CellType (Predict) against Remaining",
                                                                  "CellType against Remaining",
-                                                                 "Cluster (Droplet) against Remaining",
-                                                                 "Cluster (Well) against Remaining",
+                                                                 "Cluster against Remaining",
                                                                  "Organism against Organism within CellType",
                                                                  "Organism against Organism within CellType (Predict)",
-                                                                 "Organism against Organism within Cluster (Droplet)",
-                                                                 "Organism against Organism within Cluster (Well)",
+                                                                 "Organism against Organism within Cluster",
                                                                  "Pairwise CellType (Predict) against CellType (Predict)",
                                                                  "Pairwise CellType against CellType",
-                                                                 "Pairwise Cluster against Cluster (Droplet)",
-                                                                 "Pairwise Cluster against Cluster (Well)"),
+                                                                 "Pairwise Cluster against Cluster"),
                                                      selected = 'Gene')
                                        )),
                                 column(8,
