@@ -108,6 +108,7 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
     geom_point() +
     cowplot::theme_cowplot() +
     scale_color_viridis_c(option = 'magma') +
+    geom_point() + scale_radius(range=c(0, 10)) +
     theme(axis.line  = element_blank()) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
     ylab('') + xlab('') +
