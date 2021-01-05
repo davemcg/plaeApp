@@ -32,7 +32,7 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   color_range <- range(p$cpm)
   plot <- p %>% ggplot() +
     geom_scattermost(cbind(mf$UMAP_1, mf$UMAP_2), color = '#D3D3D333',
-                     pointsize = pt_size ,
+                     pointsize = pt_size - 1,
                      pixels=c(1000,1000)) +
     geom_scattermost(cbind(p$UMAP_1, p$UMAP_2),
                      color = viridis::magma(100, alpha=0.2)

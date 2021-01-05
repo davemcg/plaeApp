@@ -20,13 +20,13 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-500-0.6.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.2-500-0.6.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 meta_filter <- read_fst('www/meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                    TRUE ~ CellType_predict)) %>%
-  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
 # temporarily fix two issues:
 ## the well data RPCs were labelled as RPC by mistake
 ## remove the well based label "Mesenchymal/RPE/Endothelial" for now until I figure out
@@ -35,13 +35,13 @@ meta_filter <- read_fst('www/meta_filter.fst') %>%
 #                                                                    CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
 #                                                                    TRUE ~ CellType_predict))
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
 cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * -1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
 mf <- meta_filter %>% sample_frac(0.2)
 
 # generate color_mappings
@@ -381,17 +381,17 @@ shinyServer(function(input, output, session) {
                            selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
     }
-    if (is.null(query[['diff_term']])){
-      term = input$search_by
-      updateSelectizeInput(session, 'diff_term',
-                           choices = scEiaD_2020_v01 %>%
-                             tbl('PB_Test_terms') %>%
-                             filter(PB_Test == term) %>%
-                             collect() %>% pull(terms) %>%
-                             strsplit(., '___') %>% unlist(),
-                           options = list(placeholder = 'Type to search'),
-                           server = TRUE)
-    }
+    # if (is.null(query[['diff_term']])){
+    #   term = input$search_by
+    #   updateSelectizeInput(session, 'diff_term',
+    #                        choices = scEiaD_2020_v01 %>%
+    #                          tbl('PB_Test_terms') %>%
+    #                          filter(PB_Test == term) %>%
+    #                          collect() %>% pull(terms) %>%
+    #                          strsplit(., '___') %>% unlist(),
+    #                        options = list(placeholder = 'Type to search'),
+    #                        server = TRUE)
+    # }
     # Meta Plot modal ----------
     observeEvent(input$BUTTON_show_meta_legend, {
       # Show a modal when the button is pressed
@@ -493,23 +493,11 @@ shinyServer(function(input, output, session) {
     observeEvent(input$diff_testing_help, {
       showModal(shinyjqui::draggableModalDialog(size = 'l',
                                                 title = "Differential Testing",
-                                                HTML("<p>We have pre-computed 12 different differential expression tests. They
-                                                     can be grouped into 3 categories:
-                                                     <ul>
-                              <li>[ ] against Remaining, which tests [ ] against all other cells. The effect of organism is controlled
-                              by giving it as a covariate in the test</li>
-                              <li>Pairwise [ ] against [ ], which tests genes differentially expressed in pairwise combinations
-                              (for example Rods against Cones, ignoring all other cells)</li>
-                              <li>Organism specific test within [ ]. For example you can search for genes differentially expressed
-                              between mouse and human WITHIN rods.</li>
-                            </ul>
-                            <p>[ ] is either:</p>
-                            <ul>
+                                                HTML("<p>We have pre-computed 3 different differential expression tests.
+
                               <li>CellType, which are based on published cell type assignments</li>
                               <li>CellType (predict), which uses ML to project CellType labels onto (nearly) all of the cells</li>
-                              <li>Cluster (droplet or well), which groups the droplet or well (e.g. 10X or SmartSeq) based cells into clusters in an
-                              unsupervised manner. Well and droplet were clustered separately as the integration performance
-                              was suboptimal when combining these two technologies.</li>
+                              <li>Cluster (droplet), which are created from leiden method on the scVI correct lower dimension space.</li>
                             </ul></p>"),
                                                 easyClose = TRUE))
     })
