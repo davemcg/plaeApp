@@ -381,17 +381,16 @@ shinyServer(function(input, output, session) {
                            selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
     }
-    # if (is.null(query[['diff_term']])){
-    #   term = input$search_by
-    #   updateSelectizeInput(session, 'diff_term',
-    #                        choices = scEiaD_2020_v01 %>%
-    #                          tbl('PB_Test_terms') %>%
-    #                          filter(PB_Test == term) %>%
-    #                          collect() %>% pull(terms) %>%
-    #                          strsplit(., '___') %>% unlist(),
-    #                        options = list(placeholder = 'Type to search'),
-    #                        server = TRUE)
-    # }
+    if (is.null(query[['diff_base']])){
+      group = input$search_by
+      updateSelectizeInput(session, 'diff_base',
+                           choices = scEiaD_2020_v01 %>%
+                             tbl('wilcox_diff_testing_sets') %>%
+                             filter(Group == group) %>%
+                             collect() %>% pull(Base),
+                           options = list(placeholder = 'Type to search'),
+                           server = TRUE)
+    }
     # Meta Plot modal ----------
     observeEvent(input$BUTTON_show_meta_legend, {
       # Show a modal when the button is pressed
@@ -799,33 +798,31 @@ shinyServer(function(input, output, session) {
   output$make_diff_table <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
-      out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(Gene %in% gene, FDR < 0.05, abs(logFC) > 0.5) %>%
+      out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        filter(Gene %in% gene, FDR < 0.05) %>%
         arrange(FDR)
     } else {
-      req(input$diff_term)
-      test_val <- input$diff_term
+      req(input$diff_base)
+      test_val <- input$diff_base
       filter_term <- input$search_by
-      out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-        filter(test == test_val, FDR < 0.05, abs(logFC) > 0.5) %>%
+      out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        filter(Group == test_val, FDR < 0.05) %>%
         head(2000) %>%
-        filter(PB_Test == filter_term)
+        filter(Base == filter_term)
     }
     out %>%
       collect() %>%
-      select(-comparison) %>%
-      mutate(PB_Test = as.factor(PB_Test)) %>%
+      mutate(Group = as.factor(Group)) %>%
       mutate(FDR = format(FDR, digits = 3),
              FDR = as.numeric(FDR),
-             PValue = format(PValue, digits = 3),
-             PValue = as.numeric(PValue)) %>%
+             PValue = format(p.value, digits = 3),
+             PValue = as.numeric(p.value)) %>%
+      select(-`p.value`) %>%
       DT::datatable(extensions = 'Buttons',
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
                                    dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
-      DT::formatRound(columns = c('logFC','logCPM','F'), digits = 2) %>%
       DT::formatStyle(columns = c(8), width='250px')
-
   })
   output$diff_table_download <- downloadHandler(
     filename = function() {
@@ -834,26 +831,26 @@ shinyServer(function(input, output, session) {
     content = function(file) {
       gene <- input$diff_gene
       if (input$search_by == 'Gene'){
-        out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-          filter(Gene %in% gene, FDR < 0.05, abs(logFC) > 0.5) %>%
+        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+          filter(Gene %in% gene, FDR < 0.05) %>%
           arrange(FDR)
       } else {
         req(input$diff_term)
         test_val <- input$diff_term
         filter_term <- input$search_by
-        out <- scEiaD_2020_v01 %>% tbl('PB_results') %>%
-          filter(test == test_val, FDR < 0.05, abs(logFC) > 0.5) %>%
+        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+          filter(Group == test_val, FDR < 0.05) %>%
           head(2000) %>%
-          filter(PB_Test == filter_term)
+          filter(Base == filter_term)
       }
       out <- out %>%
         collect() %>%
-        select(-comparison) %>%
-        mutate(PB_Test = as.factor(PB_Test)) %>%
+        mutate(Group = as.factor(Group)) %>%
         mutate(FDR = format(FDR, digits = 3),
                FDR = as.numeric(FDR),
-               PValue = format(PValue, digits = 3),
-               PValue = as.numeric(PValue))
+               PValue = format(p.value, digits = 3),
+               PValue = as.numeric(p.value)) %>%
+        select(-`p.value`)
       write.csv(out, file)
     }
   )

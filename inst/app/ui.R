@@ -331,46 +331,38 @@ shinyUI(
                                  linebreaks(120),
                                  fluidRow(includeHTML("www/footer.html")))
              ),
-             # # diff testing  tables ------------
-             # tabPanel('Diff Testing',
-             #          fluidPage(column(8,
-             #                           fluidRow(tags$h1('Pseudo Bulk Diff Testing')),
-             #                           fluidRow(
-             #                             selectInput('search_by', strong('Search by: '),
-             #                                         choices = c('Gene',
-             #                                                     "CellType (Predict) against Remaining",
-             #                                                     "CellType against Remaining",
-             #                                                     "Cluster against Remaining",
-             #                                                     "Organism against Organism within CellType",
-             #                                                     "Organism against Organism within CellType (Predict)",
-             #                                                     "Organism against Organism within Cluster",
-             #                                                     "Pairwise CellType (Predict) against CellType (Predict)",
-             #                                                     "Pairwise CellType against CellType",
-             #                                                     "Pairwise Cluster against Cluster"),
-             #                                         selected = 'Gene')
-             #                           )),
-             #                    column(8,
-             #                           fluidRow(
-             #                             conditionalPanel("input.search_by == 'Gene'",
-             #                                              selectizeInput('diff_gene', strong('Genes: '),
-             #                                                             choices =  NULL,
-             #                                                             multiple = FALSE)),
-             #                             conditionalPanel("input.search_by != 'Gene'",
-             #                                              selectizeInput('diff_term', strong('Term: '),
-             #                                                             choices =  NULL,
-             #                                                             multiple = FALSE))
-             #                           )),
-             #                    column(12,
-             #                           fluidRow(
-             #                             div(DT::DTOutput('make_diff_table'), style='font-size:75%'),
-             #                             downloadButton("diff_table_download","Download all results as csv"),
-             #                             br(), br())),
-             #                    fluidRow(column(12,
-             #                                    actionButton("diff_testing_help", "Page Pop Up Info"),
-             #                                    actionButton("diff_testing_help2", "Pseudo Bulk?"),
-             #                                    actionButton("data_table_help3", "Data Table Pop Up Info")))),
-             #          linebreaks(10),
-             #          fluidRow(includeHTML("www/footer.html"))),
+             # diff testing  tables ------------
+             tabPanel('Diff Testing',
+                      fluidPage(column(8,
+                                       fluidRow(tags$h1('Pseudo Bulk Diff Testing')),
+                                       fluidRow(
+                                         selectInput('search_by', strong('Search by: '),
+                                                     choices = c('Gene', "CellType (Predict)",
+                                                                 "CellType",
+                                                                 "Cluster"),
+                                                     selected = 'Gene')
+                                       )),
+                                column(8,
+                                       fluidRow(
+                                         conditionalPanel("input.search_by == 'Gene'",
+                                                          selectizeInput('diff_gene', strong('Genes: '),
+                                                                         choices =  NULL,
+                                                                         multiple = FALSE)),
+                                         conditionalPanel("input.search_by != 'Gene'",
+                                                          selectizeInput('diff_base', strong('Group: '),
+                                                                      choices =  NULL,
+                                                                      multiple = FALSE))
+                                       )),
+                                column(12,
+                                       fluidRow(
+                                         div(DT::DTOutput('make_diff_table'), style='font-size:75%'),
+                                         downloadButton("diff_table_download","Download all results as csv"),
+                                         br(), br())),
+                                fluidRow(column(12,
+                                                actionButton("diff_testing_help", "Page Pop Up Info"),
+                                                actionButton("data_table_help3", "Data Table Pop Up Info")))),
+                      linebreaks(10),
+                      fluidRow(includeHTML("www/footer.html"))),
              tabPanel('Data', # Data ---------
                       fluidRow(column(width = 8, offset = 1, h1("Data"))),
                       fluidRow(column(width = 8, offset = 1, "If size not given, it is less than 1 GB")),
