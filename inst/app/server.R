@@ -376,7 +376,7 @@ shinyServer(function(input, output, session) {
     # diff table updateSelect ------
     if (is.null(query[['diff_gene']])){
       updateSelectizeInput(session, 'diff_gene',
-                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('wilcox_diff_testing_genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
@@ -387,7 +387,8 @@ shinyServer(function(input, output, session) {
                            choices = scEiaD_2020_v01 %>%
                              tbl('wilcox_diff_testing_sets') %>%
                              filter(Group == group) %>%
-                             collect() %>% pull(Base),
+                             collect() %>% filter(!grepl('Doubl', Base)) %>%
+                             pull(Base),
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
@@ -799,25 +800,27 @@ shinyServer(function(input, output, session) {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
       out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Gene %in% gene, FDR < 0.05) %>%
-        arrange(FDR)
+        filter(Gene %in% gene) %>%
+        head(2000)
     } else {
       req(input$diff_base)
-      test_val <- input$diff_base
+      diff_base <- input$diff_base
       filter_term <- input$search_by
       out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Group == test_val, FDR < 0.05) %>%
+        filter(Base == diff_base) %>%
         head(2000) %>%
-        filter(Base == filter_term)
+        filter(Group == filter_term)
     }
     out %>%
       collect() %>%
       mutate(Group = as.factor(Group)) %>%
       mutate(FDR = format(FDR, digits = 3),
              FDR = as.numeric(FDR),
+             AUC = format(AUC, digits = 3),
+             AUC = as.numeric(AUC),
              PValue = format(p.value, digits = 3),
-             PValue = as.numeric(p.value)) %>%
-      select(-`p.value`) %>%
+             PValue = as.numeric(PValue)) %>%
+      select(Group, Gene, Base, `Tested Against`, PValue, FDR, AUC) %>%
       DT::datatable(extensions = 'Buttons',
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
@@ -832,14 +835,14 @@ shinyServer(function(input, output, session) {
       gene <- input$diff_gene
       if (input$search_by == 'Gene'){
         out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-          filter(Gene %in% gene, FDR < 0.05) %>%
-          arrange(FDR)
+          filter(Gene %in% gene) %>%
+          head(2000)
       } else {
         req(input$diff_term)
         test_val <- input$diff_term
         filter_term <- input$search_by
         out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-          filter(Group == test_val, FDR < 0.05) %>%
+          filter(Group == test_val) %>%
           head(2000) %>%
           filter(Base == filter_term)
       }
@@ -848,8 +851,10 @@ shinyServer(function(input, output, session) {
         mutate(Group = as.factor(Group)) %>%
         mutate(FDR = format(FDR, digits = 3),
                FDR = as.numeric(FDR),
+               AUC = format(AUC, digits = 3),
+               AUC = as.numeric(AUC),
                PValue = format(p.value, digits = 3),
-               PValue = as.numeric(p.value)) %>%
+               PValue = as.numeric(PValue)) %>%
         select(-`p.value`)
       write.csv(out, file)
     }

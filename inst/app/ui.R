@@ -334,7 +334,13 @@ shinyUI(
              # diff testing  tables ------------
              tabPanel('Diff Testing',
                       fluidPage(column(8,
-                                       fluidRow(tags$h1('Pseudo Bulk Diff Testing')),
+                                       fluidRow(tags$h1('Gene Differential Expression Tests')),
+                                       fluidRow('As of 2021-01-06 we have swapped out the "pseudo-Bulk" differential testing for a simpler testing system: the ', tags$a(href="https://bioconductor.org/packages/release/bioc/html/scran.html", "scran"), ' findMarkers tool. Why? Well frankly as we used the "pseudo-Bulk" results more and more we regularly found odd results with low p values that were being driven by very few cells with high expression. The findMarkers tool, in comparison, is more robust and reliable. It uses the ', tags$a(href="https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test", "wilcox"), ' test. Genes are required to 1. be expressed in >20% of the cells in the group (e.g. Cluster or Cell Type) and 2. be expressed at least twice as high against the other cells (e.g. GeneA has a mean expression of "100" in cells in ClusterX and "40" in cells-not-in-ClusterX'),
+                                       br(),
+                                       fluidRow('What is that "AUC" column? Area Under the Curve. Instead of reporting differential expression, which can be skewed by a low number of cells with very high expression, we report the power of the gene of interest to distinguish between the base group (e.g. Rods) versus the comparison group (e.g. Cones). An AUC of 1 mean thats the marker can perfectly (100%) distinguish cells between the two groups with the marker. AUC of 0 (or missing) means that the gene has no power.'),
+                                       br(),
+                                       fluidRow('Why are all the PValues and FDR the same for each gene? The p value is calculated at the gene level, while the AUC is calculated for each pair wise test. What that means is that if you test Rods vs not-Rods, the FDR for GeneA could be 0.01. Which means that GeneA "significantly" (well actually means you can reject the null hypothesis that....) distinguishes Rods against all other cells. If you want to dive into Rods vs some-specific-Cell-Type then use the AUC, which are calculated for each tissue - tissue combination.'),
+                                       br(),
                                        fluidRow(
                                          selectInput('search_by', strong('Search by: '),
                                                      choices = c('Gene', "CellType (Predict)",
@@ -349,11 +355,11 @@ shinyUI(
                                                                          choices =  NULL,
                                                                          multiple = FALSE)),
                                          conditionalPanel("input.search_by != 'Gene'",
-                                                          selectizeInput('diff_base', strong('Group: '),
+                                                          selectizeInput('diff_base', strong('Base: '),
                                                                       choices =  NULL,
                                                                       multiple = FALSE))
                                        )),
-                                column(12,
+                                column(8,
                                        fluidRow(
                                          div(DT::DTOutput('make_diff_table'), style='font-size:75%'),
                                          downloadButton("diff_table_download","Download all results as csv"),
@@ -372,7 +378,7 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_12_31/scEiaD_all_seurat_v3.Rdata", "All (~3.5 GB)")))),
                       fluidRow(column(width = 8, offset = 1, h2("AnnData Objects"))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_12_31/scEiaD_all_anndata.h5ad", "All (~2.5 GB)")))),
-                      fluidRow(column(width = 8, offset = 1, h2("PseudoBulk Diff Results"))),
+                      fluidRow(column(width = 8, offset = 1, h2("Diff Testing Results"))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_12_31/pseudoBulk_diff_results.tsv.gz", "All PseudoBulk Results (~4.5GB)")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_12_31/pseudoBulkTable_CellTypeagainstRemaining.tsv.gz", "CellType (Predict) against Remaining")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2020_12_31/pseudoBulkTable_CellType(Predict)againstRemaining.tsv.gz", "CellType against Remaining")))),
@@ -447,6 +453,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.51 (2021-01-06): Hello 2021! ', tags$a(href="https://adamgayoso.com", "Adam Gayoso"), ' kindly pointed out that I was using scVI in a non-optimal manner, so I updated the scVI modeling to match their recommend "scArches" parameters. This (fortunately for my sanity) only subtly changes the downstream result. The more significant change is that we have totally changed the diff testing section to use the scran findMarkers test instead of our complicated and compute expensive pseudo-Bulk testing which continually gave odd results.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.50 (2020-12-31): Goodbye 2020! Major update to the scVI-based UMAP projection which improves data quality. Removed non-tissue samples (e.g. organoid/cell lines). They will be added back later once I figure out a logical/simple way to do it. Fixed major bug in QC filtering which failed to remove high mitochondrial count (likely apoptosing cells) cells. Dot plot tweaked to improve relative dot sizes. Cowan et al. dataset added.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.43 (2020-11-09): Downloadable diff results added to "Data." The diff results reactive data table now has a "Download all ..." button which replaces the "CSV" button that only downloaded the viewable data (100 max).')),
