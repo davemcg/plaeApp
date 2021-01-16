@@ -84,6 +84,7 @@ make_exp_plot <- function(input, db, meta_filter){
     ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), groupOnX = TRUE) +
     cowplot::theme_cowplot() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    scale_radius(range=c(2, 6)) +
     scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
     theme(legend.position="bottom") +
     facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_x', vars(!!as.symbol(input$exp_plot_facet)))

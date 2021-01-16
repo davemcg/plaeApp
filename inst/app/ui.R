@@ -396,7 +396,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.51'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.52'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -441,6 +441,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.52 (2021-01-13): Adding "missing" genes (we had only retained genes which were expressed in all three species, which naturally led to many genes (some important, like OPN1MW) to be dropped. That has been fixed. Tweak "Expression Plot" dot size to prevent crazy tiny point sizes. ')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.51 (2021-01-06): Hello 2021! ', tags$a(href="https://adamgayoso.com", "Adam Gayoso"), ' kindly pointed out that I was using scVI in a non-optimal manner, so I updated the scVI modeling to match their recommend "scArches" parameters. This (fortunately for my sanity) only subtly changes the downstream result. The more significant change is that we have totally changed the diff testing section to use the scran findMarkers test instead of our complicated and compute expensive pseudo-Bulk testing which continually gave odd results.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.50 (2020-12-31): Goodbye 2020! Major update to the scVI-based UMAP projection which improves data quality. Removed non-tissue samples (e.g. organoid/cell lines). They will be added back later once I figure out a logical/simple way to do it. Fixed major bug in QC filtering which failed to remove high mitochondrial count (likely apoptosing cells) cells. Dot plot tweaked to improve relative dot sizes. Cowan et al. dataset added.')),

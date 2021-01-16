@@ -46,10 +46,8 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
   if (is.numeric(meta_filter[,meta_column] %>% pull(1)) ){
     color_range <- range(p_data[,meta_column] %>% pull(1))
     suppressWarnings(plot <- ggplot() +
-                       geom_scattermost(cbind(mf %>%
-                                                filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_1),
-                                              mf %>%
-                                                filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_2)),
+                       geom_scattermost(cbind(mf  %>% pull(UMAP_1),
+                                              mf %>% pull(UMAP_2)),
                                         pointsize = pt_size - 1, color = '#D3D3D333',
                                         pixels = c(1000,1000)) +
                        geom_scattermost(cbind(p_data$UMAP_1, p_data$UMAP_2),
@@ -89,10 +87,8 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
     names(color_list) <- color_data$value
 
     suppressWarnings(plot <- ggplot() +
-                       geom_scattermost(cbind(mf %>%
-                                                filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_1),
-                                              mf %>%
-                                                filter(is.na(!!as.symbol(meta_column))) %>% pull(UMAP_2)),
+                       geom_scattermost(cbind(mf %>% pull(UMAP_1),
+                                              mf  %>% pull(UMAP_2)),
                                         pointsize = pt_size, color = '#D3D3D333',
                                         pixels = c(1000,1000)) +
                        geom_scattermost(cbind(p_data$UMAP_1, p_data$UMAP_2),
