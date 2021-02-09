@@ -424,7 +424,7 @@ shinyUI(
                                    br(),br(),
                                    fluidRow(column(width = 8, offset = 1, h1('scEiaD Machine Learned Cell Type Labels'))),
                                    fluidRow(column(width = 5, offset = 1, includeHTML("www/table_03.html"))),
-                                   fluidRow(column(width = 8, offset = 1, 'The labels above were used to create a machine learning modeled which was used to relabel all* cells in the scEiaD ((above a confidence threshold).'))),
+                                   fluidRow(column(width = 8, offset = 1, 'The labels above were used to create a machine learning modeled which was used to relabel all* cells in the scEiaD (*above a confidence threshold of 0.5).'))),
                                  br(),br(),
                                  fluidRow(includeHTML("www/footer.html"))),
                         tabPanel('Contact', # Contact ------
