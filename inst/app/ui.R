@@ -357,7 +357,11 @@ shinyUI(
                                          conditionalPanel("input.search_by != 'Gene'",
                                                           selectizeInput('diff_base', strong('Base: '),
                                                                       choices =  NULL,
-                                                                      multiple = FALSE))
+                                                                      multiple = FALSE)),
+                                         conditionalPanel("input.search_by != 'Gene'",
+                                                          selectizeInput('diff_against', strong('Against: '),
+                                                                         choices =  NULL,
+                                                                         multiple = FALSE))
                                        )),
                                 column(8,
                                        fluidRow(
@@ -375,20 +379,20 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, h2("Run plae Locally"))),
                       fluidRow(column(width = 8, offset = 1, 'If you have 200GB of free hard drive space, you can run plae on your own computer. ', tags$a(href="https://www.github.com/davemcg/plaeApp", "Installation instructions are available in our Github repository"), ' (this is the codebase for the app you are using now).')),
                       fluidRow(column(width = 8, offset = 1, h2("Seurat Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/scEiaD_all_seurat_v3.Rdata", "All (~2.9 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/scEiaD_all_seurat_v3.Rdata", "All (~2.9 GB)")))),
                       fluidRow(column(width = 8, offset = 1, h2("AnnData Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/scEiaD_all_anndata.h5ad", "All (~2.7 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/scEiaD_all_anndata.h5ad", "All (~2.7 GB)")))),
                       fluidRow(column(width = 8, offset = 1, h2("Diff Testing Results"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/wilcox_diff_resultsCellType(Predict).tsv.gz", "CellType against CellType (Predict)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/wilcox_diff_resultsCluster.tsv.gz", "Cluster against Cluster")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/wilcox_diff_resultsCellType(Predict).tsv.gz", "CellType against CellType (Predict)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/wilcox_diff_resultsCluster.tsv.gz", "Cluster against Cluster")))),
                       fluidRow(column(width = 8, offset = 1, h2("Metadata"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/metadata_filter.tsv.gz", "Cell Metadata")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/metadata_filter.tsv.gz", "Cell Metadata")))),
                       fluidRow(column(width = 8, offset = 1, h2("Counts"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/counts.Rdata", "Kallisto counts, R sparse matrix (~1.4 GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/cpm.Rdata", "Kallisto counts, cpm scaled, R sparse matrix (~1.4 GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_01_13/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix (~1.4 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/counts.Rdata", "Kallisto counts, R sparse matrix (~1.4 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/cpm.Rdata", "Kallisto counts, cpm scaled, R sparse matrix (~1.4 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_05/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix (~1.4 GB)")))),
                       br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
                       fluidRow(includeHTML("www/footer.html"))
              ),
@@ -396,7 +400,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.52'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.60'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -441,6 +445,9 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.60 (2021-02-08): New scEiaD built with more studies. Removed several retinal organoid datasets that had snuck in. Added a filter option for the diff searching to search, for example, one cluster directly against another cluster.')),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1)),
                                  fluidRow(column(width = 8, offset = 1, '0.52 (2021-01-13): Adding "missing" genes (we had only retained genes which were expressed in all three species, which naturally led to many genes (some important, like OPN1MW) to be dropped. That has been fixed. Tweak "Expression Plot" dot size to prevent crazy tiny point sizes. ')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.51 (2021-01-06): Hello 2021! ', tags$a(href="https://adamgayoso.com", "Adam Gayoso"), ' kindly pointed out that I was using scVI in a non-optimal manner, so I updated the scVI modeling to match their recommend "scArches" parameters. This (fortunately for my sanity) only subtly changes the downstream result. The more significant change is that we have totally changed the diff testing section to use the scran findMarkers test instead of our complicated and compute expensive pseudo-Bulk testing which continually gave odd results.')),

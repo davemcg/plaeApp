@@ -20,12 +20,12 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/massive_integrated_eye_scRNA/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.2-500-0.6.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD//2021_02_05_MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-0.6.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
-meta_filter <- read_fst('www/meta_filter.fst') %>%
+meta_filter <- read_fst('~/git/plaeApp/inst/app/www/meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
-                   TRUE ~ CellType_predict)) %>%
+                                      TRUE ~ CellType_predict)) %>%
   mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
 # temporarily fix two issues:
 ## the well data RPCs were labelled as RPC by mistake
@@ -383,15 +383,26 @@ shinyServer(function(input, output, session) {
     }
     if (is.null(query[['diff_base']])){
       group = input$search_by
+      choices = scEiaD_2020_v01 %>%
+        tbl('wilcox_diff_testing_sets') %>%
+        filter(Group == group) %>%
+        collect() %>% filter(!grepl('Doubl', Base)) %>%
+        pull(Base)
       updateSelectizeInput(session, 'diff_base',
-                           choices = scEiaD_2020_v01 %>%
-                             tbl('wilcox_diff_testing_sets') %>%
-                             filter(Group == group) %>%
-                             collect() %>% filter(!grepl('Doubl', Base)) %>%
-                             pull(Base),
+                           choices = choices,
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
+    updateSelectizeInput(session, 'diff_against',
+                         choices = scEiaD_2020_v01 %>%
+                           tbl('wilcox_diff_testing_sets') %>%
+                           filter(Group == group) %>%
+                           collect() %>% filter(!grepl('Doubl', Base)) %>%
+                           pull(Base),
+                         selected = '',
+                         options = list(placeholder = 'Optional Filtering'),
+                         server = TRUE)
+
     # Meta Plot modal ----------
     observeEvent(input$BUTTON_show_meta_legend, {
       # Show a modal when the button is pressed
@@ -796,20 +807,29 @@ shinyServer(function(input, output, session) {
     make_pic()
   }, deleteFile = TRUE)
 
+  ## diff table code --------
   output$make_diff_table <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
       out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Gene %in% gene) %>%
-        head(2000)
+        filter(Gene %in% gene) #%>%
+      head(2000)
     } else {
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
+      if (input$diff_against == ''){
       out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         filter(Base == diff_base) %>%
         head(2000) %>%
         filter(Group == filter_term)
+      } else {
+        against <- input$diff_against
+        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+          filter(Base == diff_base, `Tested Against` == against) %>%
+          head(2000) %>%
+          filter(Group == filter_term)
+      }
     }
     out %>%
       collect() %>%
