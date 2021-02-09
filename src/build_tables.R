@@ -83,6 +83,8 @@ table01 <- mito %>%
 
 table01$`Post QC<br/>Count`[is.na(table01$`Post QC<br/>Count`)] <- 0
 formattable_01 <- table01 %>%
+  mutate(PMID = case_when(!grepl('doi', PMID) ~ glue::glue('<a href = https://pubmed.ncbi.nlm.nih.gov/{PMID}>{PMID}</a>') %>% as.character(),
+                          TRUE ~ '<a <href = https://doi.org/10.1101/774950>bioRxiv 774950</a>')) %>%
   formattable(., list(Count = normalize_bar("lightblue"),
                       `Post QC<br/>Count` = normalize_bar("lightblue"),
                       organism = color_bar_factor,
