@@ -20,37 +20,45 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD//2021_02_05_MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-0.6.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-5.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
-meta_filter <- read_fst('~/git/plaeApp/inst/app/www/meta_filter.fst') %>%
+
+x_dir <- -1
+y_dir <- 1
+meta_filter <- read_fst('~/data/scEiaD/2021_03_17_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
+                                      is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
-  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
-# temporarily fix two issues:
-## the well data RPCs were labelled as RPC by mistake
-## remove the well based label "Mesenchymal/RPE/Endothelial" for now until I figure out
-## better what this population is
-# meta_filter <- meta_filter %>% mutate(CellType_predict = case_when(CellType_predict == 'RPC' ~ 'RPCs',
-#                                                                    CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
-#                                                                    TRUE ~ CellType_predict))
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
-  mutate(UMAP_1 = UMAP_1 * 1, UMAP_2 = UMAP_2 * -1)
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 mf <- meta_filter %>% sample_frac(0.2)
 
 # generate color_mappings
 categorical_columns <- c("Phase","batch","study_accession","library_layout","organism","Platform",
                          "Covariate","CellType","CellType_predict","TabulaMurisCellType","TabulaMurisCellType_predict",
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
-                         "Doublet","TechType", "SubCellType", 'subcluster' )
+                         "Doublet","TechType", "SubCellType", 'subcluster', 'Age' )
 #"SubCellType" and subcluster are problems
-meta_filter <- meta_filter %>% mutate(SubCellType = tidyr::replace_na(SubCellType, 'None'),
+meta_filter <- meta_filter %>% mutate(Age = as.character(Age), SubCellType = tidyr::replace_na(SubCellType, 'None'),
                                       subcluster = as.character(subcluster))
 map_color <- function(column, meta_filter){
   #master_colorlist <- c(pals::polychrome()[3:length(pals::polychrome())], pals::alphabet2())
@@ -240,7 +248,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'insitu_filter_cat',
                            label = 'Filter category: ',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
+                             select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
                            selected = '',
                            server = TRUE)
     }
@@ -260,7 +268,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['grouping_features']])){
       updateSelectizeInput(session, 'grouping_features',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
+                             select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
                            selected = c('CellType_predict'),
                            server = TRUE)
@@ -299,7 +307,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['exp_filter_cat']])){
       updateSelectizeInput(session, 'exp_filter_cat',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
+                             select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
                            selected = 'CellType',
                            server = TRUE)
     }
@@ -318,7 +326,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['exp_plot_groups']])){
       updateSelectizeInput(session, 'exp_plot_groups',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
+                             select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
                            selected = c('study_accession'),
                            server = TRUE)
     }
@@ -348,7 +356,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['facet_filter_cat']])){
       updateSelectizeInput(session, 'facet_filter_cat',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
-                             select(-Gene, -cell_ct, -cell_exp_ct, -cpm) %>% colnames() %>% sort(),
+                             select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
                            selected = 'CellType',
                            server = TRUE)
     }
@@ -467,7 +475,7 @@ shinyServer(function(input, output, session) {
 
                             There are two fundamental ways to view the data:
                             <ul>
-                              <li>Expression, which is log2 scaled CPM (counts per million) </li>
+                              <li>Expression, which is log2 scaled counts</li>
                               <li>% Cells Detected, which is the proportion of cells that have any detectable transcript</li>
                             </ul>"),
                                                 easyClose = TRUE))
@@ -668,7 +676,7 @@ shinyServer(function(input, output, session) {
       table <- scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
         filter(Gene == gene) %>%
         group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
-        summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
+        summarise(counts = sum(counts * cell_exp_ct) / sum(cell_exp_ct),
                   cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
         collect() %>%
         tidyr::drop_na() %>%
@@ -677,12 +685,12 @@ shinyServer(function(input, output, session) {
                     summarise(Count = n())) %>%
         mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
         mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-               Expression = round(cpm * (`%` / 100), 2)) %>%
+               Expression = round(counts * (`%` / 100), 2)) %>%
         select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
         arrange(-Expression) %>%
         rename(`Cells # Detected` = cell_exp_ct,
                `Total Cells` = Count,
-               `log2(cpm+1)` = Expression) %>%
+               `log2(counts+1)` = Expression) %>%
         ungroup() %>%
         select(-Gene)
 
@@ -786,7 +794,7 @@ shinyServer(function(input, output, session) {
     full_table <- full_table %>%
       rename(`Cells # Detected` = cell_exp_ct,
              `Total Cells` = Count,
-             `log2(cpm+1)` = Expression) %>%
+             `log2(counts+1)` = Expression) %>%
       tidyr::drop_na()
     full_table %>% DT::datatable(extensions = 'Buttons',
                                  filter = list(position = 'bottom', clear = TRUE, plain = TRUE),

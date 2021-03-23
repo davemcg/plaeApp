@@ -63,11 +63,11 @@ shinyUI(
                                                              column(5,
                                                                     selectizeInput('pt_size_gene', strong('Scatter Point Size: '),
                                                                                    choices=c(1,2,3,6,10),
-                                                                                   selected = 2, multiple=FALSE))),
+                                                                                   selected = 1, multiple=FALSE))),
                                                     shinyWidgets::setSliderColor(c("#3269FF"), c(1)),
                                                     fluidRow(column(5,
-                                                                    sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(cpm + 1)): "), min = 1,
-                                                                                max = 15, value = c(1, 15))
+                                                                    sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(counts + 1)): "), min = 1,
+                                                                                max = 10, value = c(1, 10))
                                                     )),
                                                     fluidRow(column(5,
                                                                     selectizeInput('gene_filter_cat', label = strong('Scatter Filter Category: '),
@@ -174,7 +174,7 @@ shinyUI(
                                                                 selected = 400, multiple = FALSE)),
                                           column(3,
                                                  selectInput('exp_plot_ylab', strong('Value: '),
-                                                             choices = c('Mean CPM', '% of Cells Detected')))
+                                                             choices = c('Mean log2(Counts + 1)', '% of Cells Detected')))
                                         ),
                                         fluidRow(
                                           column(3,
@@ -400,7 +400,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.60'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.61'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -427,6 +427,10 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, 'The labels above were used to create a machine learning modeled which was used to relabel all* cells in the scEiaD (*above a confidence threshold of 0.5).'))),
                                  br(),br(),
                                  fluidRow(includeHTML("www/footer.html"))),
+                        # tabPanel('Example Analyses', # Analyses ------
+                        #          fluidPage(
+                        #            fluidRow(includeHTML("www/plae_analyses.html"))
+                        #          )),
                         tabPanel('Contact', # Contact ------
                                  fluidPage(
                                    fluidRow(column(width = 8, offset = 1, h1('Contact'))),
@@ -445,6 +449,7 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.70 (2021-03-22): New scEiaD built with corrected fastq file sets (potential bug in 10x bamtofastq tool resulted ina few datasets getting scrambled barcodes). Removed a macaque dataset (SRR7733526) with odd behavior (clustering in 2D UMAP space largely alone). Tweaked the UMAP 2D gene view with a darker "background" cell color scheme to reduce "over-emphasis" on cells with low expression of a gene. CPM replaced with counts as some odd behaviour was detected in some genes in the UMAP view where there was high "background" expression. Counts have more consistent behavior. Removed hard filter that tossed cells with >2500 detected genes.')),
                                  fluidRow(column(width = 8, offset = 1, '0.60 (2021-02-08): New scEiaD built with more studies. Removed several retinal organoid datasets that had snuck in. Added a filter option for the diff searching to search, for example, one cluster directly against another cluster.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1)),

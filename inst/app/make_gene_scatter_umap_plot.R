@@ -1,18 +1,22 @@
 make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   cat(file=stderr(), paste0(Sys.time(), ' Gene Scatter Plot Call\n'))
+  # input <- list()
+  # input$Gene <- 'CRX (ENSG00000105392)'
+  # input$pt_size <- 1
+  # input$gene_scater_slider <- c(1,15)
+  # db <- scEiaD_2020_v01
   gene <- input$Gene
+
 
   pt_size <- input$pt_size_gene %>% as.numeric()
   expression_range <- input$gene_scatter_slider
 
-  p <-  db %>% tbl('cpm') %>%
+  p <-  db %>% tbl('counts') %>%
     filter(Gene == gene) %>%
     collect() %>%
-    mutate(cpm = cpm - min(cpm) + 1) %>%
-    filter(cpm > as.numeric(expression_range[1]),
-           cpm < as.numeric(expression_range[2])) %>%
+    #mutate(counts = counts - min(counts) + 1) %>%
     left_join(., meta_filter, by = 'Barcode') %>%
-    filter(!is.na(UMAP_1), !is.na(UMAP_2), !is.na(cpm))
+    filter(!is.na(UMAP_1), !is.na(UMAP_2), !is.na(counts))
   cat(input$gene_filter_cat)
   cat(class(input$gene_filter_cat))
   if (!is_null(input$gene_filter_cat)){
@@ -29,22 +33,28 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   }
 
 
-  color_range <- range(p$cpm)
+  # remove effect of super long with capping max val at 5 * SD
+  max_value <- sd(p$counts) * 5
+  p <- p %>% select(Barcode, UMAP_1, UMAP_2, counts) %>% filter(!is.na(counts)) %>% mutate(counts = case_when(counts > max_value ~ max_value, TRUE ~ counts)) %>%
+    filter(counts > as.numeric(expression_range[1]),
+           counts < as.numeric(expression_range[2]))
+  color_range <- range(p$counts)
+  #color_range <- c(1,5)
   plot <- p %>% ggplot() +
-    geom_scattermost(cbind(mf$UMAP_1, mf$UMAP_2), color = '#D3D3D333',
-                     pointsize = pt_size - 1,
+    geom_scattermost(cbind(mf$UMAP_1, mf$UMAP_2), color = '#707070',
+                     pointsize = 0,
                      pixels=c(1000,1000)) +
     geom_scattermost(cbind(p$UMAP_1, p$UMAP_2),
                      color = viridis::magma(100, alpha=0.2)
-                     [1+99*(p$cpm-color_range[1])/diff(color_range)],
-                     pointsize= pt_size - 1,
+                     [1+99*(p$counts-color_range[1])/diff(color_range)],
+                     pointsize= pt_size ,
                      pixels=c(1000,1000),
                      interpolate=FALSE) +
     geom_point(data=data.frame(x=double(0)), aes(x,x,color=x)) +
     scale_color_gradientn(  #add the manual guide for the empty aes
-      limits=c(min(p$cpm),max(p$cpm)),
+      limits=c(min(p$counts),max(p$counts)),
       colors=viridis::magma(100),
-      name="log2(cpm+1)") +
+      name="log2(counts+1)") +
     theme_cowplot() +
     theme(axis.line = element_blank(),
           axis.title = element_blank(),

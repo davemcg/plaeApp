@@ -33,7 +33,7 @@ get_insitu_table <- function(input, db, meta_filter) {
       filter(Gene == gene) %>%
       filter(!!as.symbol(filt_cat) %in% filt_on) %>%
       group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
-      summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
+      summarise(counts = sum(counts * cell_exp_ct) / sum(cell_exp_ct),
                 cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
       as_tibble() %>%
       tidyr::drop_na() %>%
@@ -42,7 +42,7 @@ get_insitu_table <- function(input, db, meta_filter) {
                   summarise(Count = n())) %>%
       mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
       mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-             Expression = round(cpm * (`%` / 100), 2)) %>%
+             Expression = round(counts * (`%` / 100), 2)) %>%
       select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
       arrange(-Expression)
   }
@@ -52,7 +52,7 @@ get_insitu_table <- function(input, db, meta_filter) {
     full_table <- db %>% tbl('grouped_stats') %>%
       filter(Gene == gene) %>%
       group_by_at(vars(one_of(c('Gene', grouping_features)))) %>%
-      summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
+      summarise(counts = sum(counts * cell_exp_ct) / sum(cell_exp_ct),
                 cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
       as_tibble() %>%
       tidyr::drop_na() %>%
@@ -61,7 +61,7 @@ get_insitu_table <- function(input, db, meta_filter) {
                   summarise(Count = n())) %>%
       mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
       mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-             Expression = round(cpm * (`%` / 100), 2)) %>%
+             Expression = round(counts * (`%` / 100), 2)) %>%
       select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
       arrange(-Expression)
   }
@@ -106,7 +106,7 @@ make_insitu_plot <- function(input, scEiaD_2020_v01, meta_filter){
   leg_lab[] <- lapply(leg_lab, round,2)
   legend <- image_graph(width = 300, height = 600, res = 96)
   legend_image <- as.raster(matrix(rev(p$col), ncol=1))
-  plot(c(0,3),c(0,1),type = 'n', axes = F,xlab = '', ylab = '', main = expression(bold("Log"[2] * "(CPM + 1)")), cex.main=1.5)
+  plot(c(0,3),c(0,1),type = 'n', axes = F,xlab = '', ylab = '', main = expression(bold("Log"[2] * "(counts + 1)")), cex.main=1.5)
   text(x=2, y = seq(0,1,l=5), labels = leg_lab[], cex=1.5)
   rasterImage(legend_image, 0, 0, 1,1)
   dev.off()

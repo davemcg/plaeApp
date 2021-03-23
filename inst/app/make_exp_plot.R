@@ -5,9 +5,9 @@ make_exp_plot <- function(input, db, meta_filter){
   # input$exp_filter_cat <- 'CellType_predict'
   # input$exp_filter_on <- c('Rods' ,'Cones')
   # input$exp_plot_facet <- c('CellType_predict')
-  # input$exp_plot_genes <- c('PAX6', 'CRX', 'NRL', 'RHO')
+  # input$exp_plot_genes <- c('PAX6 (ENSG00000007372)', 'CRX (ENSG00000105392)', 'NRL (ENSG00000129535)', 'RHO (ENSG00000163914)')
   # input$exp_plot_groups <- c('Stage')
-  # input$exp_plot_ylab <- 'Mean CPM'
+  # input$exp_plot_ylab <- 'Mean log2(Counts + 1)'
   # input$exp_plot_col_num <- 10
 
   cat(file=stderr(), paste0(Sys.time(), ' Exp Plot Call\n'))
@@ -61,19 +61,19 @@ make_exp_plot <- function(input, db, meta_filter){
     mutate(Stage = factor(Stage, levels = c('Early Dev.', 'Late Dev.', 'Maturing', 'Mature'))) %>%
     #filter(!is.na(!!as.symbol(grouping_features))) %>%
     group_by_at(vars(one_of(c('Gene', input$exp_plot_facet, grouping_features)))) %>%
-    summarise(cpm = sum(cpm * cell_exp_ct) / sum(cell_exp_ct),
+    summarise(counts = sum(counts * cell_exp_ct) / sum(cell_exp_ct),
               cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
     full_join(., meta_filter %>%
                 group_by_at(vars(one_of(grouping_features))) %>%
                 summarise(Count = n())) %>%
     mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
     mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
-           Expression = round(cpm * (`%` / 100), 2)) %>%
+           Expression = round(counts * (`%` / 100), 2)) %>%
     select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
     arrange(-Expression) %>%
     rename(`Cells # Detected` = cell_exp_ct,
            `Total Cells` = Count,
-           `Mean CPM` = Expression,
+           `Mean log2(Counts + 1)` = Expression,
            `% of Cells Detected` = `%`) %>%
     tidyr::drop_na()
   box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)

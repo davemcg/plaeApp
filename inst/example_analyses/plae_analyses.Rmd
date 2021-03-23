@@ -155,8 +155,8 @@ We provide the full data as seurat (v3) or anndata (scanpy) objects you can down
 ```{r}
 library(Seurat)
 library(tidyverse)
-#system('wget -O ~/Downloads/scEiaD_all_seurat_v3.Rdata http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_17/scEiaD_all_seurat_v3.Rdata')
-load('~/Downloads/scEiaD_all_seurat_v3.Rdata')
+#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_17/scEiaD_all_seurat_v3.Rdata')
+load('~/data/scEiaD/scEiaD_all_seurat_v3.Rdata')
 ```
 
 ## ID neurogenic cells in different clusters
@@ -170,9 +170,9 @@ scEiaD_droplet@meta.data %>%
   arrange(-Perc)
 ```
 
-The most common is cluster 6 and 7 (by both count and proportion that is Neurogenic)
+The most common is cluster 41 and 42 (by both count and proportion that is Neurogenic)
 
-## Compare cluster 6 - Neurogenic vs cluster 7 - Neurogenic
+## Compare cluster 41 - Neurogenic vs cluster 42 - Neurogenic
 This will take a few minutes to run. This is why we cannot offer on-demand custom diff testing as it takes at least a few minutes to run and the whole app shuts down for *everyone* while it computes. 
 ```{r}
 # Create new column with a pasted together cluster ID and a CellType
@@ -186,7 +186,7 @@ scEiaD_droplet <- AddMetaData(scEiaD_droplet,
                               col.name = 'clusterCT' )
 # tell Seurat this new column is the default identity
 Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$clusterCT
-diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '6_Neurogenic Cells', ident.2 = '7_Neurogenic Cells')
+diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '41_Neurogenic Cells', ident.2 = '42_Neurogenic Cells')
 diff_test %>% arrange(-avg_logFC) %>% head(5)
 ```
 
@@ -204,10 +204,7 @@ scEiaD_droplet@meta.data %>%
   arrange(-Perc)
 ```
 
-The most common is cluster 6 and 7 (by both count and proportion that is Neurogenic)
-
-## Compare cluster 37 - RPE vs cluster 46 - RPE
-This will take a few minutes to run. This is why we cannot offer on-demand custom diff testing as it takes at least a few minutes to run and the whole app shuts down for *everyone* while it computes. 
+## Compare cluster 34 - RPE vs cluster 47 - RPE
 ```{r}
 # Create new column with a pasted together cluster ID and a CellType
 scEiaD_droplet <- AddMetaData(scEiaD_droplet, 
@@ -220,15 +217,15 @@ scEiaD_droplet <- AddMetaData(scEiaD_droplet,
                               col.name = 'clusterCT' )
 # tell Seurat this new column is the default identity
 Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$clusterCT
-diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '37_RPE', ident.2 = '46_RPE')
-diff_test %>% arrange(-avg_logFC) %>% head(5)
+diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '34_RPE', ident.2 = '47_RPE')
+diff_test %>% arrange(avg_logFC) %>% head(20)
 ```
-A top gene is vimentin, which has been previously identified as over-expressed in cultured RPE (https://pubmed.ncbi.nlm.nih.gov/1700982/). The RPE in cluster 37 are iPSC-based.. 
+One of the first non-ribosome or mitochondrial gene is vimentin, which has been previously identified as over-expressed in cultured and proliferating RPE (https://pubmed.ncbi.nlm.nih.gov/1700982/). The RPE in cluster 47 are iPSC-based. 
 
-## Check RPE65, TTR, TYRP1 and Vimentin expression across the two RPE cluster
-RPE65, TTR, and TYRP1 are markers for functional RPE and are high in both groups of RPE. Vimentin is much higher in the iPSC RPE cluster (37).
-```{r}
-scEiaD_droplet__RPE <- subset(scEiaD_droplet, idents = c('37_RPE','46_RPE'))
+## Check RPE65, TTR, TYRP1 and Vimentin expression across the two RPE cluster (and RGC)
+RPE65, TTR, and TYRP1 are markers for functional RPE and are high in both groups of RPE (and as a quick control, virtually all off in RGC). Vimentin is much higher in the iPSC RPE cluster (37).
+```{r, fig.width=4, fig.height=5}
+scEiaD_droplet__RPE <- subset(scEiaD_droplet, idents = c('34_RPE','47_RPE', '51_Retinal Ganglion Cells', '7_RPCs'))
 VlnPlot(scEiaD_droplet__RPE, features = c('ENSG00000116745', 'ENSG00000107165', 'ENSG00000118271', 'ENSG00000026025'))
 ```
 
