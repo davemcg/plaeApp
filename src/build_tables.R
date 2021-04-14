@@ -8,7 +8,9 @@ library(RSQLite)
 # all cells
 load('~/data/scEiaD/cell_info_labelled.Rdata')
 # pre mt filtering
-mito <- read_tsv('~/data/scEiaD/QC.tsv.gz')
+srt <- data.table::fread('~/git/scEiaD/data/sample_run_layout_organism_tech.tsv')
+mito <- data.table::fread('~/data/scEiaD/QC.tsv.gz')
+mito <- mito %>% left_join(srt %>% select(sample_accession, SX = Source) %>% unique(), by = 'sample_accession') %>% filter(SX %in% c('iPSC','Tissue'))
 # load('/Volumes/data/projects/nei/mcgaughey/massive_integrated_eye_scRNA/fastMNN_umap_full.Rdata')
 study_meta <- read_tsv('~/git/scEiaD/data/GEO_Study_Level_Metadata.tsv')
 sample_meta <- read_tsv('~/git/scEiaD/data/sample_run_layout_organism_tech.tsv')
@@ -63,7 +65,7 @@ table01 <- mito %>% mutate(barcode = value) %>%
   full_join(sample_meta %>% select(sample_accession, study_accession, organism, Platform, Source) %>% unique()) %>%
   left_join(study_meta) %>%
   left_join(cell_info_labels %>% select(barcode = value, CellType)) %>%
-  filter(Source != 'Cell Culture', Source != 'Organoid') %>%
+  #filter(Source != 'Cell Culture', Source != 'Organoid') %>%
   filter(!is.na(study_accession)) %>%
   mutate(PMID = as.character(PMID)) %>%
   mutate(Citation = case_when(is.na(Citation) ~ '',
