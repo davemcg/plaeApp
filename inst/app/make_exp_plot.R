@@ -55,6 +55,7 @@ make_exp_plot <- function(input, db, meta_filter){
 
   #cat(input)
   box_data <- box_data %>%
+    filter(!Platform %in% c('SCRBSeq')) %>%
     mutate(CellType_predict = case_when(CellType_predict == 'RPC' ~ 'RPCs',
                                         CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
                                         TRUE ~ CellType_predict)) %>%
@@ -71,11 +72,12 @@ make_exp_plot <- function(input, db, meta_filter){
            Expression = round(counts * (`%` / 100), 2)) %>%
     select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
     arrange(-Expression) %>%
-    rename(`Cells # Detected` = cell_exp_ct,
+    rename(`Cell # Detected` = cell_exp_ct,
            `Total Cells` = Count,
            `Mean log2(Counts + 1)` = Expression,
            `% of Cells Detected` = `%`) %>%
-    tidyr::drop_na()
+    tidyr::drop_na() %>%
+    filter(`Total Cells` > as.integer(input$exp_filter_min_cell_number))
   box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)
 
   box_data %>%

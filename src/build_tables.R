@@ -8,11 +8,11 @@ library(RSQLite)
 # all cells
 load('~/data/scEiaD/cell_info_labelled.Rdata')
 # pre mt filtering
-mito <- read_tsv('~/data/scEiaD/mito_counts.tsv')
+mito <- read_tsv('~/data/scEiaD/QC.tsv.gz')
 # load('/Volumes/data/projects/nei/mcgaughey/massive_integrated_eye_scRNA/fastMNN_umap_full.Rdata')
 study_meta <- read_tsv('~/git/scEiaD/data/GEO_Study_Level_Metadata.tsv')
 sample_meta <- read_tsv('~/git/scEiaD/data/sample_run_layout_organism_tech.tsv')
-scEiaD <- dbPool(drv = SQLite(), dbname = "~/data/scEiaD/2021_02_05_MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-0.6.sqlite", idleTimeout = 3600000)
+scEiaD <- dbPool(drv = SQLite(), dbname = "~/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-5.sqlite", idleTimeout = 3600000)
 meta <- scEiaD %>% tbl('metadata') %>% as_tibble()
 
 stats <- meta %>% group_by(study_accession, Platform) %>% summarise(Counts = n())
@@ -57,13 +57,13 @@ post <- stats %>% rename(`Post QC<br/>Count` = Counts) %>%
   group_by(study_accession, Platform) %>%
   summarise(`Post QC<br/>Count` = sum(`Post QC<br/>Count`))
 
-table01 <- mito %>%
+table01 <- mito %>% mutate(barcode = value) %>%
   mutate(barcode = gsub(':','_',barcode)) %>%
-  rename(sample_accession = srs) %>%
+  #rename(sample_accession = srs) %>%
   full_join(sample_meta %>% select(sample_accession, study_accession, organism, Platform, Source) %>% unique()) %>%
   left_join(study_meta) %>%
   left_join(cell_info_labels %>% select(barcode = value, CellType)) %>%
-  filter(Source != 'Cell Culture', Source != 'Organoid', study_accession != 'SRP166660') %>%
+  filter(Source != 'Cell Culture', Source != 'Organoid') %>%
   filter(!is.na(study_accession)) %>%
   mutate(PMID = as.character(PMID)) %>%
   mutate(Citation = case_when(is.na(Citation) ~ '',

@@ -192,6 +192,8 @@ shinyUI(
                                                                    choices = NULL, multiple = TRUE)),
                                           column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
                                                                    choices = NULL, multiple = TRUE)),
+                                          column(3, numericInput('exp_filter_min_cell_number', strong('Minimum # Cells in Group: '),
+                                                                   value = 50))
                                         ),
                                         fluidRow(column(3, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                         alt = 'BUTTON draw exp plot below',
@@ -375,6 +377,9 @@ shinyUI(
                       fluidRow(includeHTML("www/footer.html"))),
              tabPanel('Data', # Data ---------
                       fluidRow(column(width = 8, offset = 1, h1("Data"))),
+                      br(),
+                      fluidRow(column(width = 8, offset = 1, "The codebase for the creation of the scEiaD dataset is on ", tags$a(href="https://www.github.com/davemcg/scEiaD", "github"))),
+                      br(),
                       fluidRow(column(width = 8, offset = 1, "If size not given, it is less than 1 GB")),
                       fluidRow(column(width = 8, offset = 1, h2("Run plae Locally"))),
                       fluidRow(column(width = 8, offset = 1, 'If you have 200GB of free hard drive space, you can run plae on your own computer. ', tags$a(href="https://www.github.com/davemcg/plaeApp", "Installation instructions are available in our Github repository"), ' (this is the codebase for the app you are using now).')),
@@ -400,7 +405,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.61'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.71'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -415,6 +420,8 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, h1('tldr'))),
                                    fluidRow(column(width = 8, offset = 1, 'You can look up gene expression by retina cell type across loads of different studies, three organisms, and multiple developmental stages.')),
                                    br(),
+                                   fluidRow(column(width = 8, offset = 1, h1('Preprint of the data creation and benchmarking now on', tags$a(href="https://www.biorxiv.org/content/10.1101/2021.03.26.437190v1", "bioRxiv!")))),
+                                   br(),
                                    fluidRow(column(width = 8, offset = 1, h1('Data Sources'))),
 
                                    fluidRow(column(width = 8, offset = 1, includeHTML("www/table_01.html"))),
@@ -427,10 +434,10 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, 'The labels above were used to create a machine learning modeled which was used to relabel all* cells in the scEiaD (*above a confidence threshold of 0.5).'))),
                                  br(),br(),
                                  fluidRow(includeHTML("www/footer.html"))),
-                        # tabPanel('Example Analyses', # Analyses ------
-                        #          fluidPage(
-                        #            fluidRow(includeHTML("www/plae_analyses.html"))
-                        #          )),
+                        tabPanel('Example Analyses', # Analyses ------
+                                 fluidPage(
+                                   fluidRow(column(width = 8, offset = 1, (tags$a(href="http://plae.nei.nih.gov/plae_analyses.html", "External link - analysis examples")))),
+                                 )),
                         tabPanel('Contact', # Contact ------
                                  fluidPage(
                                    fluidRow(column(width = 8, offset = 1, h1('Contact'))),
@@ -449,7 +456,10 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.71 (2021-04-14): scEiaD preprint on bioRxiv! Added a filter in the "exp plot" section to remove data points with user-selected (default 50) minimum cells. I was finding that data points (e.g. cell type - study) with low N would often have "outlier" results. Added a new section to the web page - Analyses (under the "Info" tab)! ')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.70 (2021-03-22): New scEiaD built with corrected fastq file sets (potential bug in 10x bamtofastq tool resulted ina few datasets getting scrambled barcodes). Removed a macaque dataset (SRR7733526) with odd behavior (clustering in 2D UMAP space largely alone). Tweaked the UMAP 2D gene view with a darker "background" cell color scheme to reduce "over-emphasis" on cells with low expression of a gene. CPM replaced with counts as some odd behaviour was detected in some genes in the UMAP view where there was high "background" expression. Counts have more consistent behavior. Removed hard filter that tossed cells with >2500 detected genes.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.60 (2021-02-08): New scEiaD built with more studies. Removed several retinal organoid datasets that had snuck in. Added a filter option for the diff searching to search, for example, one cluster directly against another cluster.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1)),

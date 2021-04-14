@@ -5,7 +5,7 @@ output:
 ---
 # Welcome
 
-This document contains some simple examples for how to use the advanced filtering options in [https://plae.nei.nih.gov]()
+This document contains some simple examples for how to use the advanced filtering options in [https://plae.nei.nih.gov]() and a brief introduction to using the Seurat file to do custom tests. 
 
 # Gene Focused
 
@@ -18,9 +18,9 @@ By "gene focused" we mean that:
 
 For those who are most comfortable with stained *in situ* slices of the retina this visualization may be useful. The major cell types of the retina are laid on in rough anatomical positioning. The cell types are colored by intensity, with the brighter colors meaning that the gene is more highly expressed in that cell type. As an example we show expression of RHO (rhodopsin, a rod marker) and RPE65 (RPE marker).
 
-![](screenshots/rho_in_situ.png)
+![](screenshots/rho_in_situ.png){width=50%}
 
-![](screenshots/rpe65_in_situ.png)
+![](screenshots/rpe65_in_situ.png){width=50%}
 
 
 ## UMAP - Table
@@ -33,13 +33,13 @@ Let's go the UMAP - Table viewer in plae:
 
 Viz -> UMAP - Tables
 
-![](screenshots/atoh7_umap_navigation.png){width=50%}
+![](screenshots/atoh7_umap_navigation.png){width=75%}
 
-Gray are cells which have no detectable ATOH7.
+Dark gray are cells which have no detectable ATOH7.
 
-Yellow is the highest expression. Dark blue the lowest (notice the legend).
+Yellow is the highest expression and dark purple is the lowest expression. 
 
-![](screenshots/atoh7_umap.png){width=50%}
+![](screenshots/atoh7_umap.png){width=75%}
 
 ## Show highest expressing cells
 
@@ -47,7 +47,7 @@ What if we want to see which cells have the highest expression? We can use the "
 
 We see that the highest expressing cells are in the "center" before the branching happens.
 
-![](screenshots/atoh7_umap_filtered.png){width=50%}
+![](screenshots/atoh7_umap_filtered.png){width=75%}
 
 ## Species Filtering
 
@@ -55,7 +55,7 @@ By default plae shows data for all organisms in the database (human, mouse, maca
 
 If we only want to see ATOH7 expression in human data, then that is very easy with the powerful "Scatter Filter Category" and "Gene Filter On" sections.
 
-![](screenshots/atoh7_umap_filtered_human_only.png){width=50%}
+![](screenshots/atoh7_umap_filtered_human_only.png){width=75%}
 
 ## Table Information
 
@@ -63,11 +63,11 @@ While the UMAP view is cool looking, it can't show you everything....what if we 
 
 We can have quantified information on where ATOH7 is expressed by Cell Type (predicted) (this is our machine learned cell type labels) and organism.
 
-![](screenshots/atoh7_table.png){width=50%}
+![](screenshots/atoh7_table.png){width=75%}
 
-We see that about 50% of the mouse and human neurogenic cell type express ATOH7. In raw counts that is 9173 of 170101 total mouse neurogenic cells. They have an average expression of 6.86. You can sort or filter the table based on queries. If you wanted to see ATOH7 expression in the RGCs this is trivial to do by typing in the box below.
+We see that about 50% of the mouse and human neurogenic cell type express ATOH7. In raw counts that is 16,449 of 28,811 total mouse neurogenic cells. They have an average expression of 1.86. You can sort or filter the table based on queries. If you wanted to see ATOH7 expression in the RGCs this is trivial to do by typing in the box below.
 
-![](screenshots/atoh7_table_search.png){width=50%}
+![](screenshots/atoh7_table_search.png){width=75%}
 
 This shows us that ATOH7 expression seems to be dropping in the maturing/mature RGCs (and is much lower in the macaque) relative to the neurogenic population. 
 
@@ -77,13 +77,13 @@ As scEiaD is constructed from publicly available datasets, you can also filter t
 
 You can see information about the papers / studies in scEiaD by using the adjacent "Make Meta Table" section as follows:
 
-![](screenshots/meta_table_studies.png){width=50%}
+![](screenshots/meta_table_studies.png){width=75%}
 
 We see that the Clark et al. 2019 study did Smart-seq2 and 10X across many developmental time points in mouse. They study_accession ID is SRP158081. We can use this ID to look at ATOH7 expression only in this study in both the UMAP view and the table view
 
-![](screenshots/atoh7_umap_clark_only.png){width=50%}
+![](screenshots/atoh7_umap_clark_only.png){width=75%}
 
-![](screenshots/atoh7_table_clark_only.png){width=50%}
+![](screenshots/atoh7_table_clark_only.png){width=75%}
 
 
 # Expression Plot
@@ -100,7 +100,7 @@ We've entered ATOH7 as the gene to plot (1). We are faceting (splitting the plot
 
 ![](screenshots/atoh7_exp_bad_view.png)
 
-That is because the Plot Height (400) is not high enough. The text is prioritized over the data, so they are hidden. As it is extremely difficult to "auto" pick the correct height, it was more straightforward to have the user pick it. Usually a value of 1000 will give a reasonable view.
+That is because the Plot Height (400) is not high enough. The text is prioritized over the data, so they are hidden. As it is extremely difficult to "auto" pick the correct height, it was more straightforward to have the user pick it. Usually a value around 700 - 1200 will give a reasonable view.
 
 ## Useable plot
 ![](screenshots/atoh7_exp_view.png)
@@ -109,10 +109,10 @@ So yes, now we can see the data.
 
 ## Some cones have ATOH7 expression?
 
-So each point is an independent study. We see high ATOH7 expression in the neurogenic population, across many studies. But we also see *some* of the Cones with ATOH7 expression. The legend shows which colors correspond to which study.
+So each point is an independent study. We see high ATOH7 expression in the neurogenic population, across many studies. But we also see one of studies with ATOH7 expression in cones. The legend shows which colors correspond to which study.
 
 ![](screenshots/atoh7_exp_legend.png)
-One of the studies is a bright purple...probably SRP200599. We can confirm that by replotting the data with a filter that only shows study_accessionSRP200599.
+One of the studies is a bright pink...probably SRP200599. We can confirm that by replotting the data with a filter that only shows study_accession SRP200599.
 
 ![](screenshots/atoh7_exp_SRP200599.png)
 
@@ -139,9 +139,11 @@ These are published labels
 
 ## How many rods (predicted) we we have across organism and study?
 ![](screenshots/rods_predict_org_study_table.png)
+
 ## What genes are differentially expressed in the Rods?
 
 ![](screenshots/rods_diff_test.png)
+
 ## And what does ROM1 expression look like in the UMAP?
 
 ![](screenshots/rods_rom1_umap.png)
@@ -155,7 +157,7 @@ We provide the full data as seurat (v3) or anndata (scanpy) objects you can down
 ```{r}
 library(Seurat)
 library(tidyverse)
-#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_02_17/scEiaD_all_seurat_v3.Rdata')
+#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/scEiaD_all_seurat_v3.Rdata')
 load('~/data/scEiaD/scEiaD_all_seurat_v3.Rdata')
 ```
 
@@ -187,10 +189,10 @@ scEiaD_droplet <- AddMetaData(scEiaD_droplet,
 # tell Seurat this new column is the default identity
 Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$clusterCT
 diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '41_Neurogenic Cells', ident.2 = '42_Neurogenic Cells')
-diff_test %>% arrange(-avg_logFC) %>% head(5)
+diff_test %>% arrange(-avg_log2FC) %>% head(5)
 ```
 
-We see the top hit (by log fold change) that is overexpressed in cluster6-Neurogenic is ENSG00000131747 (TOP2A), which is a marker of cell proliferation. 
+We see the top hit (by log fold change) that is over expressed in cluster6-Neurogenic is ENSG00000131747 (TOP2A), which is a marker of cell proliferation. 
 
 
 ## ID RPE cells in different clusters
@@ -218,13 +220,13 @@ scEiaD_droplet <- AddMetaData(scEiaD_droplet,
 # tell Seurat this new column is the default identity
 Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$clusterCT
 diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '34_RPE', ident.2 = '47_RPE')
-diff_test %>% arrange(avg_logFC) %>% head(20)
+diff_test %>% arrange(avg_log2FC) %>% head(20)
 ```
 One of the first non-ribosome or mitochondrial gene is vimentin, which has been previously identified as over-expressed in cultured and proliferating RPE (https://pubmed.ncbi.nlm.nih.gov/1700982/). The RPE in cluster 47 are iPSC-based. 
 
 ## Check RPE65, TTR, TYRP1 and Vimentin expression across the two RPE cluster (and RGC)
 RPE65, TTR, and TYRP1 are markers for functional RPE and are high in both groups of RPE (and as a quick control, virtually all off in RGC). Vimentin is much higher in the iPSC RPE cluster (37).
-```{r, fig.width=4, fig.height=5}
+```{r, fig.width=8, fig.height=10}
 scEiaD_droplet__RPE <- subset(scEiaD_droplet, idents = c('34_RPE','47_RPE', '51_Retinal Ganglion Cells', '7_RPCs'))
 VlnPlot(scEiaD_droplet__RPE, features = c('ENSG00000116745', 'ENSG00000107165', 'ENSG00000118271', 'ENSG00000026025'))
 ```
