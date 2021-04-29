@@ -827,10 +827,10 @@ shinyServer(function(input, output, session) {
       diff_base <- input$diff_base
       filter_term <- input$search_by
       if (input$diff_against == ''){
-      out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Base == diff_base) %>%
-        head(2000) %>%
-        filter(Group == filter_term)
+        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+          filter(Base == diff_base) %>%
+          head(2000) %>%
+          filter(Group == filter_term)
       } else {
         against <- input$diff_against
         out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%

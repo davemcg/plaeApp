@@ -405,7 +405,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.71'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.72'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -434,10 +434,13 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, 'The labels above were used to create a machine learning modeled which was used to relabel all* cells in the scEiaD (*above a confidence threshold of 0.5).'))),
                                  br(),br(),
                                  fluidRow(includeHTML("www/footer.html"))),
-                        tabPanel('Example Analyses', # Analyses ------
+                        tabPanel('Analysis and Extension', # Analyses ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, (tags$a(href="http://plae.nei.nih.gov/plae_analyses.html", "External link - analysis examples")))),
-                                 )),
+                                   fluidRow(column(width = 8, offset = 1, (tags$h1('Using and Extending plae and the scEiaD')))),
+                                   br(),
+                                   fluidRow(column(width = 8, offset = 1, tags$b('All Links are External'))),
+                                   br(),
+                                   fluidRow(column(width = 12, offset = 1, includeHTML("www/analysis_toc.html"))))),
                         tabPanel('Contact', # Contact ------
                                  fluidPage(
                                    fluidRow(column(width = 8, offset = 1, h1('Contact'))),
@@ -456,6 +459,9 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.72 (2021-04-29): Added more content and a table organzation to the Info -> Analysis... section')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.71 (2021-04-14): scEiaD preprint on bioRxiv! Added a filter in the "exp plot" section to remove data points with user-selected (default 50) minimum cells. I was finding that data points (e.g. cell type - study) with low N would often have "outlier" results. Added a new section to the web page - Analyses (under the "Info" tab)!')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.70 (2021-03-22): New scEiaD built with corrected fastq file sets (potential bug in 10x bamtofastq tool resulted ina few datasets getting scrambled barcodes). Removed a macaque dataset (SRR7733526) with odd behavior (clustering in 2D UMAP space largely alone). Tweaked the UMAP 2D gene view with a darker "background" cell color scheme to reduce "over-emphasis" on cells with low expression of a gene. CPM replaced with counts as some odd behaviour was detected in some genes in the UMAP view where there was high "background" expression. Counts have more consistent behavior. Removed hard filter that tossed cells with >2500 detected genes.')),
