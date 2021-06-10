@@ -36,7 +36,7 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
   # remove effect of super long with capping max val at 5 * SD
   max_value <- sd(p$counts) * 5
   p <- p %>% select(Barcode, UMAP_1, UMAP_2, counts) %>% filter(!is.na(counts)) %>% mutate(counts = case_when(counts > max_value ~ max_value, TRUE ~ counts)) %>%
-    filter(counts > as.numeric(expression_range[1]),
+    filter(counts >= as.numeric(expression_range[1]),
            counts < as.numeric(expression_range[2]))
   color_range <- range(p$counts)
   #color_range <- c(1,5)

@@ -66,8 +66,8 @@ shinyUI(
                                                                                    selected = 1, multiple=FALSE))),
                                                     shinyWidgets::setSliderColor(c("#3269FF"), c(1)),
                                                     fluidRow(column(5,
-                                                                    sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(counts + 1)): "), min = 1,
-                                                                                max = 10, value = c(1, 10))
+                                                                    sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(counts + 1)): "), min =1,
+                                                                                max = 10, value = c(2, 10))
                                                     )),
                                                     fluidRow(column(5,
                                                                     selectizeInput('gene_filter_cat', label = strong('Scatter Filter Category: '),
@@ -405,7 +405,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.72'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.73'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -421,6 +421,9 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, 'You can look up gene expression by retina cell type across loads of different studies, three organisms, and multiple developmental stages.')),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('Preprint of the data creation and benchmarking now on', tags$a(href="https://www.biorxiv.org/content/10.1101/2021.03.26.437190v1", "bioRxiv!")))),
+                                   br(),
+                                   fluidRow(column(width = 8, offset = 1, h1('Licensing'))),
+                                   fluidRow(column(width = 8, offset = 1, 'This work is released under the CC0 license')),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('Data Sources'))),
 
@@ -440,7 +443,7 @@ shinyUI(
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, tags$b('All Links are External'))),
                                    br(),
-                                   fluidRow(column(width = 12, offset = 1, includeHTML("www/analysis_toc.html"))))),
+                                   fluidRow(column(width = 8, offset = 1, includeHTML("www/analysis_toc.html"))))),
                         tabPanel('Contact', # Contact ------
                                  fluidPage(
                                    fluidRow(column(width = 8, offset = 1, h1('Contact'))),
@@ -459,6 +462,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.73 (2021-06-10): Allow for UMAP plot to show all values (filter now starts at >=1)')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.72 (2021-04-29): Added more content and a table organzation to the Info -> Analysis... section')),
                                  br(),

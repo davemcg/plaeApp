@@ -86,7 +86,7 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
   mat[is.na(mat)] <- 0
 
   validate(
-    need(nrow(mat)!=0 | is.null(mat), 'Gene not expressed in current selection')
+    need(nrow(mat)!=0 | is.null(mat), 'Gene not highly expressed in current selection')
   )
   if(nrow(mat) ==1 | ncol(mat) ==1) {# in some cases
     h_clust <- list()
