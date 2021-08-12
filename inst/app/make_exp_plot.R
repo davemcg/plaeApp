@@ -65,7 +65,7 @@ make_exp_plot <- function(input, db, meta_filter){
     summarise(counts = sum(counts * cell_exp_ct) / sum(cell_exp_ct),
               cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
     full_join(., meta_filter %>%
-                group_by_at(vars(one_of(grouping_features))) %>%
+                group_by_at(vars(one_of(input$exp_plot_facet, grouping_features))) %>%
                 summarise(Count = n())) %>%
     mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
     mutate(`%` = round((cell_exp_ct / Count) * 100, 2),

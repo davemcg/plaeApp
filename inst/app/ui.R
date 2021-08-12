@@ -386,7 +386,7 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, h2("Seurat Objects"))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/scEiaD_all_seurat_v3.Rdata", "All (~20 GB)")))),
                       fluidRow(column(width = 8, offset = 1, h2("AnnData Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/scEiaD_all_anndata.h5ad", "All (~20 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/scEiaD_all_anndata.h5ad", "All (~4 GB)")))),
                       fluidRow(column(width = 8, offset = 1, h2("Diff Testing Results"))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
@@ -396,7 +396,6 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/metadata_filter.tsv.gz", "Cell Metadata")))),
                       fluidRow(column(width = 8, offset = 1, h2("Counts"))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/counts.Rdata", "Kallisto counts, R sparse matrix (~1.4 GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/cpm.Rdata", "Kallisto counts, cpm scaled, R sparse matrix (~1.4 GB)")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix (~1.4 GB)")))),
                       br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
                       fluidRow(includeHTML("www/footer.html"))
@@ -405,7 +404,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.73'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.74'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -462,6 +461,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.74 (2021-08-12): Remove broken link, fix bug in Expression Plot that was making average expression far too low.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.73 (2021-06-10): Allow for UMAP plot to show all values (filter now starts at >=1)')),
                                  br(),
