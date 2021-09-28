@@ -20,12 +20,12 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD/2021_09_23_meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD_v2/2021_09_23_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -817,7 +817,7 @@ shinyServer(function(input, output, session) {
   }, deleteFile = TRUE)
 
   ## diff table code --------
-
+  ### diff table auc -----
   output$make_diff_table_auc <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
@@ -825,7 +825,8 @@ shinyServer(function(input, output, session) {
       #   filter(Gene %in% gene) #%>%
       out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
         filter(Gene %in% gene) %>%
-      head(2000)
+        head(2000) %>%
+        collect()
     } else {
       req(input$diff_base)
       diff_base <- input$diff_base
@@ -834,53 +835,59 @@ shinyServer(function(input, output, session) {
         out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
           filter(Base == diff_base) %>%
           head(2000) %>%
-          filter(Group == filter_term)
+          filter(Base == diff_base,
+                 Group == filter_term) %>%
+          select(Gene, Base, `Tested Against`, AUC) %>%
+          collect()
         # out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         #   filter(Base == diff_base) %>%
         #   filter(Group == filter_term)
       } else {
         against <- input$diff_against
         out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
-          filter(Base == diff_base) %>%
-          filter(Group == filter_term)
+          filter(Base == diff_base,
+                 Group == filter_term,
+                 `Tested Against` == against) %>%
+          head(2000) %>%
+          select(Gene, Base, `Tested Against`, AUC) %>%
+          collect()
       }
     }
     out_auc %>%
-      collect() %>%
-      mutate(Group = as.factor(Group)) %>%
       mutate(
-             AUC = format(AUC, digits = 3),
-             AUC = as.numeric(AUC)) %>%
-      select(Group, Gene, Base, `Tested Against`, AUC) %>%
+        AUC = format(AUC, digits = 3),
+        AUC = as.numeric(AUC)) %>%
       DT::datatable(extensions = 'Buttons',
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
                                    dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatStyle(columns = c(8), width='250px')
   })
-
+  ### diff table gene - base level -----
   output$make_diff_table <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
       out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Gene %in% gene)
+        filter(Gene %in% gene) %>%
+        select(Group, Gene, Base,  p.value, FDR) %>%
+        collect() %>%
+        mutate(Group = as.factor(Group))
     } else {
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
-        out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
-          filter(Base == diff_base) %>%
-          head(2000) %>%
-          filter(Group == filter_term)
+      out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        filter(Base == diff_base,
+               Group == filter_term) %>%
+        select(Gene, Base,  p.value, FDR) %>%
+        collect()
     }
     out_gene %>%
-      collect() %>%
-      mutate(Group = as.factor(Group)) %>%
       mutate(FDR = format(FDR, digits = 3),
              FDR = as.numeric(FDR),
              PValue = format(p.value, digits = 3),
              PValue = as.numeric(PValue)) %>%
-      select(Group, Gene, Base,  PValue, FDR) %>%
+      select(-p.value) %>%
       DT::datatable(extensions = 'Buttons',
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
