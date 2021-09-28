@@ -43,12 +43,12 @@ make_facet_plot <- function(input, meta_filter){
                                       color = 'gray',
                                       pointsize = pt_size,
                                       pixels = c(750,750),
-                                      alpha = 0.4) +
+                                      alpha = 0.3) +
                      geom_scattermore(aes(x = UMAP_1, y = UMAP_2,
                                           color = !!as.symbol(color_column)) ,
                                       pointsize= pt_size,
                                       pixels = c(750,750),
-                                      alpha = 0.6) +
+                                      alpha = 0.4) +
                      facet_wrap(vars(!!(as.symbol(facet_column))), ncol = num_col) +
                      scale_colour_manual(values = rep(c(pals::alphabet() %>% unname(),
                                                         pals::alphabet2() %>% unname()),
