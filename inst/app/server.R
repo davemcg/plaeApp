@@ -25,7 +25,7 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scE
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v2/2021_09_23_meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD/2021_09_23_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -385,7 +385,7 @@ shinyServer(function(input, output, session) {
     # diff table updateSelect ------
     if (is.null(query[['diff_gene']])){
       updateSelectizeInput(session, 'diff_gene',
-                           choices = scEiaD_2020_v01 %>% tbl('wilcox_diff_testing_genes') %>% collect() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC_genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'CRX (ENSG00000105392)',
                            server = TRUE)
@@ -393,7 +393,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['diff_base']])){
       group = input$search_by
       choices = scEiaD_2020_v01 %>%
-        tbl('wilcox_diff_testing_sets') %>%
+        tbl('wilcox_diff_AUC_sets') %>%
         filter(Group == group) %>%
         collect() %>% filter(!grepl('Doubl', Base)) %>%
         pull(Base)
@@ -404,7 +404,7 @@ shinyServer(function(input, output, session) {
     }
     updateSelectizeInput(session, 'diff_against',
                          choices = scEiaD_2020_v01 %>%
-                           tbl('wilcox_diff_testing_sets') %>%
+                           tbl('wilcox_diff_AUC_sets') %>%
                            filter(Group == group) %>%
                            collect() %>% filter(!grepl('Doubl', Base)) %>%
                            pull(Base),
@@ -817,11 +817,12 @@ shinyServer(function(input, output, session) {
   }, deleteFile = TRUE)
 
   ## diff table code --------
+
   output$make_diff_table_auc <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
-      out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Gene %in% gene) #%>%
+      # out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+      #   filter(Gene %in% gene) #%>%
       out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
         filter(Gene %in% gene) %>%
       head(2000)
@@ -834,9 +835,9 @@ shinyServer(function(input, output, session) {
           filter(Base == diff_base) %>%
           head(2000) %>%
           filter(Group == filter_term)
-        out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-          filter(Base == diff_base) %>%
-          filter(Group == filter_term)
+        # out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        #   filter(Base == diff_base) %>%
+        #   filter(Group == filter_term)
       } else {
         against <- input$diff_against
         out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
@@ -847,19 +848,47 @@ shinyServer(function(input, output, session) {
     out_auc %>%
       collect() %>%
       mutate(Group = as.factor(Group)) %>%
-      mutate(FDR = format(FDR, digits = 3),
-             FDR = as.numeric(FDR),
+      mutate(
              AUC = format(AUC, digits = 3),
-             AUC = as.numeric(AUC),
-             PValue = format(p.value, digits = 3),
-             PValue = as.numeric(PValue)) %>%
-      select(Group, Gene, Base, `Tested Against`, PValue, FDR, AUC) %>%
+             AUC = as.numeric(AUC)) %>%
+      select(Group, Gene, Base, `Tested Against`, AUC) %>%
       DT::datatable(extensions = 'Buttons',
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10,
                                    dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatStyle(columns = c(8), width='250px')
   })
+
+  output$make_diff_table <- DT::renderDataTable(server = TRUE, {
+    gene <- input$diff_gene
+    if (input$search_by == 'Gene'){
+      out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        filter(Gene %in% gene)
+    } else {
+      req(input$diff_base)
+      diff_base <- input$diff_base
+      filter_term <- input$search_by
+        out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
+          filter(Base == diff_base) %>%
+          head(2000) %>%
+          filter(Group == filter_term)
+    }
+    out_gene %>%
+      collect() %>%
+      mutate(Group = as.factor(Group)) %>%
+      mutate(FDR = format(FDR, digits = 3),
+             FDR = as.numeric(FDR),
+             PValue = format(p.value, digits = 3),
+             PValue = as.numeric(PValue)) %>%
+      select(Group, Gene, Base,  PValue, FDR) %>%
+      DT::datatable(extensions = 'Buttons',
+                    filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                    options = list(pageLength = 10,
+                                   dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
+      DT::formatStyle(columns = c(8), width='250px')
+  })
+
+
   output$diff_table_download <- downloadHandler(
     filename = function() {
       paste("plae_diff_table_", Sys.Date(), ".csv", sep="")
