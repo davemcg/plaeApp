@@ -20,35 +20,35 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-5.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
-x_dir <- -1
+x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD/2021_03_17_meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD_v2/2021_09_23_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 mf <- meta_filter %>% sample_frac(0.2)
 
@@ -56,7 +56,8 @@ mf <- meta_filter %>% sample_frac(0.2)
 categorical_columns <- c("Phase","batch","study_accession","library_layout","organism","Platform",
                          "Covariate","CellType","CellType_predict","TabulaMurisCellType","TabulaMurisCellType_predict",
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
-                         "Doublet","TechType", "SubCellType", 'subcluster', 'Age' )
+                         "Doublet","TechType", "SubCellType", 'subcluster', 'Age', "retina_region",
+                         'Tissue','Organ')
 #"SubCellType" and subcluster are problems
 meta_filter <- meta_filter %>% mutate(Age = as.character(Age), SubCellType = tidyr::replace_na(SubCellType, 'None'),
                                       subcluster = as.character(subcluster))
@@ -816,30 +817,34 @@ shinyServer(function(input, output, session) {
   }, deleteFile = TRUE)
 
   ## diff table code --------
-  output$make_diff_table <- DT::renderDataTable(server = TRUE, {
+  output$make_diff_table_auc <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
-      out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+      out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         filter(Gene %in% gene) #%>%
+      out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
+        filter(Gene %in% gene) %>%
       head(2000)
     } else {
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
       if (input$diff_against == ''){
-        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
           filter(Base == diff_base) %>%
           head(2000) %>%
           filter(Group == filter_term)
+        out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+          filter(Base == diff_base) %>%
+          filter(Group == filter_term)
       } else {
         against <- input$diff_against
-        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-          filter(Base == diff_base, `Tested Against` == against) %>%
-          head(2000) %>%
+        out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
+          filter(Base == diff_base) %>%
           filter(Group == filter_term)
       }
     }
-    out %>%
+    out_auc %>%
       collect() %>%
       mutate(Group = as.factor(Group)) %>%
       mutate(FDR = format(FDR, digits = 3),
