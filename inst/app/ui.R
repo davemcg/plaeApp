@@ -193,7 +193,7 @@ shinyUI(
                                           column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
                                                                    choices = NULL, multiple = TRUE)),
                                           column(3, numericInput('exp_filter_min_cell_number', strong('Minimum # Cells in Group: '),
-                                                                   value = 50))
+                                                                 value = 50))
                                         ),
                                         fluidRow(column(3, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                         alt = 'BUTTON draw exp plot below',
@@ -358,8 +358,8 @@ shinyUI(
                                                                          multiple = FALSE)),
                                          conditionalPanel("input.search_by != 'Gene'",
                                                           selectizeInput('diff_base', strong('Base: '),
-                                                                      choices =  NULL,
-                                                                      multiple = FALSE)),
+                                                                         choices =  NULL,
+                                                                         multiple = FALSE)),
                                          conditionalPanel("input.search_by != 'Gene'",
                                                           selectizeInput('diff_against', strong('Against: '),
                                                                          choices =  NULL,
@@ -367,8 +367,9 @@ shinyUI(
                                        )),
                                 column(8,
                                        fluidRow(
-                                         div(DT::DTOutput('make_diff_table'), style='font-size:75%'),
-                                         div(DT::DTOutput('make_diff_table_auc'), style='font-size:75%'),
+                                         fluidRow(
+                                           column(width = 5, div(DT::DTOutput('make_diff_table', width = 3), style='font-size:75%')),
+                                           column(width = 5, div(DT::DTOutput('make_diff_table_auc', width = 4), style='font-size:75%'))),
                                          downloadButton("diff_table_download","Download all results as csv"),
                                          br(), br())),
                                 fluidRow(column(12,
