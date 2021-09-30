@@ -365,7 +365,7 @@ shinyUI(
                                                                          choices =  NULL,
                                                                          multiple = FALSE))
                                        )),
-                                column(8,
+                                column(12,
                                        fluidRow(
                                          fluidRow(
                                            column(width = 6, div(DT::DTOutput('make_diff_table'), style='font-size:75%')),
@@ -406,7 +406,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.74X'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.80X'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,

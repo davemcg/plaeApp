@@ -20,35 +20,35 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD//MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD//MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
-x_dir <- 1
+x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v2/2021_09_23_meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_09_23_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
-  mutate(UMAP_a = UMAP_1 * x_dir,
-         UMAP_b = UMAP_2 * y_dir) %>%
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_1 * x_dir,
-         UMAP_b = UMAP_2 * y_dir) %>%
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>% collect %>%
-  mutate(UMAP_a = UMAP_1 * x_dir,
-         UMAP_b = UMAP_2 * y_dir) %>%
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_1 * x_dir,
-         UMAP_b = UMAP_2 * y_dir) %>%
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_1 * x_dir,
-         UMAP_b = UMAP_2 * y_dir) %>%
+  mutate(UMAP_a = UMAP_2 * x_dir,
+         UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 mf <- meta_filter %>% sample_frac(0.2)
 
@@ -860,8 +860,8 @@ shinyServer(function(input, output, session) {
       DT::datatable(extensions = 'Buttons',
                     caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 2: Pairwise AUC Diff Testing'),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
-                    options = list(pageLength = 10, scrollX = TRUE, sDom  = '<"top">lrt<"bottom">ip',
-                                   dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
+                    options = list(pageLength = 10, scrollX = TRUE,
+                                   dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatStyle(columns = c(8), width='250px')
   })
   ### diff table gene - base level -----
@@ -892,8 +892,8 @@ shinyServer(function(input, output, session) {
       DT::datatable(extensions = 'Buttons',
                     caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 1: Group - Gene - Base Diff Testing'),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
-                    options = list(pageLength = 10, scrollX = TRUE, sDom  = '<"top">lrt<"bottom">ip',
-                                   dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
+                    options = list(pageLength = 10, scrollX = TRUE,
+                                   dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatStyle(columns = c(8), width='250px')
   })
 
