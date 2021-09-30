@@ -20,7 +20,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD//MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
 x_dir <- 1
@@ -858,8 +858,9 @@ shinyServer(function(input, output, session) {
         AUC = format(AUC, digits = 3),
         AUC = as.numeric(AUC)) %>%
       DT::datatable(extensions = 'Buttons',
+                    caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 2: Pairwise AUC Diff Testing'),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
-                    options = list(pageLength = 10,
+                    options = list(pageLength = 10, scrollX = TRUE, sDom  = '<"top">lrt<"bottom">ip',
                                    dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatStyle(columns = c(8), width='250px')
   })
@@ -889,8 +890,9 @@ shinyServer(function(input, output, session) {
              PValue = as.numeric(PValue)) %>%
       select(-p.value) %>%
       DT::datatable(extensions = 'Buttons',
+                    caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 1: Group - Gene - Base Diff Testing'),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
-                    options = list(pageLength = 10,
+                    options = list(pageLength = 10, scrollX = TRUE, sDom  = '<"top">lrt<"bottom">ip',
                                    dom = 'frtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatStyle(columns = c(8), width='250px')
   })

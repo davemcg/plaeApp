@@ -368,8 +368,8 @@ shinyUI(
                                 column(8,
                                        fluidRow(
                                          fluidRow(
-                                           column(width = 5, div(DT::DTOutput('make_diff_table', width = 3), style='font-size:75%')),
-                                           column(width = 5, div(DT::DTOutput('make_diff_table_auc', width = 4), style='font-size:75%'))),
+                                           column(width = 6, div(DT::DTOutput('make_diff_table'), style='font-size:75%')),
+                                           column(width = 6, div(DT::DTOutput('make_diff_table_auc'), style='font-size:75%'))),
                                          downloadButton("diff_table_download","Download all results as csv"),
                                          br(), br())),
                                 fluidRow(column(12,
