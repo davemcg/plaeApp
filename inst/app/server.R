@@ -25,7 +25,7 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scE
 
 x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_09_23_meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD_v2/2021_09_23_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -387,7 +387,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'diff_gene',
                            choices = scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC_genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
-                           selected = 'CRX (ENSG00000105392)',
+                           selected = 'RHO (ENSG00000163914)',
                            server = TRUE)
     }
     if (is.null(query[['diff_base']])){
@@ -826,7 +826,8 @@ shinyServer(function(input, output, session) {
       out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
         filter(Gene %in% gene) %>%
         head(2000) %>%
-        collect()
+        collect() %>%
+        select(Base, `Tested Against`, AUC)
     } else {
       req(input$diff_base)
       diff_base <- input$diff_base
@@ -849,7 +850,6 @@ shinyServer(function(input, output, session) {
                  Group == filter_term,
                  `Tested Against` == against) %>%
           head(2000) %>%
-          select(Gene, Base, `Tested Against`, AUC) %>%
           collect()
       }
     }
@@ -870,25 +870,26 @@ shinyServer(function(input, output, session) {
     if (input$search_by == 'Gene'){
       out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         filter(Gene %in% gene) %>%
-        select(Group, Gene, Base,  p.value, FDR) %>%
+        select(Group, Base,  p.value, FDR,  mean_auc) %>%
         collect() %>%
         mutate(Group = as.factor(Group))
     } else {
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
+      if (filter_term == 'CellType (Predict)') { filter_term <- 'CellType_predict' }
+      if (filter_term == 'Cluster') { filter_term <- 'cluster' }
       out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         filter(Base == diff_base,
                Group == filter_term) %>%
-        select(Gene, Base,  p.value, FDR) %>%
+        select(Gene, Base,  p.value, FDR, mean_auc) %>%
         collect()
     }
     out_gene %>%
-      mutate(FDR = format(FDR, digits = 3),
-             FDR = as.numeric(FDR),
-             PValue = format(p.value, digits = 3),
-             PValue = as.numeric(PValue)) %>%
-      select(-p.value) %>%
+      mutate(PValue = format(as.numeric(p.value), digits = 3) %>% as.numeric(),
+             FDR = format(as.numeric(FDR), digits = 3) %>% as.numeric(),
+             `Mean AUC` = format(mean_auc, digits = 3) %>% as.numeric()) %>%
+      select(-p.value, -mean_auc) %>%
       DT::datatable(extensions = 'Buttons',
                     caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 1: Group - Gene - Base Diff Testing'),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
