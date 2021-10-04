@@ -13,9 +13,9 @@ mito <- data.table::fread('~/data/scEiaD_v2/QC.tsv.gz')
 mito <- mito %>% left_join(srt %>% select(sample_accession, SX = Source) %>% unique(), by = 'sample_accession') %>% filter(SX %in% c('iPSC','Tissue'))
 # load('/Volumes/data/projects/nei/mcgaughey/massive_integrated_eye_scRNA/fastMNN_umap_full.Rdata')
 study_meta <- read_tsv('~/git/scEiaD/data/GEO_Study_Level_Metadata.tsv')
-sample_meta <- read_tsv('~/git/scEiaD/data/sample_run_layout_organism_tech.tsv')
-scEiaD <- dbPool(drv = SQLite(), dbname = "/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-20.sqlite", idleTimeout = 3600000)
-meta <- scEiaD %>% tbl('metadata') %>% as_tibble()
+sample_meta <- read_tsv('~/git/scEiaD/data/sample_run_layout_organism_tech_biosample_organ_2021_06_05.tsv')
+scEiaD <- dbPool(drv = SQLite(), dbname = "/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
+meta <- read_tsv('~/data/scEiaD_v2/metadata_filter.tsv.gz')
 
 stats <- meta %>% group_by(study_accession, Platform) %>% summarise(Counts = n())
 
@@ -81,9 +81,14 @@ table01 <- mito %>% mutate(barcode = value) %>%
   left_join(., post %>%
               rename(`SRA Accession` = study_accession)) %>%
   select(Citation:Count, `Post QC<br/>Count`, Labels) %>%
-  filter(`Post QC<br/>Count` > 0)
+  filter(`Post QC<br/>Count` > 0) %>%
+  # drop pre count and post count distinction
+  # too hard to manage as the scran method is very sensitive
+  mutate(Count = `Post QC<br/>Count`) %>%
+  select(-`Post QC<br/>Count`) %>%
+  arrange(organism, -Count)
 
-table01$`Post QC<br/>Count`[is.na(table01$`Post QC<br/>Count`)] <- 0
+#table01$`Post QC<br/>Count`[is.na(table01$`Post QC<br/>Count`)] <- 0
 formattable_01 <- table01 %>%
   mutate(PMID = case_when(!grepl('doi', PMID) ~ glue::glue('<a href = https://pubmed.ncbi.nlm.nih.gov/{PMID}>{PMID}</a>') %>% as.character(),
                           TRUE ~ '<a <href = https://doi.org/10.1101/774950>bioRxiv 774950</a>')) %>%
