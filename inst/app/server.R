@@ -20,12 +20,12 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD//MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-15-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-15-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
 x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_09_31_meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD_v2/2021_09_31_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -271,7 +271,7 @@ shinyServer(function(input, output, session) {
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
                              select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
-                           selected = c('CellType_predict'),
+                           selected = c('CellType_predict', 'organism'),
                            server = TRUE)
     }
 
@@ -309,7 +309,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'exp_filter_cat',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
                              select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
-                           selected = 'CellType',
+                           selected = 'CellType_predict',
                            server = TRUE)
     }
     observeEvent(input$exp_filter_cat, {
@@ -321,7 +321,7 @@ shinyServer(function(input, output, session) {
 
       updateSelectizeInput(session, 'exp_filter_on',
                            choices = choice,
-                           selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
+                           selected = c('Rod','Retinal Ganglion Cell', 'Horizontal Cell'),
                            server = TRUE)
     })
     if (is.null(query[['exp_plot_groups']])){
@@ -358,7 +358,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'facet_filter_cat',
                            choices = scEiaD_2020_v01 %>% tbl('grouped_stats') %>%
                              select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
-                           selected = 'CellType',
+                           selected = 'CellType_predict',
                            server = TRUE)
     }
     observeEvent(input$facet_filter_cat, {
@@ -370,7 +370,7 @@ shinyServer(function(input, output, session) {
 
       updateSelectizeInput(session, 'facet_filter_on',
                            choices = choice,
-                           selected = c('Cones','Retinal Ganglion', 'Horizontal Cells'),
+                           selected = c('Cone','Retinal Ganglion Cell', 'Horizontal Cell'),
                            server = TRUE)
     })
 
@@ -379,7 +379,7 @@ shinyServer(function(input, output, session) {
                            choices = meta_filter %>%
                              dplyr::select_if(is.character) %>% colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
-                           selected = 'CellType',
+                           selected = 'CellType_predict',
                            server = TRUE)
     }
     # diff table updateSelect ------
@@ -827,8 +827,12 @@ shinyServer(function(input, output, session) {
         filter(Gene %in% gene) %>%
         head(2000) %>%
         collect() %>%
-        select(Base, `Tested Against`, AUC)
-    } else {
+        select(Base, `Tested Against`, AUC, logFC) %>%
+        mutate(
+          AUC = format(AUC, digits = 3) %>% as.numeric(.),
+          logFC = format(logFC, digits = 3) %>% as.numeric(.))
+    }
+    else {
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
@@ -837,9 +841,7 @@ shinyServer(function(input, output, session) {
           filter(Base == diff_base) %>%
           head(2000) %>%
           filter(Base == diff_base,
-                 Group == filter_term) %>%
-          select(Gene, Base, `Tested Against`, AUC) %>%
-          collect()
+                 Group == filter_term)
         # out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         #   filter(Base == diff_base) %>%
         #   filter(Group == filter_term)
@@ -849,14 +851,17 @@ shinyServer(function(input, output, session) {
           filter(Base == diff_base,
                  Group == filter_term,
                  `Tested Against` == against) %>%
-          head(2000) %>%
-          collect()
+          head(2000)
       }
+      out_auc <- out_auc %>%
+        select(Gene, Base, `Tested Against`, AUC, logFC) %>%
+        collect() %>%
+        mutate(
+          AUC = format(AUC, digits = 3),
+          AUC = as.numeric(AUC),
+          logFC = format(logFC, digits = 3) %>% as.numeric(.))
     }
     out_auc %>%
-      mutate(
-        AUC = format(AUC, digits = 3),
-        AUC = as.numeric(AUC)) %>%
       DT::datatable(extensions = 'Buttons',
                     caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 2: Pairwise AUC Diff Testing'),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
@@ -868,30 +873,36 @@ shinyServer(function(input, output, session) {
   output$make_diff_table <- DT::renderDataTable(server = TRUE, {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
+      table_name = 'Table 1: Group - Gene - Base Diff Testing'
       out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         filter(Gene %in% gene) %>%
-        select(Group, Base,  p.value, FDR,  mean_auc) %>%
+        select(Group, Base,  p.value, FDR,  mean_auc, mean_logFC) %>%
         collect() %>%
-        mutate(Group = as.factor(Group))
+        mutate(Group = as.factor(Group)) %>%
+        mutate(PValue = format(as.numeric(p.value), digits = 3) %>% as.numeric(),
+               FDR = format(as.numeric(FDR), digits = 3) %>% as.numeric(),
+               `Mean AUC` = format(mean_auc, digits = 3) %>% as.numeric(),
+               `Mean logFC` = format(mean_logFC, digits = 3) %>% as.numeric()) %>%
+        select(-p.value, -mean_auc, -mean_logFC)
     } else {
+      table_name = 'Table 1: Group - Gene - Base Diff Testing'
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
-      if (filter_term == 'CellType (Predict)') { filter_term <- 'CellType_predict' }
-      if (filter_term == 'Cluster') { filter_term <- 'cluster' }
       out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
         filter(Base == diff_base,
                Group == filter_term) %>%
-        select(Gene, Base,  p.value, FDR, mean_auc) %>%
-        collect()
+        select(Gene, Base,  p.value, FDR, mean_auc, mean_logFC) %>%
+        collect() %>%
+        mutate(PValue = format(as.numeric(p.value), digits = 3) %>% as.numeric(),
+               FDR = format(as.numeric(FDR), digits = 3) %>% as.numeric(),
+               `Mean AUC` = format(mean_auc, digits = 3) %>% as.numeric(),
+               `Mean logFC` = format(mean_logFC, digits = 3) %>% as.numeric()) %>%
+        select(-p.value, -mean_auc, -mean_logFC)
     }
     out_gene %>%
-      mutate(PValue = format(as.numeric(p.value), digits = 3) %>% as.numeric(),
-             FDR = format(as.numeric(FDR), digits = 3) %>% as.numeric(),
-             `Mean AUC` = format(mean_auc, digits = 3) %>% as.numeric()) %>%
-      select(-p.value, -mean_auc) %>%
       DT::datatable(extensions = 'Buttons',
-                    caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 1: Group - Gene - Base Diff Testing'),
+                    caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;',table_name),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10, scrollX = TRUE,
                                    dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
@@ -931,5 +942,26 @@ shinyServer(function(input, output, session) {
       write.csv(out, file)
     }
   )
+
+  ### haystack table -----
+  output$make_haystack_table <- DT::renderDataTable(server = TRUE, {
+    out <- scEiaD_2020_v01 %>%
+      tbl('haystack') %>%
+      filter(D_KL > 0.1, !is.na(`log.p.adj`), T.counts > 100) %>%
+      left_join(scEiaD_2020_v01 %>% tbl('gene_auto_label'), by = 'Gene') %>%
+      arrange(log.p.adj) %>%
+      select(-log.p.vals) %>%
+      collect() %>%
+      mutate(D_KL = format(D_KL, digits = 3) %>%as.numeric(),
+             log.p.adj = round(log.p.adj)) %>%
+      rename(`CellType (Predict)` = CellType_predict)
+
+
+    out %>% DT::datatable(extensions = 'Buttons',
+                          filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                          options = list(pageLength = 10, scrollX = TRUE,
+                                         dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
+      DT::formatStyle(columns = c(8), width='250px')
+  })
 
 })
