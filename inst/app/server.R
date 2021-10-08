@@ -20,12 +20,12 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-15-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-15-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
 x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v2/2021_09_31_meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_09_31_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -947,7 +947,7 @@ shinyServer(function(input, output, session) {
   output$make_haystack_table <- DT::renderDataTable(server = TRUE, {
     out <- scEiaD_2020_v01 %>%
       tbl('haystack') %>%
-      filter(D_KL > 0.1, !is.na(`log.p.adj`), T.counts > 100) %>%
+      filter(D_KL > 0.1, !is.na(`log.p.adj`), `log.p.adj` < 0, T.counts > 500) %>%
       left_join(scEiaD_2020_v01 %>% tbl('gene_auto_label'), by = 'Gene') %>%
       arrange(log.p.adj) %>%
       select(-log.p.vals) %>%
