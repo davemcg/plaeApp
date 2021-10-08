@@ -95,11 +95,25 @@ make_insitu_plot <- function(input, scEiaD_2020_v01, meta_filter){
   ### Create mini table with color codes
   p <- full_table %>%
     select(CellType_predict,Expression) %>%
+    filter(CellType_predict %in% c('Amacrine Cell',
+                                   "Blood Vessel",
+                                   'Astrocyte',
+                                   'Bipolar Cell',
+                                   'Cone',
+                                   'Horizontal Cell',
+                                   'Melanocyte',
+                                   'Microglia',
+                                   'Muller Glia',
+                                   'RPE',
+                                   'Retinal Ganglion Cell',
+                                   'Rod',
+                                   'Endothelial',
+                                   'Blood Vessel')) %>%
     tidyr::drop_na() %>%
     arrange(Expression)
 
   ### Convert expression to color scale
-  p$col <- viridis(length(p$Expression))
+  p$col <- scales::col_numeric(palette = viridisLite::viridis(length(p$Expression)), domain = c(0,max(p$Expression)))(p$Expression)
 
   ### Generate legend plot
   leg_lab <- seq(min(p$Expression),max(p$Expression),l=5)
@@ -112,23 +126,23 @@ make_insitu_plot <- function(input, scEiaD_2020_v01, meta_filter){
   dev.off()
 
   ### Recolor each layer based on expression
-  amacrine <- recolor(amacrine, p$col[which(p$CellType_predict == "Amacrine Cells")])
-  artery <- recolor(artery,  p$col[which(p$CellType_predict == "Artery")])
-  astrocyte <- recolor(astrocyte,  p$col[which(p$CellType_predict == "Astrocytes")])
+  amacrine <- recolor(amacrine, p$col[which(p$CellType_predict == "Amacrine Cell")])
+  artery <- recolor(artery,  p$col[which(p$CellType_predict == "Blood Vessel")])
+  astrocyte <- recolor(astrocyte,  p$col[which(p$CellType_predict == "Astrocyte")])
   axons <- recolor(axons, p$col[which(p$CellType_predict == "Axons")])
-  bipolar <- recolor(bipolar, p$col[which(p$CellType_predict == "Bipolar Cells")])
+  bipolar <- recolor(bipolar, p$col[which(p$CellType_predict == "Bipolar Cell")])
   bruch <- recolor(bruch, p$col[which(p$CellType_predict == "Bruch Membrane")])
-  cones <- recolor(cones, p$col[which(p$CellType_predict == "Cones")])
+  cones <- recolor(cones, p$col[which(p$CellType_predict == "Cone")])
   choriocap <- recolor(choriocap, p$col[which(p$CellType_predict == "Choriocapillaris")])
-  horizontal <- recolor(horizontal, p$col[which(p$CellType_predict == "Horizontal Cells")])
-  melanocytes <- recolor(melanocytes, p$col[which(p$CellType_predict == "Melanocytes")])
+  horizontal <- recolor(horizontal, p$col[which(p$CellType_predict == "Horizontal Cell")])
+  melanocytes <- recolor(melanocytes, p$col[which(p$CellType_predict == "Melanocyte")])
   microglia <- recolor(microglia, p$col[which(p$CellType_predict == "Microglia")])
   muller <- recolor(muller, p$col[which(p$CellType_predict == "Muller Glia")])
   rpe <- recolor(rpe, p$col[which(p$CellType_predict == "RPE")])
-  rgc <- recolor(rgc, p$col[which(p$CellType_predict == "Retinal Ganglion Cells")])
-  rods <- recolor(rods, p$col[which(p$CellType_predict == "Rods")])
-  sclera <- recolor(sclera, p$col[which(p$CellType_predict == "Sclera")])
-  vein <- recolor(vein,  p$col[which(p$CellType_predict == "Vein")])
+  rgc <- recolor(rgc, p$col[which(p$CellType_predict == "Retinal Ganglion Cell")])
+  rods <- recolor(rods, p$col[which(p$CellType_predict == "Rod")])
+  sclera <- recolor(sclera, p$col[which(p$CellType_predict == "Endothelial")])
+  vein <- recolor(vein,  p$col[which(p$CellType_predict == "Blood Vessel")])
 
   ### Merge the recolored layers into single image
   retina_insitu <- c(layer_labels, amacrine, artery, astrocyte,choriocap, bipolar, bruch, cones, horizontal, melanocytes, microglia, muller, axons, rpe, rgc, rods, sclera, vein, cell_labels)
