@@ -11,8 +11,6 @@ mito <- data.table::fread('~/data/scEiaD_v2/QC.tsv.gz')
 mito <- mito %>% left_join(srt %>% select(sample_accession, SX = Source) %>% unique(), by = 'sample_accession') %>% filter(SX %in% c('iPSC','Tissue'))
 # load('/Volumes/data/projects/nei/mcgaughey/massive_integrated_eye_scRNA/fastMNN_umap_full.Rdata')
 study_meta <- read_tsv('~/git/scEiaD/data/GEO_Study_Level_Metadata.tsv')
-sample_meta <- read_tsv('~/git/scEiaD/data/sample_run_layout_organism_tech_biosample_organ_2021_06_05.tsv')
-#scEiaD <- dbPool(drv = SQLite(), dbname = "/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
 meta <- read_tsv('~/data/scEiaD_v2/metadata_filter.tsv.gz')
 
 stats <- meta %>% group_by(study_accession, Platform) %>% summarise(Counts = n())
@@ -62,7 +60,7 @@ post <- stats %>% rename(`Post QC<br/>Count` = Counts) %>%
 table01 <- mito %>% mutate(barcode = value) %>%
   mutate(barcode = gsub(':','_',barcode)) %>%
   #rename(sample_accession = srs) %>%
-  full_join(sample_meta %>% select(sample_accession, study_accession, organism, Platform, Source) %>% unique()) %>%
+  full_join(srt %>% select(sample_accession, study_accession, organism, Platform, Source) %>% unique()) %>%
   mutate(study_accession = case_when(study_accession == 'OGVFB_Hufnagel_iPSC_RPE' ~ 'SRP329495',
                                       TRUE ~ study_accession)) %>%
   left_join(study_meta) %>%
