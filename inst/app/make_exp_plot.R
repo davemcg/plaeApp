@@ -32,12 +32,17 @@ make_exp_plot <- function(input, db, meta_filter){
         filter(Gene %in% gene) %>%
         collect() %>%
         filter_at(vars(all_of(input$exp_filter_cat)), all_vars(. %in% input$exp_filter_on))
+      meta_filter_EXP <- meta_filter %>%
+        filter_at(vars(all_of(input$exp_filter_cat)), all_vars(. %in% input$exp_filter_on))
       #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on)
     } else {
       box_data <- db %>% tbl('grouped_stats') %>%
         filter(Gene %in% gene) %>%
         collect() %>%
         #filter(!!as.symbol(input$exp_filter_cat) %in% input$exp_filter_on) %>%
+        filter(!!as.symbol(input$exp_filter_cat) >= input$exp_filter_on[1],
+               !!as.symbol(input$exp_filter_cat) <= input$exp_filter_on[2])
+      meta_filter_EXP <- meta_filter %>%
         filter(!!as.symbol(input$exp_filter_cat) >= input$exp_filter_on[1],
                !!as.symbol(input$exp_filter_cat) <= input$exp_filter_on[2])
     }
@@ -64,7 +69,7 @@ make_exp_plot <- function(input, db, meta_filter){
     group_by_at(vars(one_of(c('Gene', input$exp_plot_facet, grouping_features)))) %>%
     summarise(counts = sum(counts * cell_exp_ct) / sum(cell_exp_ct),
               cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
-    full_join(., meta_filter %>%
+    full_join(., meta_filter_EXP %>%
                 group_by_at(vars(one_of(input$exp_plot_facet, grouping_features))) %>%
                 summarise(Count = n())) %>%
     mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%

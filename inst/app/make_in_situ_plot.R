@@ -38,6 +38,7 @@ get_insitu_table <- function(input, db, meta_filter) {
       as_tibble() %>%
       tidyr::drop_na() %>%
       full_join(., meta_filter %>%
+                  filter(!!as.symbol(filt_cat) %in% filt_on) %>%
                   group_by_at(vars(one_of(grouping_features))) %>%
                   summarise(Count = n())) %>%
       mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%

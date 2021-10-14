@@ -57,7 +57,7 @@ categorical_columns <- c("Phase","batch","study_accession","library_layout","org
                          "Covariate","CellType","CellType_predict","TabulaMurisCellType","TabulaMurisCellType_predict",
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
                          "Doublet","TechType", "SubCellType", 'subcluster', 'Age', "retina_region",
-                         'Tissue','Organ')
+                         'Tissue','Organ', 'Source')
 #"SubCellType" and subcluster are problems
 meta_filter <- meta_filter %>% mutate(Age = as.character(Age), SubCellType = tidyr::replace_na(SubCellType, 'None'),
                                       subcluster = as.character(subcluster))
@@ -146,7 +146,7 @@ shinyServer(function(input, output, session) {
       }
       output$gene_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
-          selectizeInput('gene_filter_on', strong('Gene Filter on: '),
+          selectizeInput('gene_filter_on', strong('Gene Select: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
           shinyWidgets::setSliderColor(c("#3399ff"), c(1))
@@ -184,7 +184,7 @@ shinyServer(function(input, output, session) {
       }
       output$meta_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
-          selectizeInput('meta_filter_on', strong('Meta Filter on: '),
+          selectizeInput('meta_filter_on', strong('Meta Select: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
           shinyWidgets::setSliderColor(c("#3399ff"), c(1))
@@ -231,7 +231,7 @@ shinyServer(function(input, output, session) {
         choice = meta_filter[,input$dotplot_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
       updateSelectizeInput(session, 'dotplot_filter_on',
-                           label = 'Filter on: ',
+                           label = 'Select: ',
                            choices = choice,
                            server = TRUE)
     })
@@ -260,7 +260,7 @@ shinyServer(function(input, output, session) {
         choice = meta_filter[,input$insitu_filter_cat] %>% pull(1) %>% unique() %>% sort()
       }
       updateSelectizeInput(session, 'insitu_filter_on',
-                           label = "Filter on: ",
+                           label = "Select: ",
                            choices = choice,
                            server = TRUE)
     })

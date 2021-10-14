@@ -127,7 +127,7 @@ shinyUI(
                                                       column(5, downloadButton('BUTTON_download_meta','Download Meta Plot', alt = 'Download Meta Plot to PNG in your browser default folder',
                                                                                style='background-color: #3269FF; color: #ffffff'))),
                                                     br()
-                                                    # selectizeInput('meta_filter_on', strong('Filter on: '),
+                                                    # selectizeInput('meta_filter_on', strong('Select: '),
                                                     #                choices = NULL, selected = NULL, multiple = TRUE)))
                                              )
                                            ),
@@ -192,7 +192,7 @@ shinyUI(
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = TRUE)),
-                                          column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
+                                          column(3, selectizeInput('exp_filter_on', strong('Select: '),
                                                                    choices = NULL, multiple = TRUE)),
                                           column(3, numericInput('exp_filter_min_cell_number', strong('Minimum # Cells in Group: '),
                                                                  value = 50))
@@ -224,7 +224,7 @@ shinyUI(
                                           fluidRow(
                                             column(5, selectizeInput('insitu_filter_cat', label = strong('Filter category: '),
                                                                      choices=NULL, multiple=FALSE)),
-                                            column(5, selectizeInput('insitu_filter_on', label = strong('Filter on: '),
+                                            column(5, selectizeInput('insitu_filter_on', label = strong('Select: '),
                                                                      choices=NULL, multiple=TRUE)),
                                           ),
                                           fluidRow(
@@ -263,7 +263,7 @@ shinyUI(
                                                                  selectizeInput('facet_filter_cat', strong('Filter Category: '),
                                                                                 choices = NULL, multiple=TRUE)),
                                                           column(5,
-                                                                 selectizeInput('facet_filter_on', strong('Filter On: '),
+                                                                 selectizeInput('facet_filter_on', strong('Select: '),
                                                                                 choices = NULL, multiple=TRUE)),
                                                           column(5,
                                                                  selectizeInput('pt_size_facet', strong('Point Size: '),
@@ -320,7 +320,7 @@ shinyUI(
                                                                    choices=NULL, multiple=TRUE)),
                                           column(4, selectizeInput('dotplot_filter_cat', strong('Filter category: '),
                                                                    choices=NULL, multiple=FALSE)),
-                                          column(4, selectizeInput('dotplot_filter_on', strong('Filter on: '),
+                                          column(4, selectizeInput('dotplot_filter_on', strong('Select: '),
                                                                    choices=NULL, multiple=TRUE)),
                                         ),
                                         actionButton('BUTTON_draw_dotplot','Draw Dotplot!', icon = icon("arrow-down"),
@@ -448,7 +448,7 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, h1('What is scEiaD?'))),
                                    fluidRow(column(width = 8, offset = 1, HTML("<b>s</b>ingle <b>c</b>ell <b>E</b>ye <b>i</b>n <b>a</b> <b>D</b>isk"),)),
                                    br(),
-                                   fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. scEiaD is a meta-atlas that compiles 1.2 million single-cell back of the eye transcriptomes across 28 studies, 18 publications, and 3 species. Deep metadata mining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
+                                   fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. scEiaD is a meta-atlas that compiles 1.1 million single-cell eye and body tissue transcriptomes across 42 studies, 31 publications, and 4 species. Deep metadata mining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('tldr'))),
                                    fluidRow(column(width = 8, offset = 1, 'You can look up gene expression by retina cell type across loads of different studies, four organisms, and multiple developmental stages.')),
@@ -501,7 +501,7 @@ shinyUI(
                                  ' to remove (mostly) Rod gene contamination (e.g. Rho *was* everywhere).',  tags$a(href="https://www.nature.com/articles/s41467-020-17900-3", "singleCellHaystack"),
                                  ' table added to Diff Testing. Updated cell filtering with a higher minimum gene count cutoff to improve overall quality. Fixed bug in gene selection where human
                                  genes that mapped to multiple mouse genes were accidently removed. Improved scran-based differential gene expression testing with better parameters and added logFC calculations
-                                 to improve interpretability.')),
+                                 to improve interpretability. Fixed bug in dotplot plot where filtered data had the incorrect denominator values.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.74 (2021-08-12): Remove broken link, fix bug in Expression Plot that was making average expression far too low.')),
                                  br(),
