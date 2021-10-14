@@ -20,6 +20,7 @@ make_exp_plot <- function(input, db, meta_filter){
       need(input$exp_filter_on != '', "Please select at least one feature to filter on")
     )}
 
+  meta_filter_EXP <- meta_filter
   if (!is.null(input$exp_filter_cat)){
     # box_data <- db %>% tbl('grouped_stats') %>%
     #   filter(Gene %in% gene) %>%
