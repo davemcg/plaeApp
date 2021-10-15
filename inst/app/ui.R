@@ -66,6 +66,14 @@ shinyUI(
                                                                                    selected = 1, multiple=FALSE))),
                                                     shinyWidgets::setSliderColor(c("#3269FF"), c(1)),
                                                     fluidRow(column(5,
+                                                                    selectInput("gene_label_toggle", label = strong("Meta Label: "),
+                                                                                choices = list("None" = 0,
+                                                                                               "CellType (published)" = 1,
+                                                                                               "CellType (predict)" = 2,
+                                                                                               "Cluster" = 3,
+                                                                                               "Tabula Muris" = 4), multiple = FALSE,
+                                                                                selected = 0)),
+                                                             column(5,
                                                                     sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(counts + 1)): "), min =1,
                                                                                 max = 10, value = c(2, 10))
                                                     )),
@@ -252,7 +260,7 @@ shinyUI(
                                  column(10,
                                         fluidRow(column(6, tags$h1('Facet UMAP'))),
                                         fluidRow(
-                                          column(10,
+                                          column(12,
                                                  fluidRow(column(5,
                                                                  selectizeInput('facet', strong('Facet On: '),
                                                                                 choices=NULL, multiple=FALSE)),

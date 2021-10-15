@@ -20,19 +20,47 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
+
+# find "common" tabula muris cell type labels to move over
+# meta_filter %>%
+#   group_by(cluster) %>%
+#   mutate(Percentage = (Count / sum(Count) * 100)) %>%
+#   filter(Percentage > 10) %>%
+#   arrange(cluster) %>%
+#   data.frame() %>%
+#   filter(grepl('B |T |^[a-z]', CellType_predict))
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v2/2021_10_11_meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_10_11_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
-  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b) %>%
+  # hand tweak tabula muris cell types
+  mutate(CellType_predict = case_when(TabulaMurisCellType_predict == 'T cell' ~ 'T/NK-Cell',
+                                      TabulaMurisCellType_predict == 'B cell' ~ 'B-Cell',
+                                      TabulaMurisCellType_predict == 'endothelial cell' ~ 'Endothelial',
+                                      TabulaMurisCellType_predict == 'epithelial cell' ~ 'Epithelial',
+                                      TabulaMurisCellType_predict == 'endothelial cell' ~ 'Epithelial',
+                                      TabulaMurisCellType_predict == 'keratinocyte' ~ 'Keratinocyte',
+                                      TabulaMurisCellType_predict == 'blood cell' ~ 'Red Blood Cell',
+                                      TabulaMurisCellType_predict == 'hepatocyte' ~ 'Hepatocyte',
+                                      TabulaMurisCellType_predict == 'mesenchymal cell' ~ 'Mesenchymal',
+                                      TabulaMurisCellType_predict == 'bladder cell' ~ 'Bladder',
+                                      TabulaMurisCellType_predict == 'mesenchymal stem cell' ~ 'Mesenchymal (Stem)',
+                                      TabulaMurisCellType_predict == 'bladder urothelial cell' ~ 'Bladder Urothelial',
+                                      TabulaMurisCellType_predict == 'kidney proximal straight tubule epithelial cell' ~ 'Kidney Proximal Tubule',
+                                      TabulaMurisCellType_predict == 'basal cell of epidermis' ~ 'Basal Cell',
+                                      TabulaMurisCellType_predict == 'macrophage' ~ 'Macrophage',
+                                      TabulaMurisCellType_predict == 'natural killer cell' ~ 'T/NK-Cell',
+                                      TabulaMurisCellType_predict == 'monocyte' ~ 'Monocyte',
+                                      TRUE ~ CellType_predict))
 
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
@@ -106,7 +134,7 @@ cat(file=stderr(), 'Data loaded in ')
 cat(file=stderr(), Sys.time() - time)
 cat(file=stderr(), ' seconds.\n')
 
-
+shinyOptions(cache = cachem::cache_disk(file.path(dirname(tempdir()), "plae-cache")))
 # site begins! ---------
 shinyServer(function(input, output, session) {
   #bootstraplib::bs_themer()
@@ -589,7 +617,14 @@ shinyServer(function(input, output, session) {
                                           y = y_range)
     source('make_gene_scatter_umap_plot.R')
     gene_scatter_plot <- eventReactive(input$BUTTON_draw_scatter, {
-      make_gene_scatter_umap_plot(input, scEiaD_2020_v01, mf, meta_filter)
+      make_gene_scatter_umap_plot(input,
+                                  scEiaD_2020_v01,
+                                  mf,
+                                  meta_filter,
+                                  celltype_predict_labels,
+                                  celltype_labels,
+                                  tabulamuris_predict_labels,
+                                  cluster_labels)
     })
 
     observeEvent(input$gene_scatter_plot_dblclick, {
@@ -605,7 +640,18 @@ shinyServer(function(input, output, session) {
     })
     output$gene_scatter_plot <- renderPlot({
       gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
-    })
+    }) %>%
+      bindCache(list(input$Gene,
+                     input$pt_size_gene,
+                     input$gene_scatter_slider,
+                     input$gene_label_toggle,
+                     input$gene_filter_cat,
+                     input$gene_filter_cat_on,
+                     gene_scatter_ranges$x,
+                     gene_scatter_ranges$y)) %>%
+      bindEvent(input$BUTTON_draw_scatter,
+                input$gene_scatter_plot_dblclick)
+
     # gene scatter plot download ------
     output$BUTTON_download_scatter <- downloadHandler(
       filename = function() { ('plae_gene_scatter.png') },
@@ -650,7 +696,17 @@ shinyServer(function(input, output, session) {
         plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
           theme(legend.position = 'none')
       }
-    })
+    }) %>%
+      bindCache(list(input$meta_column,
+                     input$pt_size_meta,
+                     input$label_toggle,
+                     input$meta_column_transform,
+                     input$meta_filter_cat,
+                     input$meta_filter_on,
+                     meta_ranges$x,
+                     meta_ranges$y)) %>%
+      bindEvent(input$BUTTON_draw_meta,
+                input$meta_plot_dblclick)
 
     output$BUTTON_download_meta <- downloadHandler(
       filename = function() { ('plae_meta.png') },
@@ -893,6 +949,7 @@ shinyServer(function(input, output, session) {
         filter(Base == diff_base,
                Group == filter_term) %>%
         select(Gene, Base,  p.value, FDR, mean_auc, mean_logFC) %>%
+        head(2000) %>%
         collect() %>%
         mutate(PValue = format(as.numeric(p.value), digits = 3) %>% as.numeric(),
                FDR = format(as.numeric(FDR), digits = 3) %>% as.numeric(),
