@@ -13,8 +13,10 @@ Encoding: UTF-8
 LazyData: true
 Imports:
   aplot,
+  cachem (>= 1.0.0),
   Cairo,
   cowplot,
+  dbplyr (>= 2.0.0)
   dplyr (>= 1.0.0),
   DT,
   formattable,
@@ -28,12 +30,12 @@ Imports:
   pool,
   purrr,
   RSQLite,
-  shiny (>= 1.4.0),
+  shiny (>= 1.6.0),
   shinyalert,
   shinycssloaders,
   shinyjqui,
   shinythemes,
-  shinyWidgets,
+  shinyWidgets (>= 0.5.6),
   stringr,
   tibble,
   tidyr (>= 1.0.0),
