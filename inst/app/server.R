@@ -23,22 +23,25 @@ library(fst)
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
-# find "common" tabula muris cell type labels to move over
+# # find "common" tabula muris cell type labels to move over
 # meta_filter %>%
-#   group_by(cluster) %>%
+#   group_by(cluster, TabulaMurisCellType_predict) %>%
+#   summarise(Count = n()) %>%
 #   mutate(Percentage = (Count / sum(Count) * 100)) %>%
 #   filter(Percentage > 10) %>%
 #   arrange(cluster) %>%
 #   data.frame() %>%
-#   filter(grepl('B |T |^[a-z]', CellType_predict))
+#   filter(!is.na(TabulaMurisCellType_predict))
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_10_11_meta_filter.fst') %>%
+load('~/data/scEiaD_v2/n_features-5000__transform-counts__partition-universe__covariate-batch__method-scVIprojection__dims-6__epochs-15__dist-0.1__neighbors-50__knn-20__pacmap.Rdata')
+meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_10_15_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
+  left_join(pacmap) %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b) %>%
@@ -70,7 +73,7 @@ celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
-celltype_labels <-scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
+celltype_labels <- scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
@@ -135,6 +138,7 @@ cat(file=stderr(), Sys.time() - time)
 cat(file=stderr(), ' seconds.\n')
 
 shinyOptions(cache = cachem::cache_disk(file.path(dirname(tempdir()), "plae-cache")))
+
 # site begins! ---------
 shinyServer(function(input, output, session) {
   #bootstraplib::bs_themer()
@@ -880,7 +884,7 @@ shinyServer(function(input, output, session) {
       # out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
       #   filter(Gene %in% gene) #%>%
       out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
-        filter(Gene %in% gene) %>%
+        filter(Gene %in% gene, Base != 'Doublet') %>%
         head(2000) %>%
         collect() %>%
         select(Base, `Tested Against`, AUC, logFC) %>%
