@@ -446,7 +446,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.80'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.81'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -504,6 +504,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.81 (2021-10-25): Fix small bug in bindCache logic, improve exp plot plotting by retaining zero expression studies')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.80 (2021-10-22): MASSIVE update. Chicken data added. Brain choroid added. Trabecular meshword added. Cornea added. Human body tissues added. We now have over one million cells in this resource. Counts cleaned up with ',
                                  tags$a(href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-1950-6", "DecontX"),
