@@ -66,6 +66,14 @@ shinyUI(
                                                                                    selected = 1, multiple=FALSE))),
                                                     shinyWidgets::setSliderColor(c("#3269FF"), c(1)),
                                                     fluidRow(column(5,
+                                                                    selectInput("gene_label_toggle", label = strong("Meta Label: "),
+                                                                                choices = list("None" = 0,
+                                                                                               "CellType (published)" = 1,
+                                                                                               "CellType (predict)" = 2,
+                                                                                               "Cluster" = 3,
+                                                                                               "Tabula Muris" = 4), multiple = FALSE,
+                                                                                selected = 0)),
+                                                             column(5,
                                                                     sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(counts + 1)): "), min =1,
                                                                                 max = 10, value = c(2, 10))
                                                     )),
@@ -127,7 +135,7 @@ shinyUI(
                                                       column(5, downloadButton('BUTTON_download_meta','Download Meta Plot', alt = 'Download Meta Plot to PNG in your browser default folder',
                                                                                style='background-color: #3269FF; color: #ffffff'))),
                                                     br()
-                                                    # selectizeInput('meta_filter_on', strong('Filter on: '),
+                                                    # selectizeInput('meta_filter_on', strong('Select: '),
                                                     #                choices = NULL, selected = NULL, multiple = TRUE)))
                                              )
                                            ),
@@ -179,7 +187,9 @@ shinyUI(
                                         fluidRow(
                                           column(3,
                                                  (selectizeInput('exp_plot_facet', strong('Facet on: '),
-                                                                 choices = c('CellType','cluster','CellType_predict'), multiple = FALSE))),
+                                                                 choices = c('CellType','cluster','CellType_predict'),
+                                                                 selected = 'CellType_predict',
+                                                                 multiple = FALSE))),
                                           column(3,
                                                  (selectizeInput('exp_plot_groups', strong('Color on: '),
                                                                  choices = NULL, multiple = FALSE))),
@@ -190,10 +200,10 @@ shinyUI(
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = TRUE)),
-                                          column(3, selectizeInput('exp_filter_on', strong('Filter On: '),
+                                          column(3, selectizeInput('exp_filter_on', strong('Select: '),
                                                                    choices = NULL, multiple = TRUE)),
                                           column(3, numericInput('exp_filter_min_cell_number', strong('Minimum # Cells in Group: '),
-                                                                   value = 50))
+                                                                 value = 50))
                                         ),
                                         fluidRow(column(3, actionButton('BUTTON_draw_exp_plot','Draw Plot', icon = icon("arrow-down"),
                                                                         alt = 'BUTTON draw exp plot below',
@@ -222,7 +232,7 @@ shinyUI(
                                           fluidRow(
                                             column(5, selectizeInput('insitu_filter_cat', label = strong('Filter category: '),
                                                                      choices=NULL, multiple=FALSE)),
-                                            column(5, selectizeInput('insitu_filter_on', label = strong('Filter on: '),
+                                            column(5, selectizeInput('insitu_filter_on', label = strong('Select: '),
                                                                      choices=NULL, multiple=TRUE)),
                                           ),
                                           fluidRow(
@@ -250,7 +260,7 @@ shinyUI(
                                  column(10,
                                         fluidRow(column(6, tags$h1('Facet UMAP'))),
                                         fluidRow(
-                                          column(10,
+                                          column(12,
                                                  fluidRow(column(5,
                                                                  selectizeInput('facet', strong('Facet On: '),
                                                                                 choices=NULL, multiple=FALSE)),
@@ -261,7 +271,7 @@ shinyUI(
                                                                  selectizeInput('facet_filter_cat', strong('Filter Category: '),
                                                                                 choices = NULL, multiple=TRUE)),
                                                           column(5,
-                                                                 selectizeInput('facet_filter_on', strong('Filter On: '),
+                                                                 selectizeInput('facet_filter_on', strong('Select: '),
                                                                                 choices = NULL, multiple=TRUE)),
                                                           column(5,
                                                                  selectizeInput('pt_size_facet', strong('Point Size: '),
@@ -318,7 +328,7 @@ shinyUI(
                                                                    choices=NULL, multiple=TRUE)),
                                           column(4, selectizeInput('dotplot_filter_cat', strong('Filter category: '),
                                                                    choices=NULL, multiple=FALSE)),
-                                          column(4, selectizeInput('dotplot_filter_on', strong('Filter on: '),
+                                          column(4, selectizeInput('dotplot_filter_on', strong('Select: '),
                                                                    choices=NULL, multiple=TRUE)),
                                         ),
                                         actionButton('BUTTON_draw_dotplot','Draw Dotplot!', icon = icon("arrow-down"),
@@ -334,47 +344,79 @@ shinyUI(
                                  fluidRow(includeHTML("www/footer.html")))
              ),
              # diff testing  tables ------------
-             tabPanel('Diff Testing',
-                      fluidPage(column(8,
-                                       fluidRow(tags$h1('Gene Differential Expression Tests')),
-                                       fluidRow('As of 2021-01-06 we have swapped out the "pseudo-Bulk" differential testing for a simpler testing system: the ', tags$a(href="https://bioconductor.org/packages/release/bioc/html/scran.html", "scran"), ' findMarkers tool. Why? Well frankly as we used the "pseudo-Bulk" results more and more we regularly found odd results with low p values that were being driven by very few cells with high expression. The findMarkers tool, in comparison, is more robust and reliable. It uses the ', tags$a(href="https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test", "wilcox"), ' test. Genes are required to 1. be expressed in >20% of the cells in the group (e.g. Cluster or Cell Type) and 2. be expressed at least twice as high against the other cells (e.g. GeneA has a mean expression of "100" in cells in ClusterX and "40" in cells-not-in-ClusterX'),
-                                       br(),
-                                       fluidRow('What is that "AUC" column? Area Under the Curve. Instead of reporting differential expression, which can be skewed by a low number of cells with very high expression, we report the power of the gene of interest to distinguish between the base group (e.g. Rods) versus the comparison group (e.g. Cones). An AUC of 1 mean thats the marker can perfectly (100%) distinguish cells between the two groups with the marker. AUC of 0 (or missing) means that the gene has no power.'),
-                                       br(),
-                                       fluidRow('Why are all the PValues and FDR the same for each gene? The p value is calculated at the gene level, while the AUC is calculated for each pair wise test. What that means is that if you test Rods vs not-Rods, the FDR for GeneA could be 0.01. Which means that GeneA "significantly" (well actually means you can reject the null hypothesis that....) distinguishes Rods against all other cells. If you want to dive into Rods vs some-specific-Cell-Type then use the AUC, which are calculated for each tissue - tissue combination.'),
-                                       br(),
-                                       fluidRow(
-                                         selectInput('search_by', strong('Search by: '),
-                                                     choices = c('Gene', "CellType (Predict)",
-                                                                 "CellType",
-                                                                 "Cluster"),
-                                                     selected = 'Gene')
-                                       )),
-                                column(8,
-                                       fluidRow(
-                                         conditionalPanel("input.search_by == 'Gene'",
-                                                          selectizeInput('diff_gene', strong('Genes: '),
-                                                                         choices =  NULL,
-                                                                         multiple = FALSE)),
-                                         conditionalPanel("input.search_by != 'Gene'",
-                                                          selectizeInput('diff_base', strong('Base: '),
-                                                                      choices =  NULL,
-                                                                      multiple = FALSE)),
-                                         conditionalPanel("input.search_by != 'Gene'",
-                                                          selectizeInput('diff_against', strong('Against: '),
-                                                                         choices =  NULL,
-                                                                         multiple = FALSE))
-                                       )),
-                                column(8,
-                                       fluidRow(
-                                         div(DT::DTOutput('make_diff_table'), style='font-size:75%'),
-                                         downloadButton("diff_table_download","Download all results as csv"),
-                                         br(), br())),
-                                fluidRow(column(12,
-                                                actionButton("diff_testing_help", "Page Pop Up Info"),
-                                                actionButton("data_table_help3", "Data Table Pop Up Info")))),
-                      linebreaks(10),
-                      fluidRow(includeHTML("www/footer.html"))),
+             navbarMenu('Diff Testing',
+                        tabPanel('Markers',
+                                 fluidPage(column(8,
+                                                  fluidRow(tags$h1('Gene Differential Expression Tests')),
+                                                  fluidRow('Tests run with ', tags$a(href="https://bioconductor.org/packages/release/bioc/html/scran.html", "scran"), ' findMarkers tool.
+                                                  The findMarkers tool uses the ', tags$a(href="https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test", "wilcox"), ' test, with the study used as the covariate, to generate the
+                                                  AUC scores and p values (the wilcox test is a bit more conservative than the ', tags$a(href="https://en.wikipedia.org/wiki/Student%27s_t-test", "t-test"), ' and more robust when outliers are present).
+                                                           The log Fold Change (logFC) scores are generated by findMarkers t-test method.'),
+                                                  br(),
+                                                  fluidRow('What is "AUC"? Area Under the Curve. This reports the power of the gene of interest to distinguish between the base group
+                                                           (e.g. Rods) versus the comparison group (e.g. Cones). An AUC of 1 mean thats the marker can perfectly (100%) distinguish cells
+                                                           between the two groups with the marker. AUC of 0 (or missing) means that the gene has no power.'),
+                                                  br(),
+                                                  br(),
+                                                  fluidRow(
+                                                    selectInput('search_by', strong('Search by: '),
+                                                                choices = c('Gene',
+                                                                            "CellType (Predict)",
+                                                                            "CellType",
+                                                                            "Cluster"),
+                                                                selected = 'Gene')
+                                                  )),
+                                           column(8,
+                                                  fluidRow(
+                                                    conditionalPanel("input.search_by == 'Gene' || input.search_by == 'Haystack'",
+                                                                     selectizeInput('diff_gene', strong('Genes: '),
+                                                                                    choices =  NULL,
+                                                                                    multiple = FALSE)),
+                                                    conditionalPanel("input.search_by != 'Gene' & input.search_by != 'Haystack'",
+                                                                     selectizeInput('diff_base', strong('Base: '),
+                                                                                    choices =  NULL,
+                                                                                    multiple = FALSE)),
+                                                    conditionalPanel("input.search_by != 'Gene' & input.search_by != 'Haystack'",
+                                                                     selectizeInput('diff_against', strong('Against: '),
+                                                                                    choices =  NULL,
+                                                                                    multiple = FALSE))
+                                                  )),
+                                           column(12,
+                                                  fluidRow(
+                                                    fluidRow(
+                                                      column(width = 6, div(DT::DTOutput('make_diff_table'), style='font-size:75%')),
+                                                      column(width = 6, div(DT::DTOutput('make_diff_table_auc'), style='font-size:75%'))),
+                                                    downloadButton("diff_table_download","Download all results as csv"),
+                                                    br(), br())),
+                                           fluidRow(column(12,
+                                                           actionButton("diff_testing_help", "Page Pop Up Info"),
+                                                           actionButton("data_table_help3", "Data Table Pop Up Info")))),
+                                 linebreaks(10),
+                                 fluidRow(includeHTML("www/footer.html"))),
+                        # haystack tables ------------
+                        tabPanel("singleCellHaystack",
+                                 fluidPage(column(8, offset = 0,
+                                                  fluidRow(tags$h1('Haystack')),
+                                                  fluidRow(tags$a(href="https://www.nature.com/articles/s41467-020-17900-3", "singleCellHaystack"), ' is a
+                                                           cluster or cell type independent method for identifying differentially expressed or "interesting" genes'),
+                                                  br(),
+                                                  fluidRow('Very briefly, it uses the ', tags$a(href="https://en.wikipedia.org/wiki/Kullback–Leibler_divergence",
+                                                                                                HTML(paste0("D",tags$sub("KL")))),
+                                                           ' divergence across the scVI multidimensional space to find non-randomly expressed genes. The table is ordered
+                                                           by the log10(p value) calculated (lower is a lower p value). A higher D_KL score means that the genes is less randomly
+                                                           expressed. T counts sums the number of counts (higher is expressed in more cells).'),
+                                                  br(),
+                                                  fluidRow('The CellType(s) and Cluster columns are the "top" genes which are most differentially expressed in the
+                                                           comparison. The idea is to provide a quick way to see what CellType(s) or Cluster are driving the
+                                                           singleCellHaystack identified gene.')),
+                                           br(),
+                                           column(10, offset = 0,
+                                                  fluidRow(column(width = 10, div(DT::DTOutput('make_haystack_table'), style='font-size:75%'))))),
+                                 linebreaks(10),
+                                 fluidRow(includeHTML("www/footer.html"))
+                        )
+             ),
+
              tabPanel('Data', # Data ---------
                       fluidRow(column(width = 8, offset = 1, h1("Data"))),
                       br(),
@@ -382,21 +424,21 @@ shinyUI(
                       br(),
                       fluidRow(column(width = 8, offset = 1, "If size not given, it is less than 1 GB")),
                       fluidRow(column(width = 8, offset = 1, h2("Run plae Locally"))),
-                      fluidRow(column(width = 8, offset = 1, 'If you have 200GB of free hard drive space, you can run plae on your own computer. ', tags$a(href="https://www.github.com/davemcg/plaeApp", "Installation instructions are available in our Github repository"), ' (this is the codebase for the app you are using now).')),
+                      fluidRow(column(width = 8, offset = 1, 'If you have 500GB (!) of free hard drive space, you can run plae on your own computer. ', tags$a(href="https://www.github.com/davemcg/plaeApp", "Installation instructions are available in our Github repository"), ' (this is the codebase for the app you are using now).')),
                       fluidRow(column(width = 8, offset = 1, h2("Seurat Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/scEiaD_all_seurat_v3.Rdata", "All (~20 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/scEiaD_all_seurat_v3.Rdata", "All (~25 GB)")))),
                       fluidRow(column(width = 8, offset = 1, h2("AnnData Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/scEiaD_all_anndata.h5ad", "All (~4 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/scEiaD_all_anndata.h5ad", "All (~8 GB)")))),
                       fluidRow(column(width = 8, offset = 1, h2("Diff Testing Results"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/wilcox_diff_resultsCellType(Predict).tsv.gz", "CellType against CellType (Predict)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/wilcox_diff_resultsCluster.tsv.gz", "Cluster against Cluster")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/wilcox_diff_resultsCellType(Predict).tsv.gz", "CellType against CellType (Predict)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/wilcox_diff_resultsCluster.tsv.gz", "Cluster against Cluster")))),
                       fluidRow(column(width = 8, offset = 1, h2("Metadata"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/metadata_filter.tsv.gz", "Cell Metadata")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/metadata_filter.tsv.gz", "Cell Metadata")))),
                       fluidRow(column(width = 8, offset = 1, h2("Counts"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/counts.Rdata", "Kallisto counts, R sparse matrix (~1.4 GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix (~1.4 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/counts.Rdata", "Kallisto counts, R sparse matrix (12 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_10_22/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix (15 GB)")))),
                       br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
                       fluidRow(includeHTML("www/footer.html"))
              ),
@@ -404,7 +446,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.74'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.80'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -414,12 +456,13 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, h1('What is scEiaD?'))),
                                    fluidRow(column(width = 8, offset = 1, HTML("<b>s</b>ingle <b>c</b>ell <b>E</b>ye <b>i</b>n <b>a</b> <b>D</b>isk"),)),
                                    br(),
-                                   fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. scEiaD is a meta-atlas that compiles 1.2 million single-cell back of the eye transcriptomes across 28 studies, 18 publications, and 3 species. Deep metadata mining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of retina single cell expression information to be analyzed in one location.')),
+                                   fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. In front of the retina is the clear lens and cornea, which shape the light onto the retina. scEiaD is a meta-atlas that compiles 1.1 million single-cell eye and body tissue transcriptomes across 42 studies, 31 publications, and 4 species. Deep metadata mining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of ocular single cell expression information to be analyzed in one location.')),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('tldr'))),
-                                   fluidRow(column(width = 8, offset = 1, 'You can look up gene expression by retina cell type across loads of different studies, three organisms, and multiple developmental stages.')),
+                                   fluidRow(column(width = 8, offset = 1, 'You can look up gene expression by retina cell type across loads of different studies, four organisms, and multiple developmental stages.')),
                                    br(),
-                                   fluidRow(column(width = 8, offset = 1, h1('Preprint of the data creation and benchmarking now on', tags$a(href="https://www.biorxiv.org/content/10.1101/2021.03.26.437190v1", "bioRxiv!")))),
+                                   fluidRow(column(width = 8, offset = 1, h1('How to cite?'))),
+                                   fluidRow(column(width = 8, offset = 1, 'The article covering of the data creation and benchmarking of version 0.74 data is now publised at (now **not** on plae, but the codebase and principles are the same)', tags$a(href="https://academic.oup.com/gigascience/article/10/10/giab061/6396190", "GigaScience!"))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('Licensing'))),
                                    fluidRow(column(width = 8, offset = 1, 'This work is released under the CC0 license')),
@@ -461,6 +504,13 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.80 (2021-10-22): MASSIVE update. Chicken data added. Brain choroid added. Trabecular meshword added. Cornea added. Human body tissues added. We now have over one million cells in this resource. Counts cleaned up with ',
+                                 tags$a(href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-1950-6", "DecontX"),
+                                 ' to remove (mostly) Rod gene contamination (e.g. Rho *was* everywhere).',  tags$a(href="https://www.nature.com/articles/s41467-020-17900-3", "singleCellHaystack"),
+                                 ' table added to Diff Testing. Updated cell filtering with a higher minimum gene count cutoff to improve overall quality. Fixed bug in gene selection where human
+                                 genes that mapped to multiple mouse genes were accidently removed. Improved scran-based differential gene expression testing with better parameters and added logFC calculations
+                                 to improve interpretability. Fixed bug in dotplot plot where filtered data had the incorrect denominator values. ')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.74 (2021-08-12): Remove broken link, fix bug in Expression Plot that was making average expression far too low.')),
                                  br(),

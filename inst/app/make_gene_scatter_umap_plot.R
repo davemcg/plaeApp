@@ -1,4 +1,11 @@
-make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
+make_gene_scatter_umap_plot <- function(input,
+                                        db,
+                                        mf,
+                                        meta_filter,
+                                        celltype_predict_labels,
+                                        celltype_labels,
+                                        tabulamuris_predict_labels,
+                                        cluster_labels){
   cat(file=stderr(), paste0(Sys.time(), ' Gene Scatter Plot Call\n'))
   # input <- list()
   # input$Gene <- 'CRX (ENSG00000105392)'
@@ -62,5 +69,26 @@ make_gene_scatter_umap_plot <- function(input, db, mf, meta_filter){
           axis.text = element_blank()) +
     annotate("text", -Inf, Inf, label = paste0(gene, ' expression'), hjust = 0, vjust = 1, size = 6)
 
-  suppressWarnings(plot)
+  more <- NULL
+  if ('1' %in% input$gene_label_toggle){
+    more <- geom_text_repel(data = celltype_labels, bg.color = 'white',
+                            aes(x = UMAP_1, y = UMAP_2, label = CellType))
+  }
+  if ('2' %in% input$gene_label_toggle){
+    more <- geom_text_repel(data = celltype_predict_labels, bg.color = 'white',
+                            aes(x = UMAP_1, y = UMAP_2, label = CellType_predict))
+  }
+  if ('3' %in% input$gene_label_toggle){
+    more <- geom_text_repel(data = cluster_labels, bg.color = 'white',
+                            aes(x = UMAP_1, y = UMAP_2, label = cluster),
+                            max.iter = 20)
+  }
+  if ('4' %in% input$gene_label_toggle){
+    more <- geom_text_repel(data = tabulamuris_predict_labels, bg.color = 'white',
+                            aes(x = UMAP_1, y = UMAP_2, label = TabulaMurisCellType_predict),
+                            max.iter = 20)
+  }
+
+
+  suppressWarnings(plot + more)
 }

@@ -1,21 +1,17 @@
-
 library(tidyverse)
 library(formattable)
 library(webshot)
 library(htmltools)
-library(pool)
-library(RSQLite)
+
 # all cells
-load('~/data/scEiaD/cell_info_labelled.Rdata')
+load('~/data/scEiaD_v2/cell_info_labelled.Rdata')
 # pre mt filtering
-srt <- data.table::fread('~/git/scEiaD/data/sample_run_layout_organism_tech.tsv')
-mito <- data.table::fread('~/data/scEiaD/QC.tsv.gz')
+srt <- data.table::fread('~/git/scEiaD/data/sample_run_layout_organism_tech_biosample_organ_2021_06_07.tsv')
+mito <- data.table::fread('~/data/scEiaD_v2/QC.tsv.gz')
 mito <- mito %>% left_join(srt %>% select(sample_accession, SX = Source) %>% unique(), by = 'sample_accession') %>% filter(SX %in% c('iPSC','Tissue'))
 # load('/Volumes/data/projects/nei/mcgaughey/massive_integrated_eye_scRNA/fastMNN_umap_full.Rdata')
 study_meta <- read_tsv('~/git/scEiaD/data/GEO_Study_Level_Metadata.tsv')
-sample_meta <- read_tsv('~/git/scEiaD/data/sample_run_layout_organism_tech.tsv')
-scEiaD <- dbPool(drv = SQLite(), dbname = "~/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-transform-counts-universe-batch-scVIprojectionSO-8-0.1-50-5.sqlite", idleTimeout = 3600000)
-meta <- scEiaD %>% tbl('metadata') %>% as_tibble()
+meta <- read_tsv('~/data/scEiaD_v2/metadata_filter.tsv.gz')
 
 stats <- meta %>% group_by(study_accession, Platform) %>% summarise(Counts = n())
 
@@ -26,7 +22,7 @@ color_bar_factor <- formatter("span",
                                 display = "block",
                                 color = "black",
                                 border.radius = "4px",
-                                background = c("#44BB99", "#EE8866", "#BBCC33")[factor(as.character(x))]))
+                                background = c("#44BB99", "#EE8866", "#BBCC33", "#dc74e8")[factor(as.character(x))]))
 
 color_bar_factor2 <- formatter("span",
                                style = function(x) style(
@@ -57,12 +53,16 @@ export_formattable <- function(f, file, width = "100%", height = NULL,
 post <- stats %>% rename(`Post QC<br/>Count` = Counts) %>%
   select(study_accession, Platform, `Post QC<br/>Count`) %>%
   group_by(study_accession, Platform) %>%
-  summarise(`Post QC<br/>Count` = sum(`Post QC<br/>Count`))
+  summarise(`Post QC<br/>Count` = sum(`Post QC<br/>Count`)) %>%
+  mutate(study_accession = case_when(study_accession == 'OGVFB_Hufnagel_iPSC_RPE' ~ 'SRP329495',
+                                                                                              TRUE ~ study_accession))
 
 table01 <- mito %>% mutate(barcode = value) %>%
   mutate(barcode = gsub(':','_',barcode)) %>%
   #rename(sample_accession = srs) %>%
-  full_join(sample_meta %>% select(sample_accession, study_accession, organism, Platform, Source) %>% unique()) %>%
+  full_join(srt %>% select(sample_accession, study_accession, organism, Platform, Source) %>% unique()) %>%
+  mutate(study_accession = case_when(study_accession == 'OGVFB_Hufnagel_iPSC_RPE' ~ 'SRP329495',
+                                      TRUE ~ study_accession)) %>%
   left_join(study_meta) %>%
   left_join(cell_info_labels %>% select(barcode = value, CellType)) %>%
   #filter(Source != 'Cell Culture', Source != 'Organoid') %>%
@@ -81,9 +81,14 @@ table01 <- mito %>% mutate(barcode = value) %>%
   left_join(., post %>%
               rename(`SRA Accession` = study_accession)) %>%
   select(Citation:Count, `Post QC<br/>Count`, Labels) %>%
-  filter(`Post QC<br/>Count` > 0)
+  filter(`Post QC<br/>Count` > 0) %>%
+  # drop pre count and post count distinction
+  # too hard to manage as the scran method is very sensitive
+  mutate(Count = `Post QC<br/>Count`) %>%
+  select(-`Post QC<br/>Count`) %>%
+  arrange(organism, -Count)
 
-table01$`Post QC<br/>Count`[is.na(table01$`Post QC<br/>Count`)] <- 0
+#table01$`Post QC<br/>Count`[is.na(table01$`Post QC<br/>Count`)] <- 0
 formattable_01 <- table01 %>%
   mutate(PMID = case_when(!grepl('doi', PMID) ~ glue::glue('<a href = https://pubmed.ncbi.nlm.nih.gov/{PMID}>{PMID}</a>') %>% as.character(),
                           TRUE ~ '<a <href = https://doi.org/10.1101/774950>bioRxiv 774950</a>')) %>%
@@ -106,6 +111,7 @@ table02 <- cell_info_labels %>%
          !grepl('RPE|Vascul', CellType)) %>%
   mutate(organism = case_when(grepl('Homo', organism) ~ 'HS',
                               grepl('Mus', organism) ~ 'MM',
+                              grepl('Gal', organism) ~ 'GG',
                               TRUE ~ 'MF')) %>%
   group_by(CellType,organism, study_accession) %>%
   summarise(Count = n()) %>%
@@ -126,6 +132,7 @@ table03 <- meta %>%
          !is.na(study_accession)) %>%
   mutate(organism = case_when(grepl('Homo', organism) ~ 'HS',
                               grepl('Mus', organism) ~ 'MM',
+                              grepl('Gal', organism) ~ 'GG',
                               TRUE ~ 'MF')) %>%
   group_by(CellType,organism, study_accession) %>%
   summarise(Count = n()) %>%

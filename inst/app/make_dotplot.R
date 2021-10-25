@@ -14,7 +14,7 @@ library(stringr)
 make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
   ### this makes it a little easier to test
   # input <- list()
-  # input[['dotplot_Gene']] <- c('RHO','WIF1', 'CABP5', 'AIF1', 'ARR3', 'ONECUT1', 'GRIK1', 'GAD1', 'POU4F2')#c('RHO', 'CRX')
+  # input[['dotplot_Gene']] <- c('CABP5 (ENSG00000105507)','ARR3 (ENSG00000120500)', 'AIF1L (ENSG00000126878)', 'WIF1 (ENSG00000156076)', 'RHO (ENSG00000163914)', 'ONECUT1 (ENSG00000169856)', 'AIF1 (ENSG00000204472)', 'TTR (ENSG00000118271)') #, 'POU4F2')#c('RHO', 'CRX')
   # input[['dotplot_groups']] <- c('CellType_predict', 'organism')
   # input[['dotplot_filter_cat']] <- ''
   # input[['dotplot_filter_on']] <- ''
@@ -34,11 +34,13 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
       filter(Gene %in% gene) %>%
       collect() %>%
       filter(!!as.symbol(input$dotplot_filter_cat) %in% input$dotplot_filter_on)
-
+    meta_filter_DOT <- meta_filter %>%
+      filter(!!as.symbol(input$dotplot_filter_cat) %in% input$dotplot_filter_on)
   } else {
     dotplot_data <- db %>% tbl('grouped_stats') %>%
       filter(Gene %in% gene) %>%
       collect()
+    meta_filter_DOT <- meta_filter
   }
 
   dotplot_data <- dotplot_data %>%
@@ -48,7 +50,7 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
               cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
     collect() %>%
     tidyr::drop_na() %>%
-    full_join(., meta_filter %>%
+    full_join(., meta_filter_DOT %>%
                 group_by_at(vars(one_of(grouping_features))) %>%
                 summarise(Count = n())) %>%
     mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
