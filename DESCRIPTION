@@ -16,7 +16,7 @@ Imports:
   cachem (>= 1.0.0),
   Cairo,
   cowplot,
-  dbplyr (>= 2.0.0)
+  dbplyr (>= 2.0.0),
   dplyr (>= 1.0.0),
   DT,
   formattable,

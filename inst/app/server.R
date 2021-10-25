@@ -35,35 +35,15 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scE
 
 x_dir <- 1
 y_dir <- 1
-load('~/data/scEiaD_v2/n_features-5000__transform-counts__partition-universe__covariate-batch__method-scVIprojection__dims-6__epochs-15__dist-0.1__neighbors-50__knn-20__pacmap.Rdata')
-meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD/2021_10_15_meta_filter.fst') %>%
+# load('~/data/scEiaD_v2/n_features-5000__transform-counts__partition-universe__covariate-batch__method-scVIprojection__dims-6__epochs-15__dist-0.1__neighbors-50__knn-20__pacmap.Rdata')
+meta_filter <- read_fst('~/data/scEiaD_v2//2021_10_22_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
-  left_join(pacmap) %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
-  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b) %>%
-  # hand tweak tabula muris cell types
-  mutate(CellType_predict = case_when(TabulaMurisCellType_predict == 'T cell' ~ 'T/NK-Cell',
-                                      TabulaMurisCellType_predict == 'B cell' ~ 'B-Cell',
-                                      TabulaMurisCellType_predict == 'endothelial cell' ~ 'Endothelial',
-                                      TabulaMurisCellType_predict == 'epithelial cell' ~ 'Epithelial',
-                                      TabulaMurisCellType_predict == 'endothelial cell' ~ 'Epithelial',
-                                      TabulaMurisCellType_predict == 'keratinocyte' ~ 'Keratinocyte',
-                                      TabulaMurisCellType_predict == 'blood cell' ~ 'Red Blood Cell',
-                                      TabulaMurisCellType_predict == 'hepatocyte' ~ 'Hepatocyte',
-                                      TabulaMurisCellType_predict == 'mesenchymal cell' ~ 'Mesenchymal',
-                                      TabulaMurisCellType_predict == 'bladder cell' ~ 'Bladder',
-                                      TabulaMurisCellType_predict == 'mesenchymal stem cell' ~ 'Mesenchymal (Stem)',
-                                      TabulaMurisCellType_predict == 'bladder urothelial cell' ~ 'Bladder Urothelial',
-                                      TabulaMurisCellType_predict == 'kidney proximal straight tubule epithelial cell' ~ 'Kidney Proximal Tubule',
-                                      TabulaMurisCellType_predict == 'basal cell of epidermis' ~ 'Basal Cell',
-                                      TabulaMurisCellType_predict == 'macrophage' ~ 'Macrophage',
-                                      TabulaMurisCellType_predict == 'natural killer cell' ~ 'T/NK-Cell',
-                                      TabulaMurisCellType_predict == 'monocyte' ~ 'Monocyte',
-                                      TRUE ~ CellType_predict))
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
@@ -310,7 +290,7 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['meta_groupings']])){
       updateSelectizeInput(session, 'meta_groupings',
                            choices = meta_filter %>%
-                             select(-Barcode, -UMAP_1, -UMAP_2, -nCount_RNA, -nFeature_RNA, -percent_mt) %>%
+                             select(-Barcode, -UMAP_1, -UMAP_2, -nCount_RNA, -nFeature_RNA, -percent_mt, -UMAP_a, -UMAP_b) %>%
                              colnames() %>% sort(),
                            options = list(placeholder = 'Type to search'),
                            selected = c('CellType_predict', 'organism'),
