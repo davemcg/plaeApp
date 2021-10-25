@@ -117,7 +117,7 @@ cat(file=stderr(), 'Data loaded in ')
 cat(file=stderr(), Sys.time() - time)
 cat(file=stderr(), ' seconds.\n')
 
-shinyOptions(cache = cachem::cache_disk(file.path(dirname(tempdir()), "plae-cache")))
+#shinyOptions(cache = cachem::cache_disk(file.path(dirname(tempdir()), "plae-cache")))
 
 # site begins! ---------
 shinyServer(function(input, output, session) {
@@ -158,7 +158,7 @@ shinyServer(function(input, output, session) {
       }
       output$gene_filter_on_dynamicUI <- renderUI({
         if (class(choice) == 'character'){
-          selectizeInput('gene_filter_on', strong('Gene Select: '),
+          selectizeInput('gene_filter_on', strong('Gene Scatter Select: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
           shinyWidgets::setSliderColor(c("#3399ff"), c(1))
@@ -629,6 +629,7 @@ shinyServer(function(input, output, session) {
                      input$pt_size_gene,
                      input$gene_scatter_slider,
                      input$gene_label_toggle,
+                     input$gene_filter_on,
                      input$gene_filter_cat,
                      input$gene_filter_cat_on,
                      gene_scatter_ranges$x,

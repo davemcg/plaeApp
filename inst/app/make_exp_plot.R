@@ -82,8 +82,19 @@ make_exp_plot <- function(input, db, meta_filter){
            `Total Cells` = Count,
            `Mean log2(Counts + 1)` = Expression,
            `% of Cells Detected` = `%`) %>%
-    tidyr::drop_na() %>%
+    filter(!is.na(CellType_predict)) %>%
+    mutate(`Mean log2(Counts + 1)` = case_when(is.na(`Mean log2(Counts + 1)`) ~ 0, TRUE ~ `Mean log2(Counts + 1)`)) %>%
     filter(`Total Cells` > as.integer(input$exp_filter_min_cell_number))
+  # expand missing genes (nothing detected) to all genes used
+  box_data_NA <- box_data %>% filter(is.na(Gene))
+  if (nrow(box_data_NA > 0)){
+    box_data_NA_list <- list()
+    for (i in gene){
+      box_data_NA_list <- box_data_NA %>% mutate(Gene = i)
+    }
+    box_data <- bind_rows(box_data %>% filter(!is.na(Gene)),
+                          box_data_NA_list %>% bind_rows())
+  }
   box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)
 
   box_data %>%
