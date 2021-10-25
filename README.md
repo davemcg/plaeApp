@@ -1,5 +1,10 @@
 # PLatform for Analysis of scEiad
 
+## What is this?
+The code-base for plae.nei.nih.gov
+
+By cloning this repo and downloading (see below) the scEiaD database, you can run PLAE on your local computer.
+
 ## Warning
 scEiaD is a sqlite file that is approximately **380GB when uncompressed**. Not a typo! 
 
