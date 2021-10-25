@@ -21,4 +21,4 @@ scEiaD is a sqlite file that is approximately **380GB when uncompressed**. Not a
   - Edit absolute path to sqlite file in `inst/app/server.R`
 
 # Note
-  - If you've cloned this repo, then you can create the `meta_filter.fst` file yourself by running `Rscript ~/path/to/plaeApp/src/convert_metadata_to_fst.R /path/to/scEiaD.sqlite.gz /output/path/meta_filter.fst`
+  - If you've cloned this repo, then you can create the `meta_filter.fst` file yourself by running `Rscript ~/path/to/plaeApp/src/convert_metadata_to_fst.R /path/to/scEiaD.sqlite /output/path/meta_filter.fst`
