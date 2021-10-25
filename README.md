@@ -1,5 +1,8 @@
 # PLatform for Analysis of scEiad
 
+## Warning
+scEiaD is a sqlite file that is approximately **380GB when uncompressed**. Not a typo! 
+
 # Installation (bash)
 
   - You'll need [magick](https://imagemagick.org/index.php) otherwise the package install will fail
@@ -14,7 +17,7 @@
     
   -  Decompress sqlite file
   
-    pigz -d -p 8 scEiaD-0-2000-counts-TabulaDroplet-batch-scVI-8-0.001-500-0.6.sqlite.gz
+    pigz -d -p 8 MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite.gz
   - Edit absolute path to sqlite file in `inst/app/server.R`
 
 # Note
