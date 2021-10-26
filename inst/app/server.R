@@ -19,8 +19,8 @@ library(magick)
 library(stringr)
 library(shinyalert)
 library(fst)
-
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+library(ggiraph)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
 # # find "common" tabula muris cell type labels to move over
@@ -672,6 +672,21 @@ shinyServer(function(input, output, session) {
         meta_ranges$y <- y_range
       }
     })
+
+    observeEvent(input$meta_plot_click, {
+      click <- input$meta_plot_click
+
+        tab <- nearPoints(meta_filter, input$meta_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
+          select(Barcode, CellType, CellType_predict, cluster, Source)
+
+      output$meta_hover_info <- renderDataTable(tab %>% DT::datatable())
+    })
+
+
+
+
+
+
 
     output$meta_plot <- renderPlot({
       plot_data <- meta_plot()

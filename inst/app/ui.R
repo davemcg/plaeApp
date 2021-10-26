@@ -93,6 +93,7 @@ shinyUI(
                                              column(6,
                                                     plotOutput('meta_plot',
                                                                height = '500px',
+                                                               click = 'meta_plot_click',
                                                                dblclick = "meta_plot_dblclick",
                                                                brush = brushOpts(
                                                                  id = "meta_plot_brush",
@@ -101,6 +102,7 @@ shinyUI(
                                                                                    size = 0.5,
                                                                                    color = "#3269FF",
                                                                                    color.background = 'white'),
+                                                    fluidRow(column(width = 5,  div(DT::dataTableOutput('meta_hover_info'), style='font-size:75%'))),
                                                     fluidRow(column(5,
                                                                     selectizeInput('meta_column', strong('Meta Color: '),
                                                                                    choices= NULL, selected = 'CellType_predict')),
