@@ -50,6 +50,7 @@ shinyUI(
                                              column(6,
                                                     plotOutput('gene_scatter_plot',
                                                                height = '500px',
+                                                               click = 'gene_scatter_plot_click',
                                                                dblclick = "gene_scatter_plot_dblclick",
                                                                brush = brushOpts(
                                                                  id = "gene_scatter_plot_brush",
@@ -57,6 +58,9 @@ shinyUI(
                                                       shinycssloaders::withSpinner(type = 3, size = 0.5,
                                                                                    color = "#3269FF",
                                                                                    color.background = 'white'),
+                                                    fluidRow(column(width = 5, strong('Five nearest cells (click image):'))),
+                                                    fluidRow(column(width = 4,  div(DT::dataTableOutput('gene_scatter_click_info'), style='font-size:75%'))),
+                                                    br(),
                                                     fluidRow(column(5,
                                                                     selectizeInput('Gene', strong('Scatter Gene: '),
                                                                                    choices=NULL, multiple=FALSE)),
@@ -76,7 +80,7 @@ shinyUI(
                                                              column(5,
                                                                     sliderInput("gene_scatter_slider", label = strong("Filter Gene Expression (log2(counts + 1)): "), min =1,
                                                                                 max = 10, value = c(2, 10))
-                                                    )),
+                                                             )),
                                                     fluidRow(column(5,
                                                                     selectizeInput('gene_filter_cat', label = strong('Scatter Filter Category: '),
                                                                                    choices = NULL, selected = NULL, multiple = TRUE)),
@@ -93,6 +97,7 @@ shinyUI(
                                              column(6,
                                                     plotOutput('meta_plot',
                                                                height = '500px',
+                                                               click = 'meta_plot_click',
                                                                dblclick = "meta_plot_dblclick",
                                                                brush = brushOpts(
                                                                  id = "meta_plot_brush",
@@ -101,6 +106,9 @@ shinyUI(
                                                                                    size = 0.5,
                                                                                    color = "#3269FF",
                                                                                    color.background = 'white'),
+                                                    fluidRow(column(width = 5, strong('Five nearest cells (click image):'))),
+                                                    fluidRow(column(width = 4,  div(DT::dataTableOutput('meta_click_info'), style='font-size:75%'))),
+                                                    br(),
                                                     fluidRow(column(5,
                                                                     selectizeInput('meta_column', strong('Meta Color: '),
                                                                                    choices= NULL, selected = 'CellType_predict')),
@@ -446,7 +454,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.81'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.82'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -505,12 +513,14 @@ shinyUI(
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
                                  br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.82 (2021-10-26): Cool feature! Now you can click the UMAP viz to get cell info!')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.81 (2021-10-25): Fix small bug in bindCache logic, improve exp plot plotting by retaining zero expression studies')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.80 (2021-10-22): MASSIVE update. Chicken data added. Brain choroid added. Trabecular meshword added. Cornea added. Human body tissues added. We now have over one million cells in this resource. Counts cleaned up with ',
-                                 tags$a(href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-1950-6", "DecontX"),
-                                 ' to remove (mostly) Rod gene contamination (e.g. Rho *was* everywhere).',  tags$a(href="https://www.nature.com/articles/s41467-020-17900-3", "singleCellHaystack"),
-                                 ' table added to Diff Testing. Updated cell filtering with a higher minimum gene count cutoff to improve overall quality. Fixed bug in gene selection where human
+                                                 tags$a(href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-1950-6", "DecontX"),
+                                                 ' to remove (mostly) Rod gene contamination (e.g. Rho *was* everywhere).',  tags$a(href="https://www.nature.com/articles/s41467-020-17900-3", "singleCellHaystack"),
+                                                 ' table added to Diff Testing. Updated cell filtering with a higher minimum gene count cutoff to improve overall quality. Fixed bug in gene selection where human
                                  genes that mapped to multiple mouse genes were accidently removed. Improved scran-based differential gene expression testing with better parameters and added logFC calculations
                                  to improve interpretability. Fixed bug in dotplot plot where filtered data had the incorrect denominator values. ')),
                                  br(),
