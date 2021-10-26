@@ -19,9 +19,8 @@ library(magick)
 library(stringr)
 library(shinyalert)
 library(fst)
-library(ggiraph)
+
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
-#scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname = "/data/swamyvs/plaeApp/sql_08132020.sqlite", idleTimeout = 3600000)
 
 # # find "common" tabula muris cell type labels to move over
 # meta_filter %>%
@@ -35,7 +34,6 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__
 
 x_dir <- 1
 y_dir <- 1
-# load('~/data/scEiaD_v2/n_features-5000__transform-counts__partition-universe__covariate-batch__method-scVIprojection__dims-6__epochs-15__dist-0.1__neighbors-50__knn-20__pacmap.Rdata')
 meta_filter <- read_fst('~/data/scEiaD_v2//2021_10_22_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
