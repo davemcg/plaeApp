@@ -50,6 +50,7 @@ shinyUI(
                                              column(6,
                                                     plotOutput('gene_scatter_plot',
                                                                height = '500px',
+                                                               click = 'gene_scatter_plot_click',
                                                                dblclick = "gene_scatter_plot_dblclick",
                                                                brush = brushOpts(
                                                                  id = "gene_scatter_plot_brush",
@@ -57,6 +58,9 @@ shinyUI(
                                                       shinycssloaders::withSpinner(type = 3, size = 0.5,
                                                                                    color = "#3269FF",
                                                                                    color.background = 'white'),
+                                                    fluidRow(column(width = 5, strong('Five nearest cells (click image):'))),
+                                                    fluidRow(column(width = 4,  div(DT::dataTableOutput('gene_scatter_click_info'), style='font-size:75%'))),
+                                                    br(),
                                                     fluidRow(column(5,
                                                                     selectizeInput('Gene', strong('Scatter Gene: '),
                                                                                    choices=NULL, multiple=FALSE)),
@@ -102,7 +106,9 @@ shinyUI(
                                                                                    size = 0.5,
                                                                                    color = "#3269FF",
                                                                                    color.background = 'white'),
-                                                    fluidRow(column(width = 5,  div(DT::dataTableOutput('meta_hover_info'), style='font-size:75%'))),
+                                                    fluidRow(column(width = 5, strong('Five nearest cells (click image):'))),
+                                                    fluidRow(column(width = 4,  div(DT::dataTableOutput('meta_click_info'), style='font-size:75%'))),
+                                                    br(),
                                                     fluidRow(column(5,
                                                                     selectizeInput('meta_column', strong('Meta Color: '),
                                                                                    choices= NULL, selected = 'CellType_predict')),
@@ -448,7 +454,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.81'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.82'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -506,6 +512,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.82 (2021-10-26): Cool feature! Now you can click the UMAP viz to get cell info!')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.81 (2021-10-25): Fix small bug in bindCache logic, improve exp plot plotting by retaining zero expression studies')),
                                  br(),
