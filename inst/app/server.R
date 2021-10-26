@@ -677,7 +677,7 @@ shinyServer(function(input, output, session) {
       tab <- nearPoints(meta_filter, input$meta_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
         select(Barcode, Tissue, CellType, CellType_predict, cluster, study_accession, GSE)
 
-      output$meta_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = '', ordering=F)))
+      output$meta_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
 
     observeEvent(input$gene_scatter_plot_click, {
@@ -686,7 +686,7 @@ shinyServer(function(input, output, session) {
       tab <- nearPoints(meta_filter, input$gene_scatter_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
         select(Barcode, Tissue, CellType, CellType_predict, cluster, study_accession, GSE)
 
-      output$gene_scatter_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = '', ordering=F)))
+      output$gene_scatter_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
 
 
