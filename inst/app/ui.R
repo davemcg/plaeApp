@@ -454,7 +454,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.82'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.83'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -512,6 +512,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 br(),
+                                 fluidRow(column(width = 8, offset = 1, '0.83 (2021-11-01): Fixed bug in metadata filter table loading that was messing up some of the plots in certain situations. Tweak click table column choice to include organism.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.82 (2021-10-26): Cool feature! Now you can click the UMAP viz to get cell info!')),
                                  br(),

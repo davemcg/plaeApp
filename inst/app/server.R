@@ -20,7 +20,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/scEiaD_v2//MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 
 # # find "common" tabula muris cell type labels to move over
 # meta_filter %>%
@@ -34,9 +34,9 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v2//2021_10_22_meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/McGaughey_S/scEiaD_v2/2021_10_x_meta_filter.fst') %>%
   as_tibble() %>%
-  mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
+  mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
@@ -675,7 +675,7 @@ shinyServer(function(input, output, session) {
       click <- input$meta_plot_click
 
       tab <- nearPoints(meta_filter, input$meta_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
-        select(Barcode, Tissue, CellType, CellType_predict, cluster, study_accession, GSE)
+        select(Barcode, Tissue, organism, CellType, CellType_predict, cluster, study_accession)
 
       output$meta_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
@@ -684,7 +684,7 @@ shinyServer(function(input, output, session) {
       click <- input$gene_scatter_plot_click
 
       tab <- nearPoints(meta_filter, input$gene_scatter_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
-        select(Barcode, Tissue, CellType, CellType_predict, cluster, study_accession, GSE)
+        select(Barcode, Tissue, organism, CellType, CellType_predict, cluster, study_accession)
 
       output$gene_scatter_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
