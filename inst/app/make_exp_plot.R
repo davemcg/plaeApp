@@ -3,7 +3,7 @@ make_exp_plot <- function(input, db, meta_filter){
   # db <- scEiaD_2020_v01
   # input <- list()
   # input$exp_filter_cat <- 'CellType_predict'
-  # input$exp_filter_on <- c('Rods' ,'Cones')
+  # input$exp_filter_on <- c('Rod' ,'Cone')
   # input$exp_plot_facet <- c('CellType_predict')
   # input$exp_plot_genes <- c('PAX6 (ENSG00000007372)', 'CRX (ENSG00000105392)', 'NRL (ENSG00000129535)', 'RHO (ENSG00000163914)')
   # input$exp_plot_groups <- c('Stage')
