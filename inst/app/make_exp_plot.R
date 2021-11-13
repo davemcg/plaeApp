@@ -4,11 +4,12 @@ make_exp_plot <- function(input, db, meta_filter){
   # input <- list()
   # input$exp_filter_cat <- 'CellType_predict'
   # input$exp_filter_on <- c('Rod' ,'Cone')
-  # input$exp_plot_facet <- c('CellType_predict')
+  # input$exp_plot_facet <- c('cluster')
   # input$exp_plot_genes <- c('PAX6 (ENSG00000007372)', 'CRX (ENSG00000105392)', 'NRL (ENSG00000129535)', 'RHO (ENSG00000163914)')
   # input$exp_plot_groups <- c('Stage')
   # input$exp_plot_ylab <- 'Mean log2(Counts + 1)'
   # input$exp_plot_col_num <- 10
+  # input$exp_filter_min_cell_number <- 50
 
   cat(file=stderr(), paste0(Sys.time(), ' Exp Plot Call\n'))
   gene <- input$exp_plot_genes
@@ -82,7 +83,7 @@ make_exp_plot <- function(input, db, meta_filter){
            `Total Cells` = Count,
            `Mean log2(Counts + 1)` = Expression,
            `% of Cells Detected` = `%`) %>%
-    filter(!is.na(CellType_predict)) %>%
+    filter(!is.na(vars(input$exp_plot_facet))) %>%
     mutate(`Mean log2(Counts + 1)` = case_when(is.na(`Mean log2(Counts + 1)`) ~ 0, TRUE ~ `Mean log2(Counts + 1)`)) %>%
     filter(`Total Cells` > as.integer(input$exp_filter_min_cell_number))
   # expand missing genes (nothing detected) to all genes used
