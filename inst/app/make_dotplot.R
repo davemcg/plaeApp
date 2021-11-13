@@ -15,9 +15,9 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
   ### this makes it a little easier to test
   # input <- list()
   # input[['dotplot_Gene']] <- c('CABP5 (ENSG00000105507)','ARR3 (ENSG00000120500)', 'AIF1L (ENSG00000126878)', 'WIF1 (ENSG00000156076)', 'RHO (ENSG00000163914)', 'ONECUT1 (ENSG00000169856)', 'AIF1 (ENSG00000204472)', 'TTR (ENSG00000118271)') #, 'POU4F2')#c('RHO', 'CRX')
-  # input[['dotplot_groups']] <- c('CellType_predict', 'organism')
-  # input[['dotplot_filter_cat']] <- ''
-  # input[['dotplot_filter_on']] <- ''
+  # input[['dotplot_groups']] <- c('CellType_predict')
+  # input[['dotplot_filter_cat']] <- 'organism'
+  # input[['dotplot_filter_on']] <- 'Mus musculus'
   # db <- scEiaD_2020_v01
 
   gene <- input$dotplot_Gene
@@ -124,7 +124,7 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
                              str_replace_all(':', ' '))) %>%
     ggplot(aes(x=Column, y = Count)) +
     geom_bar(stat='identity', width = 0.5) + coord_flip() +
-      theme_void()
+    theme_void()
   dp_legened <- get_legend(dotplot)
   dotplot <- dotplot+
     theme(axis.ticks = element_blank(), axis.text.x= element_text(angle = -45), legend.position = 'none')
@@ -134,9 +134,9 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
     mutate(Column = Column %>% str_replace_all(':', ' '))
 
   group1_labels_df <- order %>% inner_join(cat_to_color_df %>%
-                                          filter(meta_category ==grouping_features[1]) %>%
-                                          rename(Group1=value)) %>% arrange(Group1)
-    group1_labels <- ggplot(group1_labels_df) +
+                                             filter(meta_category ==grouping_features[1]) %>%
+                                             rename(Group1=value)) %>% arrange(Group1)
+  group1_labels <- ggplot(group1_labels_df) +
     geom_tile(aes(x = Column, y = 1, fill = Group1)) +
     scale_fill_manual(name = grouping_features[1],
                       values = unique(group1_labels_df$color) )+

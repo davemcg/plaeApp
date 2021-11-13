@@ -20,7 +20,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v3/MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/scEiaD_v3//MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 
 # # find "common" tabula muris cell type labels to move over
 # meta_filter %>%
@@ -34,7 +34,7 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v3/MOARTABLES__
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v3/2021_11_09_meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/McGaughey_S/scEiaD_v3/2021_11_09_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -71,7 +71,9 @@ cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 mf <- meta_filter %>% sample_frac(0.2)
 
+#################################
 # generate color_mappings
+################################
 categorical_columns <- c("Phase","batch","study_accession","library_layout","organism","Platform",
                          "Covariate","CellType","CellType_predict","TabulaMurisCellType","TabulaMurisCellType_predict",
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
@@ -80,10 +82,10 @@ categorical_columns <- c("Phase","batch","study_accession","library_layout","org
 #"SubCellType" and subcluster are problems
 meta_filter <- meta_filter %>% mutate(Age = as.character(Age), SubCellType = tidyr::replace_na(SubCellType, 'None'),
                                       subcluster = as.character(subcluster))
+
+
 map_color <- function(column, meta_filter){
-  #master_colorlist <- c(pals::polychrome()[3:length(pals::polychrome())], pals::alphabet2())
-  #master_colorlist <- c(pals::glasbey()[-c(3,4,8,18)],pals::alphabet2()[-c(5,7,8,9,23,24)])
-  master_colorlist <- c(pals::alphabet(), pals::cols25()[1:23], pals::glasbey())
+  master_colorlist <- c(pals::alphabet(), pals::cols25()[1:23], pals::glasbey(), pals::alphabet2()) %>% unique()
   values <- meta_filter %>% pull(!!column) %>% unique %>% sort
   if(length(values) > length(master_colorlist) ){
     r= round(length(values) / length(master_colorlist)) +1
@@ -95,32 +97,14 @@ map_color <- function(column, meta_filter){
 
 }
 
-#this is to avoid a color collision within the same cluster
-# sub_cluster_df <- meta_filter %>% select(cluster, subcluster) %>% distinct
-# sub_cluster_map <- lapply(sub_cluster_df$cluster, function(x) sub_cluster_df %>%
-#                             filter(cluster == x) %>%
-#                             map_color('subcluster',.) ) %>% bind_rows
-
-# this could work, but the Celltype  > SubCellType mapping is not 1:1
-# sub_celltype_df <- meta_filter %>% select(CellType_predict, SubCellType) %>% distinct
-# sub_celltype_map <- lapply(sub_celltype_df$CellType_predict, function(x) sub_celltype_df %>%
-#                              filter(CellType_predict == x) %>%
-#                              map_color('SubCellType',.) ) %>% bind_rows %>%
-#   mutate(color = replace(color, value == 'None', '#D3D3D3'))
-
-
 cat_to_color_df <- lapply(categorical_columns, function(col) map_color(col, meta_filter)) %>% bind_rows()
-# %>%
-#   bind_rows(sub_cluster_map)
+# now roll through and set each value to the same color across CellType and CellType (predict)
+# e.g. RPE will be one color in CellType and CellType (Predict)
+celltype_x_color_map <- cat_to_color_df %>% filter(meta_category %in% c("CellType", "CellType_predict")) %>% group_by(value) %>% summarise(c2 = head(color,1))
+cat_to_color_df <- cat_to_color_df %>% left_join(celltype_x_color_map) %>% mutate(color = case_when(!is.na(c2) ~ c2, TRUE ~ color)) %>% select(-c2)
 
 
 
-# # attach colors to cell types
-# cell_types <- meta_filter %>%
-#   pull(CellType_predict) %>% unique() %>% sort()
-# type_val <- setNames(pals::alphabet(n = cell_types %>% length()), cell_types)
-# type_col <- scale_colour_manual(values = type_val)
-# type_fill <- scale_fill_manual(values = type_val)
 cat(file=stderr(), 'Data loaded in ')
 cat(file=stderr(), Sys.time() - time)
 cat(file=stderr(), ' seconds.\n')
