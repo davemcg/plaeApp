@@ -22,15 +22,8 @@ library(fst)
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/scEiaD_v3//MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 
-# # find "common" tabula muris cell type labels to move over
-# meta_filter %>%
-#   group_by(cluster, TabulaMurisCellType_predict) %>%
-#   summarise(Count = n()) %>%
-#   mutate(Percentage = (Count / sum(Count) * 100)) %>%
-#   filter(Percentage > 10) %>%
-#   arrange(cluster) %>%
-#   data.frame() %>%
-#   filter(!is.na(TabulaMurisCellType_predict))
+# # testing
+# load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
 
 x_dir <- 1
 y_dir <- 1
@@ -41,7 +34,11 @@ meta_filter <- read_fst('/Volumes/McGaughey_S/scEiaD_v3/2021_11_09_meta_filter.f
                                       TRUE ~ CellType_predict)) %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
-  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+
+# %>%
+#    select(-UMAP_1, -UMAP_2) %>%
+#    right_join(umap %>% select(Barcode, UMAP_1, UMAP_2), by = 'Barcode')
 
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
@@ -616,18 +613,19 @@ shinyServer(function(input, output, session) {
     })
     output$gene_scatter_plot <- renderPlot({
       gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
-    }) %>%
-      bindCache(list(input$Gene,
-                     input$pt_size_gene,
-                     input$gene_scatter_slider,
-                     input$gene_label_toggle,
-                     input$gene_filter_on,
-                     input$gene_filter_cat,
-                     input$gene_filter_cat_on,
-                     gene_scatter_ranges$x,
-                     gene_scatter_ranges$y)) %>%
-      bindEvent(input$BUTTON_draw_scatter,
-                input$gene_scatter_plot_dblclick)
+    })
+    # %>%
+    #   bindCache(list(input$Gene,
+    #                  input$pt_size_gene,
+    #                  input$gene_scatter_slider,
+    #                  input$gene_label_toggle,
+    #                  input$gene_filter_on,
+    #                  input$gene_filter_cat,
+    #                  input$gene_filter_cat_on,
+    #                  gene_scatter_ranges$x,
+    #                  gene_scatter_ranges$y)) %>%
+    #   bindEvent(input$BUTTON_draw_scatter,
+    #             input$gene_scatter_plot_dblclick)
 
     # gene scatter plot download ------
     output$BUTTON_download_scatter <- downloadHandler(
@@ -697,17 +695,18 @@ shinyServer(function(input, output, session) {
         plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
           theme(legend.position = 'none')
       }
-    }) %>%
-      bindCache(list(input$meta_column,
-                     input$pt_size_meta,
-                     input$label_toggle,
-                     input$meta_column_transform,
-                     input$meta_filter_cat,
-                     input$meta_filter_on,
-                     meta_ranges$x,
-                     meta_ranges$y)) %>%
-      bindEvent(input$BUTTON_draw_meta,
-                input$meta_plot_dblclick)
+    })
+    # %>%
+    #   bindCache(list(input$meta_column,
+    #                  input$pt_size_meta,
+    #                  input$label_toggle,
+    #                  input$meta_column_transform,
+    #                  input$meta_filter_cat,
+    #                  input$meta_filter_on,
+    #                  meta_ranges$x,
+    #                  meta_ranges$y)) %>%
+    #   bindEvent(input$BUTTON_draw_meta,
+    #             input$meta_plot_dblclick)
 
     output$BUTTON_download_meta <- downloadHandler(
       filename = function() { ('plae_meta.png') },
