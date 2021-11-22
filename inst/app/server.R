@@ -20,28 +20,25 @@ library(stringr)
 library(shinyalert)
 library(fst)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v2/MOARTABLES__anthology_limmaFALSE___5000-counts-universe-batch-scVIprojection-6-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/scEiaD_v3//MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 
-# # find "common" tabula muris cell type labels to move over
-# meta_filter %>%
-#   group_by(cluster, TabulaMurisCellType_predict) %>%
-#   summarise(Count = n()) %>%
-#   mutate(Percentage = (Count / sum(Count) * 100)) %>%
-#   filter(Percentage > 10) %>%
-#   arrange(cluster) %>%
-#   data.frame() %>%
-#   filter(!is.na(TabulaMurisCellType_predict))
+# # testing
+# load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v2//2021_10_22_meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/McGaughey_S/scEiaD_v3/2021_11_09_meta_filter.fst') %>%
   as_tibble() %>%
-  mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) ~ 'Tabula Muris',
+  mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
-  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+
+# %>%
+#    select(-UMAP_1, -UMAP_2) %>%
+#    right_join(umap %>% select(Barcode, UMAP_1, UMAP_2), by = 'Barcode')
 
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
@@ -50,18 +47,30 @@ tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
-  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b) %>%
+  filter(!CellType_predict %in%
+           c("Limbal Progenitor","Secretory Cell", "JCT",
+             "Corneal Nerve", "Kidney Proximal Tubule",
+             "Cholangiocyte", "Corneal Endothelial",
+             "Bladder Urothelial","Proliferating Cornea"))
 celltype_labels <- scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
-  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b) %>%
+  filter(!CellType %in%
+           c("Limbal Progenitor","Secretory Cell", "JCT",
+             "Corneal Nerve", "Kidney Proximal Tubule",
+             "Cholangiocyte", "Corneal Endothelial",
+             "Bladder Urothelial","Proliferating Cornea"))
 cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 mf <- meta_filter %>% sample_frac(0.2)
 
+#################################
 # generate color_mappings
+################################
 categorical_columns <- c("Phase","batch","study_accession","library_layout","organism","Platform",
                          "Covariate","CellType","CellType_predict","TabulaMurisCellType","TabulaMurisCellType_predict",
                          "GSE","Summary","Design","Citation","PMID","Stage","cluster",
@@ -70,10 +79,10 @@ categorical_columns <- c("Phase","batch","study_accession","library_layout","org
 #"SubCellType" and subcluster are problems
 meta_filter <- meta_filter %>% mutate(Age = as.character(Age), SubCellType = tidyr::replace_na(SubCellType, 'None'),
                                       subcluster = as.character(subcluster))
+
+
 map_color <- function(column, meta_filter){
-  #master_colorlist <- c(pals::polychrome()[3:length(pals::polychrome())], pals::alphabet2())
-  #master_colorlist <- c(pals::glasbey()[-c(3,4,8,18)],pals::alphabet2()[-c(5,7,8,9,23,24)])
-  master_colorlist <- c(pals::cols25()[1:23],pals::alphabet())
+  master_colorlist <- c(pals::alphabet(), pals::cols25()[1:23], pals::glasbey(), pals::alphabet2()) %>% unique()
   values <- meta_filter %>% pull(!!column) %>% unique %>% sort
   if(length(values) > length(master_colorlist) ){
     r= round(length(values) / length(master_colorlist)) +1
@@ -85,32 +94,14 @@ map_color <- function(column, meta_filter){
 
 }
 
-#this is to avoid a color collision within the same cluster
-# sub_cluster_df <- meta_filter %>% select(cluster, subcluster) %>% distinct
-# sub_cluster_map <- lapply(sub_cluster_df$cluster, function(x) sub_cluster_df %>%
-#                             filter(cluster == x) %>%
-#                             map_color('subcluster',.) ) %>% bind_rows
-
-# this could work, but the Celltype  > SubCellType mapping is not 1:1
-# sub_celltype_df <- meta_filter %>% select(CellType_predict, SubCellType) %>% distinct
-# sub_celltype_map <- lapply(sub_celltype_df$CellType_predict, function(x) sub_celltype_df %>%
-#                              filter(CellType_predict == x) %>%
-#                              map_color('SubCellType',.) ) %>% bind_rows %>%
-#   mutate(color = replace(color, value == 'None', '#D3D3D3'))
-
-
 cat_to_color_df <- lapply(categorical_columns, function(col) map_color(col, meta_filter)) %>% bind_rows()
-# %>%
-#   bind_rows(sub_cluster_map)
+# now roll through and set each value to the same color across CellType and CellType (predict)
+# e.g. RPE will be one color in CellType and CellType (Predict)
+celltype_x_color_map <- cat_to_color_df %>% filter(meta_category %in% c("CellType", "CellType_predict")) %>% group_by(value) %>% summarise(c2 = head(color,1))
+cat_to_color_df <- cat_to_color_df %>% left_join(celltype_x_color_map) %>% mutate(color = case_when(!is.na(c2) ~ c2, TRUE ~ color)) %>% select(-c2)
 
 
 
-# # attach colors to cell types
-# cell_types <- meta_filter %>%
-#   pull(CellType_predict) %>% unique() %>% sort()
-# type_val <- setNames(pals::alphabet(n = cell_types %>% length()), cell_types)
-# type_col <- scale_colour_manual(values = type_val)
-# type_fill <- scale_fill_manual(values = type_val)
 cat(file=stderr(), 'Data loaded in ')
 cat(file=stderr(), Sys.time() - time)
 cat(file=stderr(), ' seconds.\n')
@@ -622,18 +613,19 @@ shinyServer(function(input, output, session) {
     })
     output$gene_scatter_plot <- renderPlot({
       gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
-    }) %>%
-      bindCache(list(input$Gene,
-                     input$pt_size_gene,
-                     input$gene_scatter_slider,
-                     input$gene_label_toggle,
-                     input$gene_filter_on,
-                     input$gene_filter_cat,
-                     input$gene_filter_cat_on,
-                     gene_scatter_ranges$x,
-                     gene_scatter_ranges$y)) %>%
-      bindEvent(input$BUTTON_draw_scatter,
-                input$gene_scatter_plot_dblclick)
+    })
+    # %>%
+    #   bindCache(list(input$Gene,
+    #                  input$pt_size_gene,
+    #                  input$gene_scatter_slider,
+    #                  input$gene_label_toggle,
+    #                  input$gene_filter_on,
+    #                  input$gene_filter_cat,
+    #                  input$gene_filter_cat_on,
+    #                  gene_scatter_ranges$x,
+    #                  gene_scatter_ranges$y)) %>%
+    #   bindEvent(input$BUTTON_draw_scatter,
+    #             input$gene_scatter_plot_dblclick)
 
     # gene scatter plot download ------
     output$BUTTON_download_scatter <- downloadHandler(
@@ -675,7 +667,7 @@ shinyServer(function(input, output, session) {
       click <- input$meta_plot_click
 
       tab <- nearPoints(meta_filter, input$meta_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
-        select(Barcode, Tissue, CellType, CellType_predict, cluster, study_accession, GSE)
+        select(Barcode, Tissue, organism, CellType, CellType_predict, cluster, study_accession)
 
       output$meta_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
@@ -684,7 +676,7 @@ shinyServer(function(input, output, session) {
       click <- input$gene_scatter_plot_click
 
       tab <- nearPoints(meta_filter, input$gene_scatter_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
-        select(Barcode, Tissue, CellType, CellType_predict, cluster, study_accession, GSE)
+        select(Barcode, Tissue, organism, CellType, CellType_predict, cluster, study_accession)
 
       output$gene_scatter_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
@@ -703,17 +695,18 @@ shinyServer(function(input, output, session) {
         plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
           theme(legend.position = 'none')
       }
-    }) %>%
-      bindCache(list(input$meta_column,
-                     input$pt_size_meta,
-                     input$label_toggle,
-                     input$meta_column_transform,
-                     input$meta_filter_cat,
-                     input$meta_filter_on,
-                     meta_ranges$x,
-                     meta_ranges$y)) %>%
-      bindEvent(input$BUTTON_draw_meta,
-                input$meta_plot_dblclick)
+    })
+    # %>%
+    #   bindCache(list(input$meta_column,
+    #                  input$pt_size_meta,
+    #                  input$label_toggle,
+    #                  input$meta_column_transform,
+    #                  input$meta_filter_cat,
+    #                  input$meta_filter_on,
+    #                  meta_ranges$x,
+    #                  meta_ranges$y)) %>%
+    #   bindEvent(input$BUTTON_draw_meta,
+    #             input$meta_plot_dblclick)
 
     output$BUTTON_download_meta <- downloadHandler(
       filename = function() { ('plae_meta.png') },

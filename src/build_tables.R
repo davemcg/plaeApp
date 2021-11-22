@@ -4,14 +4,14 @@ library(webshot)
 library(htmltools)
 
 # all cells
-load('~/data/scEiaD_v2/cell_info_labelled.Rdata')
+load('~/data/scEiaD_v3/cell_info_labelled.Rdata')
 # pre mt filtering
 srt <- data.table::fread('~/git/scEiaD/data/sample_run_layout_organism_tech_biosample_organ_2021_06_07.tsv')
-mito <- data.table::fread('~/data/scEiaD_v2/QC.tsv.gz')
+mito <- data.table::fread('~/data/scEiaD_v3/QC.tsv.gz')
 mito <- mito %>% left_join(srt %>% select(sample_accession, SX = Source) %>% unique(), by = 'sample_accession') %>% filter(SX %in% c('iPSC','Tissue'))
 # load('/Volumes/data/projects/nei/mcgaughey/massive_integrated_eye_scRNA/fastMNN_umap_full.Rdata')
 study_meta <- read_tsv('~/git/scEiaD/data/GEO_Study_Level_Metadata.tsv')
-meta <- read_tsv('~/data/scEiaD_v2/metadata_filter.tsv.gz')
+meta <- fst::read_fst('~/data/scEiaD_v3/meta_filter.fst')
 
 stats <- meta %>% group_by(study_accession, Platform) %>% summarise(Counts = n())
 
@@ -57,16 +57,14 @@ post <- stats %>% rename(`Post QC<br/>Count` = Counts) %>%
   mutate(study_accession = case_when(study_accession == 'OGVFB_Hufnagel_iPSC_RPE' ~ 'SRP329495',
                                                                                               TRUE ~ study_accession))
 
-table01 <- mito %>% mutate(barcode = value) %>%
-  mutate(barcode = gsub(':','_',barcode)) %>%
-  #rename(sample_accession = srs) %>%
-  full_join(srt %>% select(sample_accession, study_accession, organism, Platform, Source) %>% unique()) %>%
+table01 <- meta %>%
   mutate(study_accession = case_when(study_accession == 'OGVFB_Hufnagel_iPSC_RPE' ~ 'SRP329495',
                                       TRUE ~ study_accession)) %>%
-  left_join(study_meta) %>%
-  left_join(cell_info_labels %>% select(barcode = value, CellType)) %>%
+  select(-PMID, -Citation, -GSE, -Design, -Summary) %>%
+  left_join(study_meta, by = 'study_accession') %>%
+  #left_join(cell_info_labels %>% select(barcode = value, CellType)) %>%
   #filter(Source != 'Cell Culture', Source != 'Organoid') %>%
-  filter(!is.na(study_accession)) %>%
+  filter(!grepl('Bharti',study_accession)) %>%
   mutate(PMID = as.character(PMID)) %>%
   mutate(Citation = case_when(is.na(Citation) ~ '',
                               TRUE ~ paste0(substr(Citation, 1, 30), ' ...')),
@@ -78,15 +76,7 @@ table01 <- mito %>% mutate(barcode = value) %>%
   group_by(Citation, PMID, `SRA Accession`, organism, Platform) %>%
   summarise(Count = n(), Labels = unique(Labels) %>% sort() %>% tail(1)) %>%
   arrange(organism, -Count) %>%
-  left_join(., post %>%
-              rename(`SRA Accession` = study_accession)) %>%
-  select(Citation:Count, `Post QC<br/>Count`, Labels) %>%
-  filter(`Post QC<br/>Count` > 0) %>%
-  # drop pre count and post count distinction
-  # too hard to manage as the scran method is very sensitive
-  mutate(Count = `Post QC<br/>Count`) %>%
-  select(-`Post QC<br/>Count`) %>%
-  arrange(organism, -Count)
+  filter(Count > 0)
 
 #table01$`Post QC<br/>Count`[is.na(table01$`Post QC<br/>Count`)] <- 0
 formattable_01 <- table01 %>%
@@ -102,7 +92,8 @@ formattable_01
 write_file(format_table(formattable_01), path = 'inst/app/www/table_01.html')
 
 
-table02 <- cell_info_labels %>%
+table02 <- meta %>%
+  filter(!is.na(CellType)) %>%
   mutate(CellType = gsub('AC/HC_Precurs', 'Amacrine/Horizontal Precursors', CellType)) %>%
   #mutate(CellType = gsub("Rod Bipolar Cells", "Bipolar Cells", CellType)) %>%
   filter(!is.na(CellType),
@@ -115,6 +106,7 @@ table02 <- cell_info_labels %>%
                               TRUE ~ 'MF')) %>%
   group_by(CellType,organism, study_accession) %>%
   summarise(Count = n()) %>%
+  filter(Count > 50) %>%
   summarise(Studies = length(study_accession), Count = sum(Count)) %>%
   summarise(Species = paste(organism, collapse = ', '), Studies = sum(Studies), Count = sum(Count)) %>%
   arrange(-Count) %>%
@@ -136,6 +128,7 @@ table03 <- meta %>%
                               TRUE ~ 'MF')) %>%
   group_by(CellType,organism, study_accession) %>%
   summarise(Count = n()) %>%
+  filter(Count > 50) %>%
   summarise(Studies = length(study_accession), Count = sum(Count)) %>%
   summarise(Species = paste(organism, collapse = ', '), Studies = sum(Studies), Count = sum(Count)) %>%
   arrange(-Count) %>%

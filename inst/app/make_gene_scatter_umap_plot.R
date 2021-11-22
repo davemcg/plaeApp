@@ -52,9 +52,9 @@ make_gene_scatter_umap_plot <- function(input,
                      pointsize = 0,
                      pixels=c(1000,1000)) +
     geom_scattermost(cbind(p$UMAP_1, p$UMAP_2),
-                     color = viridis::magma(100, alpha=0.2)
+                     color = viridis::magma(100, alpha=0.3)
                      [1+99*(p$counts-color_range[1])/diff(color_range)],
-                     pointsize= pt_size ,
+                     pointsize= pt_size -1 ,
                      pixels=c(1000,1000),
                      interpolate=FALSE) +
     geom_point(data=data.frame(x=double(0)), aes(x,x,color=x)) +
@@ -72,19 +72,23 @@ make_gene_scatter_umap_plot <- function(input,
   more <- NULL
   if ('1' %in% input$gene_label_toggle){
     more <- geom_text_repel(data = celltype_labels, bg.color = 'white',
+                            alpha = 0.7,
                             aes(x = UMAP_1, y = UMAP_2, label = CellType))
   }
   if ('2' %in% input$gene_label_toggle){
     more <- geom_text_repel(data = celltype_predict_labels, bg.color = 'white',
+                            alpha = 0.7,
                             aes(x = UMAP_1, y = UMAP_2, label = CellType_predict))
   }
   if ('3' %in% input$gene_label_toggle){
     more <- geom_text_repel(data = cluster_labels, bg.color = 'white',
+                            alpha = 0.7,
                             aes(x = UMAP_1, y = UMAP_2, label = cluster),
                             max.iter = 20)
   }
   if ('4' %in% input$gene_label_toggle){
     more <- geom_text_repel(data = tabulamuris_predict_labels, bg.color = 'white',
+                            alpha = 0.7,
                             aes(x = UMAP_1, y = UMAP_2, label = TabulaMurisCellType_predict),
                             max.iter = 20)
   }
