@@ -157,25 +157,28 @@ We provide the full data as seurat (v3) or anndata (scanpy) objects you can down
 ```{r}
 library(Seurat)
 library(tidyverse)
-#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_03_17/scEiaD_all_seurat_v3.Rdata')
+library(SingleCellExperiment)
+library(scran)
+#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.Rdata)
 # the -O renames the file and puts it in the ~/data/scEiaD directory
-load('~/data/scEiaD/scEiaD_all_seurat_v3.Rdata')
+load('~/data/scEiaD_v3/scEiaD_all_seurat_v3.Rdata')
 ```
 
 ## ID neurogenic cells in different clusters
+We see that the neurogenic cells are a small minority of these clusters. But perhaps still we can find some interesting differences between them. 
 ```{r}
 scEiaD_droplet@meta.data %>% 
   group_by(cluster, CellType_predict) %>% 
   summarise(Count = n()) %>% 
   mutate(Perc = (Count / sum(Count)) * 100) %>% 
   filter(Perc > 5) %>% 
-  filter(CellType_predict == 'Neurogenic Cells') %>% 
+  filter(CellType_predict == 'Neurogenic Cell') %>% 
   arrange(-Perc)
 ```
 
-The most common is cluster 41 and 42 (by both count and proportion that is Neurogenic)
+The most common is cluster 46 and 47
 
-## Compare cluster 41 - Neurogenic vs cluster 42 - Neurogenic
+## Compare cluster 46 - Neurogenic vs cluster 47 - Neurogenic
 This will take a few minutes to run. This is why we cannot offer on-demand custom diff testing as it takes at least a few minutes to run and the whole app shuts down for *everyone* while it computes. 
 ```{r}
 # Create new column with a pasted together cluster ID and a CellType
@@ -189,11 +192,11 @@ scEiaD_droplet <- AddMetaData(scEiaD_droplet,
                               col.name = 'clusterCT' )
 # tell Seurat this new column is the default identity
 Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$clusterCT
-diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '41_Neurogenic Cells', ident.2 = '42_Neurogenic Cells')
-diff_test %>% arrange(-avg_log2FC) %>% head(5)
+diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '46_Neurogenic Cell', ident.2 = '47_Neurogenic Cell')
+diff_test %>% arrange(p_val) %>% filter(abs(avg_log2FC) > 2) %>% head(5)
 ```
 
-We see the top hit (by log fold change) that is over expressed in cluster6-Neurogenic is ENSG00000131747 (TOP2A), which is a marker of cell proliferation. 
+We see the top hit (by p value and log2FC > 2) is HMGB2 (ENSG00000164104), which is associated with a transition from quiescent to proliferative neurogenesis (https://pubmed.ncbi.nlm.nih.gov/28771884/). 
 
 
 ## ID RPE cells in different clusters
@@ -207,28 +210,54 @@ scEiaD_droplet@meta.data %>%
   arrange(-Perc)
 ```
 
-## Compare cluster 34 - RPE vs cluster 47 - RPE
+## Compare macula cones vs peripheral cones
+Let us now demonstrate how having a deeply collated set of data can be of value in asking more specific questions, like "how to macula/fova cones differ relative to peripheral cones."
+
+First, we need to see whether this is even a tractable question.
+```{r}
+scEiaD_droplet@meta.data %>% 
+  as_tibble() %>% 
+  group_by(retina_region, organism, study_accession, CellType_predict) %>% 
+  summarise(Count = n()) %>% 
+  filter(CellType_predict %in% c("Cone")) %>% 
+  filter(Count > 10, !is.na(retina_region))
+```
 ```{r}
 # Create new column with a pasted together cluster ID and a CellType
 scEiaD_droplet <- AddMetaData(scEiaD_droplet, 
                               metadata = 
                                 paste0(
-                                  scEiaD_droplet@meta.data$cluster, 
+                                  scEiaD_droplet@meta.data$retina_region, 
                                   '_', 
-                                  scEiaD_droplet@meta.data$CellType_predict
+                                  scEiaD_droplet@meta.data$CellType_predict,
+                                  '_',
+                                  scEiaD_droplet@meta.data$organism
                                   ), 
-                              col.name = 'clusterCT' )
-# tell Seurat this new column is the default identity
-Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$clusterCT
-diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '34_RPE', ident.2 = '47_RPE')
-diff_test %>% arrange(avg_log2FC) %>% head(20)
+                              col.name = 'regionCT' )
+
+# filter down scEiaD
+scEiaD_droplet__cone <- subset(scEiaD_droplet, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
+
+# create SCE object so we can use the scran test which balances covariates
+sce <- as.SingleCellExperiment(scEiaD_droplet__cone)
+
+# run test, blocking (covariate) for study accession
+sce_diff_test <- findMarkers(sce,
+                group = sce$regionCT,
+                block = sce$study_accession,
+                pval.type = 'all',
+                test="wilcox")
+
+# get human understandable gene name
+symbols <- mapIds(org.Hs.eg.db, keys = row.names(diff_test), keytype = "ENSEMBL", column="SYMBOL")
+sce_diff_test$`Peripheral_Cone_Homo sapiens` %>% as_tibble(rownames = 'name') %>% left_join(symbols %>% enframe()) %>% head(20)
 ```
 One of the first non-ribosome or mitochondrial gene is vimentin, which has been previously identified as over-expressed in cultured and proliferating RPE (https://pubmed.ncbi.nlm.nih.gov/1700982/). The RPE in cluster 47 are iPSC-based. 
 
 ## Check RPE65, TTR, TYRP1 and Vimentin expression across the two RPE cluster (and RGC)
 RPE65, TTR, and TYRP1 are markers for functional RPE and are high in both groups of RPE (and as a quick control, virtually all off in RGC). Vimentin is much higher in the iPSC RPE cluster (37).
 ```{r, fig.width=8, fig.height=10}
-scEiaD_droplet__RPE <- subset(scEiaD_droplet, idents = c('34_RPE','47_RPE', '51_Retinal Ganglion Cells', '7_RPCs'))
+scEiaD_droplet__cone <- subset(scEiaD_droplet, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
 VlnPlot(scEiaD_droplet__RPE, features = c('ENSG00000116745', 'ENSG00000107165', 'ENSG00000118271', 'ENSG00000026025'))
 ```
 
