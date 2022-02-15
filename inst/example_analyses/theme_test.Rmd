@@ -1,0 +1,43 @@
+---
+title: "plae Analysis Examples"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: monochrome
+    fig_caption: false
+    theme:
+      bootswatch: default
+      primary: "rgb(102,51,255)"
+      secondary: "#555A5F"
+---
+# Welcome
+
+This document contains some simple examples for how to use the advanced filtering options in [https://plae.nei.nih.gov]() and a brief introduction to using the Seurat file to do custom tests. 
+
+# Gene Focused
+
+By "gene focused" we mean that:
+
+1. You have a gene you are interested in
+2. You want to learn more about where / when / what it is expressed in
+
+## *In silico* *In Situ*
+
+For those who are most comfortable with stained *in situ* slices of the retina this visualization may be useful. The major cell types of the retina are laid on in rough anatomical positioning. The cell types are colored by intensity, with the brighter colors meaning that the gene is more highly expressed in that cell type. As an example we show expression of RHO (rhodopsin, a rod marker) and RPE65 (RPE marker).
+
+![In silico in situ screenshot with Rho gene](screenshots/rho_in_situ.png){width=50%}
+
+![In silico in situ screenshot with RPE65 gene](screenshots/rpe65_in_situ.png){width=50%}
+
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(SingleCellExperiment)
+library(scran)
+library(org.Hs.eg.db)
+#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.Rdata)
+# the -O renames the file and puts it in the ~/data/scEiaD directory
+# load('/Volumes/McGaughey_S/scEiaD_v3/scEiaD_all_seurat_v3.Rdata')
+```

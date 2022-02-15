@@ -19,6 +19,7 @@ library(magick)
 library(stringr)
 library(shinyalert)
 library(fst)
+library(dbplyr)
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/scEiaD_v3//MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 

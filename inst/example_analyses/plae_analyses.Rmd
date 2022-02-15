@@ -1,7 +1,15 @@
 ---
 title: "plae Analysis Examples"
-output: 
-  rmdformats::robobook
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: monochrome
+    fig_caption: false
+    theme:
+      bootswatch: default
+      primary: "rgb(102,51,255)"
+      secondary: "#555A5F"
 ---
 # Welcome
 
@@ -159,9 +167,10 @@ library(Seurat)
 library(tidyverse)
 library(SingleCellExperiment)
 library(scran)
+library(org.Hs.eg.db)
 #system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.Rdata)
 # the -O renames the file and puts it in the ~/data/scEiaD directory
-load('~/data/scEiaD_v3/scEiaD_all_seurat_v3.Rdata')
+load('/Volumes/McGaughey_S/scEiaD_v3/scEiaD_all_seurat_v3.Rdata')
 ```
 
 ## ID neurogenic cells in different clusters
@@ -173,13 +182,13 @@ scEiaD_droplet@meta.data %>%
   mutate(Perc = (Count / sum(Count)) * 100) %>% 
   filter(Perc > 5) %>% 
   filter(CellType_predict == 'Neurogenic Cell') %>% 
-  arrange(-Perc)
+  arrange(-Count)
 ```
 
 The most common is cluster 46 and 47
 
-## Compare cluster 46 - Neurogenic vs cluster 47 - Neurogenic
-This will take a few minutes to run. This is why we cannot offer on-demand custom diff testing as it takes at least a few minutes to run and the whole app shuts down for *everyone* while it computes. 
+### Compare cluster 46 - Neurogenic vs cluster 47 - Neurogenic
+This will take a few minutes to run. This is why we cannot offer on-demand custom diff testing as while it runs the whole app shuts down for *everyone* while it computes. 
 ```{r}
 # Create new column with a pasted together cluster ID and a CellType
 scEiaD_droplet <- AddMetaData(scEiaD_droplet, 
@@ -198,17 +207,6 @@ diff_test %>% arrange(p_val) %>% filter(abs(avg_log2FC) > 2) %>% head(5)
 
 We see the top hit (by p value and log2FC > 2) is HMGB2 (ENSG00000164104), which is associated with a transition from quiescent to proliferative neurogenesis (https://pubmed.ncbi.nlm.nih.gov/28771884/). 
 
-
-## ID RPE cells in different clusters
-```{r}
-scEiaD_droplet@meta.data %>% 
-  group_by(cluster, CellType_predict) %>% 
-  summarise(Count = n()) %>% 
-  mutate(Perc = (Count / sum(Count)) * 100) %>% 
-  filter(Perc > 5) %>% 
-  filter(CellType_predict == 'RPE') %>% 
-  arrange(-Perc)
-```
 
 ## Compare macula cones vs peripheral cones
 Let us now demonstrate how having a deeply collated set of data can be of value in asking more specific questions, like "how to macula/fova cones differ relative to peripheral cones."
@@ -233,13 +231,14 @@ scEiaD_droplet <- AddMetaData(scEiaD_droplet,
                                   '_',
                                   scEiaD_droplet@meta.data$organism
                                   ), 
-                              col.name = 'regionCT' )
+                              col.name = 'regionCT')
 
 # filter down scEiaD
-scEiaD_droplet__cone <- subset(scEiaD_droplet, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
+Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$regionCT
+scEiaD_droplet__subset <- subset(scEiaD_droplet, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
 
 # create SCE object so we can use the scran test which balances covariates
-sce <- as.SingleCellExperiment(scEiaD_droplet__cone)
+sce <- as.SingleCellExperiment(scEiaD_droplet__subset)
 
 # run test, blocking (covariate) for study accession
 sce_diff_test <- findMarkers(sce,
@@ -247,18 +246,56 @@ sce_diff_test <- findMarkers(sce,
                 block = sce$study_accession,
                 pval.type = 'all',
                 test="wilcox")
+# while the default test is a wilcox which returns an AUC 
+# I like to also run a t test which returns a logFC which is useful in filtering
+# as something with a high AUC (power to distinguish between groups) but
+# a low logFC is less likely to be interesting
+sce_diff_test_t <- findMarkers(sce,
+                group = sce$regionCT,
+                block = sce$study_accession,
+                pval.type = 'all',
+                test.type = 't')
 
 # get human understandable gene name
-symbols <- mapIds(org.Hs.eg.db, keys = row.names(diff_test), keytype = "ENSEMBL", column="SYMBOL")
-sce_diff_test$`Peripheral_Cone_Homo sapiens` %>% as_tibble(rownames = 'name') %>% left_join(symbols %>% enframe()) %>% head(20)
-```
-One of the first non-ribosome or mitochondrial gene is vimentin, which has been previously identified as over-expressed in cultured and proliferating RPE (https://pubmed.ncbi.nlm.nih.gov/1700982/). The RPE in cluster 47 are iPSC-based. 
+library(org.Hs.eg.db)
+symbols <- mapIds(org.Hs.eg.db, keys = row.names(sce_diff_test$`Macula_Cone_Homo sapiens`), keytype = "ENSEMBL", column="SYMBOL")
+auc_test <- sce_diff_test$`Peripheral_Cone_Homo sapiens` %>% 
+  as_tibble(rownames = 'name') %>% 
+  left_join(symbols %>% enframe()) %>% 
+  filter(FDR < 0.01) %>% 
+  dplyr::rename(p.value.auc = p.value,
+         FDR.auc = FDR)
+t_test <- sce_diff_test_t$`Peripheral_Cone_Homo sapiens` %>% 
+  as_tibble(rownames = 'name') %>% 
+  filter(FDR < 0.01) %>% 
+    dplyr::rename(p.value.t = p.value,
+         FDR.t = FDR)
 
-## Check RPE65, TTR, TYRP1 and Vimentin expression across the two RPE cluster (and RGC)
-RPE65, TTR, and TYRP1 are markers for functional RPE and are high in both groups of RPE (and as a quick control, virtually all off in RGC). Vimentin is much higher in the iPSC RPE cluster (37).
-```{r, fig.width=8, fig.height=10}
-scEiaD_droplet__cone <- subset(scEiaD_droplet, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
-VlnPlot(scEiaD_droplet__RPE, features = c('ENSG00000116745', 'ENSG00000107165', 'ENSG00000118271', 'ENSG00000026025'))
+auc_test %>% 
+  left_join(t_test, by = 'name') %>% 
+  filter(FDR.auc < 0.01, FDR.t < 0.01) %>% 
+  filter(summary.AUC > 0.7 | summary.AUC < 0.3) %>% 
+  filter(abs(summary.logFC) > 1) %>% 
+  arrange(-`logFC.Macula_Cone_Homo.sapiens`)
 ```
 
+## Always look at the plots
+
+### PDE6H 
+Top gene more highly expressed in the macula compared to the periphery. But ... seems to be driven by just one study (SRP151023). So this doesn't look like a good candidate to me. 
+```{r}
+VlnPlot(scEiaD_droplet__subset, features = c('ENSG00000139053'))
+
+VlnPlot(scEiaD_droplet__subset, c('ENSG00000139053'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD_droplet__subset$regionCT)
+```
+
+### PCP4
+The effect is consistent across multiple studies, which increases confidence this is a real pattern.
+
+PCP4 modulates calmodulin, which is involved in cone photoreceptor ribbon replenishment (https://pubmed.ncbi.nlm.nih.gov/25311636/). So maybe not crazy? Or maybe it is. I only know a dangerous amount about retinal function. 
+```{r}
+VlnPlot(scEiaD_droplet__subset, features = c('ENSG00000183036'))
+
+VlnPlot(scEiaD_droplet__subset, c('ENSG00000183036'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD_droplet__subset$regionCT)
+```
 
