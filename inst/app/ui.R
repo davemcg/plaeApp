@@ -454,7 +454,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.83'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.84'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
