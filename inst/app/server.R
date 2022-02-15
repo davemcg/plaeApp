@@ -21,21 +21,21 @@ library(shinyalert)
 library(fst)
 library(dbplyr)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/scEiaD_v3//MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v3///MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
 
 x_dir <- 1
 y_dir <- 1
-meta_filter <- read_fst('/Volumes/McGaughey_S/scEiaD_v3/2021_11_09_meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD_v3/2021_11_09_meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
   mutate(UMAP_a = UMAP_2 * x_dir,
          UMAP_b = UMAP_1 * y_dir) %>%
-   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
+  mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 
 # %>%
 #    select(-UMAP_1, -UMAP_2) %>%
@@ -1020,6 +1020,63 @@ shinyServer(function(input, output, session) {
                           options = list(pageLength = 10, scrollX = TRUE,
                                          dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
       DT::formatStyle(columns = c(8), width='250px')
+  })
+
+
+  ### data download table ----
+  output$seurat_table <- DT::renderDataTable(server = TRUE, {
+    base_url <-  'https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/study_level'
+    out <- meta_filter %>%
+      select(study_accession, Citation) %>%
+      unique() %>%
+      filter(!grepl('Bharti', study_accession)) %>%
+      mutate(`Seurat Study Level Objects URLs` = paste0("<a href='",base_url, '/', study_accession, '.seurat.Rdata', "'>",study_accession,"</a>"))
+    out %>% select(2, 3) %>%
+      DT::datatable(extensions = 'Buttons',
+                    escape = FALSE,
+                    filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                    options = list(
+                      pageLength = 10, scrollX = TRUE,
+                      dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
+      DT::formatStyle(columns = c(8), width='250px')
+  })
+
+  output$anndata_table <- DT::renderDataTable(server = TRUE, {
+    base_url <-  'https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/study_level'
+    out <- meta_filter %>%
+      select(study_accession, Citation) %>%
+      unique() %>%
+      filter(!grepl('Bharti', study_accession)) %>%
+      mutate(`anndata Study Level Objects URLs` = paste0("<a href='",base_url, '/', study_accession, '.h5ad', "'>",study_accession,"</a>"))
+
+    out %>% select(2, 3) %>%
+      DT::datatable(extensions = 'Buttons',
+                    escape = FALSE,
+                    filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                    options = list(
+                      pageLength = 10, scrollX = TRUE,
+                      dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
+      DT::formatStyle(columns = c(8), width='250px')
+  })
+
+  ### alt resource ----
+  output$outside_resources_table  <- DT::renderDataTable(server = TRUE, {
+    feature_table <- rbind(
+    c('PLAE','Yes','Yes', 'Yes', '887', '<a href=https://plae.nei.nih.gov>https://plae.nei.nih.gov</a>'),
+    c('Spectacle', 'Yes' ,'No', 'No', '~1500', '<a href=https://singlecell-eye.org>https://singlecell-eye.org</a>'),
+    c('UCSC Cell Browser', 'Yes', 'No', 'Yes', '62', '<a href=https://cells.ucsc.edu>https://cells.ucsc.edu</a>' ),
+    c('Tabula Sapiens', 'No', 'N/A', 'Yes', '10', '<a href=https://tabula-sapiens-portal.ds.czbiohub.org>https://tabula-sapiens-portal.ds.czbiohub.org</a>'),
+    c('PanglaoDB', 'Yes', 'No', 'Yes', '47', '<a href=https://panglaodb.se>https://panglaodb.se</a>'),
+    c('Protein Atlas', 'Yes','No', 'Yes', '5',  '<a href=https://www.proteinatlas.org/humanproteome/celltype>https://www.proteinatlas.org/humanproteome/celltype</a>')) %>%
+    as_tibble()
+  colnames(feature_table) <- c('Resource Name', 'Independent Datasets', 'Harmonization', 'Ocular and non-Ocular Data', 'Ocular Cell Count\n(thousands)', 'URL')
+  feature_table %>%  DT::datatable(extensions = 'Buttons',
+                                   escape = FALSE,
+                                   filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                                   options = list(
+                                     pageLength = 10, scrollX = TRUE,
+                                     dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
+    DT::formatStyle(columns = c(8), width='250px')
   })
 
 })

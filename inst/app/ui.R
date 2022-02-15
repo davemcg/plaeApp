@@ -434,9 +434,14 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, h2("Run plae Locally"))),
                       fluidRow(column(width = 8, offset = 1, 'If you have 500GB (!) of free hard drive space, you can run plae on your own computer. ', tags$a(href="https://www.github.com/davemcg/plaeApp", "Installation instructions are available in our Github repository"), ' (this is the codebase for the app you are using now).')),
                       fluidRow(column(width = 8, offset = 1, h2("Seurat Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.Rdata", "All (~25 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.01.Rdata", "All (~29 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.h5Seurat", "All (h5Seurat, ~32 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, div(DT::dataTableOutput('seurat_table'), style='font-size:75%'))),
+                      br(),
                       fluidRow(column(width = 8, offset = 1, h2("AnnData Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_anndata.h5ad", "All (~8 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_anndata.01.h5ad", "All (~32 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, div(DT::dataTableOutput('anndata_table'), style='font-size:75%'))),
+                      br(),
                       fluidRow(column(width = 8, offset = 1, h2("Diff Testing Results"))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
                       fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
@@ -454,7 +459,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.84'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.85'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -512,6 +517,11 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.85 (2022-02-15): Updated example analysis to match current data, fixed 508/a11y compliance issues with the document.
+                                                 Added *study level* seurat and anndata objects to "Data".
+                                                 Updated the large downloadable Seurat / anndata objects with intronic counts data (velocity?!).
+                                                 Added "Other Resources" section for alternative resources for ocular transcriptomics.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.84 (2021-11-17): Added large human cornea dataset from Collins et al. As this was a brand new human dataset with several new cell types, a new scVI model was built. Hence the new apperance of the UMAP view. Fixed a filtering bug in Exp Plot.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.83 (2021-11-01): Fixed bug in metadata filter table loading that was messing up some of the plots in certain situations. Tweak click table column choice to include organism.')),
@@ -583,7 +593,15 @@ shinyUI(
                                  fluidRow(column(width = 8, offset = 1, '0.20 (2020-06-06): New 2D UMAP projection that includes the full Yu - Clark Human scRNA dataset. Added tables to "Overview" section showing data stats. Added "filtering" functionality to UMAP plot section.')),
                                  linebreaks(2),
                                  fluidRow(includeHTML("www/footer.html"))
-                        ))
+                        ),
+                        # Other Resources -----
+                        tabPanel('Other single cell resources',
+                                 fluidRow(column(width = 8, offset = 1, "Other potentially useful resources for single cell ocular trancriptomics")),
+                                 fluidRow(column(width = 8, offset = 1, div(DT::dataTableOutput('outside_resources_table'), style='font-size:75%'))),
+                                 fluidRow(column(width = 8, offset = 1, tags$b("Independent datasets"), ": uses data from multiple independent groups")),
+                                 fluidRow(column(width = 8, offset = 1, tags$b("Harmonization datasets"), ": integrates data from multiple resources with consistent bioinformatic tooling")),
+                                 br()))
+
              #tags$head(tags$style(".helpAlign{float:right;}"))
   )
 )
