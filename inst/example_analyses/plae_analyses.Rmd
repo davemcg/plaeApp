@@ -120,13 +120,13 @@ So yes, now we can see the data.
 So each point is an independent study. We see high ATOH7 expression in the neurogenic population, across many studies. But we also see one of studies with ATOH7 expression in cones. The legend shows which colors correspond to which study.
 
 ![screenshot of legend of expression plot](screenshots/atoh7_exp_legend.png)
-One of the studies is a bright pink...probably SRP200599. We can confirm that by replotting the data with a filter that only shows study_accession SRP200599.
+One of the studies is a bright pink...probably SRP200599. We can confirm that by re-plotting the data with a filter that only shows study_accession SRP200599.
 
-![](screenshots/atoh7_exp_SRP200599.png)
+![filter expression plot to only study SRP200599 screenshot](screenshots/atoh7_exp_SRP200599.png)
 
 Yep, that is it. We can jump to the UMAP - Table view to pull up the metadata we have extracted about the study. 
 
-![](screenshots/atoh7_table_SRP200599.png)
+![filter metadata table to only study SRP200599 screenshot](screenshots/atoh7_table_SRP200599.png)
 
 This is from [Buenaventura et al. ](https://pubmed.ncbi.nlm.nih.gov/31260032/) and is a study that enriched early mouse cones. Some [work](https://www.sciencedirect.com/science/article/pii/S1534580720303075?via%3Dihub) suggests that loss of ATOH7 inhibits cone specification. These cones may be "early" cones or late neurogenic cells that are developing into cones. 
 
@@ -137,24 +137,24 @@ If you want to get a sense about *what* is present in scEiaD, then there are sev
 
 ## How many rods do we have?
 These are published labels
-![](screenshots/rods_table.png)
+![rod table screenshot](screenshots/rods_table.png)
 
 ## How many rods do we have after the machine learning?
-![](screenshots/rods_predict_table.png)
+![rod table screenshot](screenshots/rods_predict_table.png)
 
 ## How many rods (predicted) do we have across organism?
-![](screenshots/rods_predict_org_table.png)
+![rod table by organism screenshot](screenshots/rods_predict_org_table.png)
 
 ## How many rods (predicted) we we have across organism and study?
-![](screenshots/rods_predict_org_study_table.png)
+![rod table by organism and study screenshot](screenshots/rods_predict_org_study_table.png)
 
 ## What genes are differentially expressed in the Rods?
 
-![](screenshots/rods_diff_test.png)
+![rod diff gene table screenshot](screenshots/rods_diff_test.png)
 
 ## And what does ROM1 expression look like in the UMAP?
 
-![](screenshots/rods_rom1_umap.png)
+![ROM1 expression in umap view screenshot](screenshots/rods_rom1_umap.png)
 
 Very high expression in the rods (and expressed in other cells too)
 
@@ -168,7 +168,7 @@ library(tidyverse)
 library(SingleCellExperiment)
 library(scran)
 library(org.Hs.eg.db)
-#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.Rdata)
+#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.01.Rdata)
 # the -O renames the file and puts it in the ~/data/scEiaD directory
 load('/Volumes/McGaughey_S/scEiaD_v3/scEiaD_all_seurat_v3.Rdata')
 ```
@@ -209,7 +209,7 @@ We see the top hit (by p value and log2FC > 2) is HMGB2 (ENSG00000164104), which
 
 
 ## Compare macula cones vs peripheral cones
-Let us now demonstrate how having a deeply collated set of data can be of value in asking more specific questions, like "how to macula/fova cones differ relative to peripheral cones."
+Let us now demonstrate how having a deeply collated set of data can be of value in asking more specific questions, like "how do macula/fovea cones differ relative to peripheral cones."
 
 First, we need to see whether this is even a tractable question.
 ```{r}
@@ -283,7 +283,7 @@ auc_test %>%
 
 ### PDE6H 
 Top gene more highly expressed in the macula compared to the periphery. But ... seems to be driven by just one study (SRP151023). So this doesn't look like a good candidate to me. 
-```{r}
+```{r, fig.alt = 'PDE6H gene violin plot splitting by study and fovea vs periphery'}
 VlnPlot(scEiaD_droplet__subset, features = c('ENSG00000139053'))
 
 VlnPlot(scEiaD_droplet__subset, c('ENSG00000139053'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD_droplet__subset$regionCT)
@@ -293,7 +293,7 @@ VlnPlot(scEiaD_droplet__subset, c('ENSG00000139053'), split.by = 'regionCT', gro
 The effect is consistent across multiple studies, which increases confidence this is a real pattern.
 
 PCP4 modulates calmodulin, which is involved in cone photoreceptor ribbon replenishment (https://pubmed.ncbi.nlm.nih.gov/25311636/). So maybe not crazy? Or maybe it is. I only know a dangerous amount about retinal function. 
-```{r}
+```{r, fig.alt = 'PCP4 gene violin plot splitting by study and fovea vs periphery'}
 VlnPlot(scEiaD_droplet__subset, features = c('ENSG00000183036'))
 
 VlnPlot(scEiaD_droplet__subset, c('ENSG00000183036'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD_droplet__subset$regionCT)
