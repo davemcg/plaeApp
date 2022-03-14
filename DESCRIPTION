@@ -30,6 +30,7 @@ Imports:
   pool,
   purrr,
   RSQLite,
+  scattermore(>= 0.7)
   shiny (>= 1.7.0),
   shinyalert,
   shinycssloaders,
