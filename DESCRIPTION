@@ -1,6 +1,6 @@
 Package: plaeApp
 Title: PLatform for Analysis of scEiad
-Version: 0.2.000
+Version: 0.85.000
 Authors@R: 
     person(given = "David",
            family = "McGaughey",
@@ -30,7 +30,7 @@ Imports:
   pool,
   purrr,
   RSQLite,
-  shiny (>= 1.6.0),
+  shiny (>= 1.7.0),
   shinyalert,
   shinycssloaders,
   shinyjqui,
@@ -38,7 +38,7 @@ Imports:
   shinyWidgets (>= 0.5.6),
   stringr,
   tibble,
-  tidyr (>= 1.0.0),
+  tidyr (>= 1.2.0),
   viridis
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
