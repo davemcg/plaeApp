@@ -4,14 +4,14 @@ library(webshot)
 library(htmltools)
 
 # all cells
-load('~/data/scEiaD_v3/cell_info_labelled.Rdata')
+load('~/data/scEiaD_2022_02//cell_info_labelled.Rdata')
 # pre mt filtering
-srt <- data.table::fread('~/git/scEiaD/data/sample_run_layout_organism_tech_biosample_organ_2021_06_07.tsv')
+srt <- data.table::fread('~/git/scEiaD/data/sample_run_layout_organism_tech_biosample_organ_2022_03_04.tsv')
 mito <- data.table::fread('~/data/scEiaD_v3/QC.tsv.gz')
 mito <- mito %>% left_join(srt %>% select(sample_accession, SX = Source) %>% unique(), by = 'sample_accession') %>% filter(SX %in% c('iPSC','Tissue'))
 # load('/Volumes/data/projects/nei/mcgaughey/massive_integrated_eye_scRNA/fastMNN_umap_full.Rdata')
 study_meta <- read_tsv('~/git/scEiaD/data/GEO_Study_Level_Metadata.tsv')
-meta <- fst::read_fst('~/data/scEiaD_v3/meta_filter.fst')
+meta <- fst::read_fst('~/data/scEiaD_2022_02/2022_03_18_meta_filter.fst')
 
 stats <- meta %>% group_by(study_accession, Platform) %>% summarise(Counts = n())
 

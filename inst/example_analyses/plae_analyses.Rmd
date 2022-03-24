@@ -168,15 +168,15 @@ library(tidyverse)
 library(SingleCellExperiment)
 library(scran)
 library(org.Hs.eg.db)
-#system('wget -O ~/data/scEiaD/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.Rdata)
+#system('wget -O ~/data/scEiaD_2022_02/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/scEiaD_all_seurat_v3.Rdata)
 # the -O renames the file and puts it in the ~/data/scEiaD directory
-load('/Volumes/McGaughey_S/scEiaD_v3/scEiaD_all_seurat_v3.Rdata')
+load('~/data/scEiaD_2022_02/scEiaD_all_seurat_v3.Rdata')
 ```
 
 ## ID neurogenic cells in different clusters
 We see that the neurogenic cells are a small minority of these clusters. But perhaps still we can find some interesting differences between them. 
 ```{r}
-scEiaD_droplet@meta.data %>% 
+scEiaD@meta.data %>% 
   group_by(cluster, CellType_predict) %>% 
   summarise(Count = n()) %>% 
   mutate(Perc = (Count / sum(Count)) * 100) %>% 
@@ -185,23 +185,23 @@ scEiaD_droplet@meta.data %>%
   arrange(-Count)
 ```
 
-The most common is cluster 46 and 47
+The most common is cluster 62 and 40
 
 ### Compare cluster 46 - Neurogenic vs cluster 47 - Neurogenic
 This will take a few minutes to run. This is why we cannot offer on-demand custom diff testing as while it runs the whole app shuts down for *everyone* while it computes. 
 ```{r}
 # Create new column with a pasted together cluster ID and a CellType
-scEiaD_droplet <- AddMetaData(scEiaD_droplet, 
-                              metadata = 
-                                paste0(
-                                  scEiaD_droplet@meta.data$cluster, 
-                                  '_', 
-                                  scEiaD_droplet@meta.data$CellType_predict
-                                  ), 
-                              col.name = 'clusterCT' )
+scEiaD <- AddMetaData(scEiaD, 
+                      metadata = 
+                        paste0(
+                          scEiaD@meta.data$cluster, 
+                          '_', 
+                          scEiaD@meta.data$CellType_predict
+                        ), 
+                      col.name = 'clusterCT' )
 # tell Seurat this new column is the default identity
-Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$clusterCT
-diff_test <- FindMarkers(scEiaD_droplet, ident.1 = '46_Neurogenic Cell', ident.2 = '47_Neurogenic Cell')
+Idents(scEiaD) <- scEiaD@meta.data$clusterCT
+diff_test <- FindMarkers(scEiaD, ident.1 = '62_Neurogenic Cell', ident.2 = '40_Neurogenic Cell')
 diff_test %>% arrange(p_val) %>% filter(abs(avg_log2FC) > 2) %>% head(5)
 ```
 
@@ -209,93 +209,120 @@ We see the top hit (by p value and log2FC > 2) is HMGB2 (ENSG00000164104), which
 
 
 ## Compare macula cones vs peripheral cones
-Let us now demonstrate how having a deeply collated set of data can be of value in asking more specific questions, like "how to macula/fova cones differ relative to peripheral cones."
+Let us now demonstrate how having a deeply collated set of data can be of value in asking more specific questions, like "how to macula/fovea cones differ relative to peripheral cones."
 
 First, we need to see whether this is even a tractable question.
 ```{r}
-scEiaD_droplet@meta.data %>% 
+scEiaD@meta.data %>% 
   as_tibble() %>% 
   group_by(retina_region, organism, study_accession, CellType_predict) %>% 
   summarise(Count = n()) %>% 
   filter(CellType_predict %in% c("Cone")) %>% 
   filter(Count > 10, !is.na(retina_region))
 ```
+Yes, we have several human studies with macula / peripheral cone cells. 
+
+Let's demonstrate how we can quickly run a conservative differential expression test the leverages the many studies we have. The "traditional" scRNA diff tests often return insane numbers of highly differentially expressed genes, which is highly annoying as then you have to plot each result individually to confirm that it does not look wacky. We are going to build a "pseudo bulk" experiment here where we sum all the counts by gene, cell type (in this case we are doing macula cones *versus* peripheral cones), and study. This "pseudo" count table can then be used in a classic differential testing system like edgeR, limma, or DESeq2 (we will use the later).
+
 ```{r}
-# Create new column with a pasted together cluster ID and a CellType
-scEiaD_droplet <- AddMetaData(scEiaD_droplet, 
-                              metadata = 
-                                paste0(
-                                  scEiaD_droplet@meta.data$retina_region, 
-                                  '_', 
-                                  scEiaD_droplet@meta.data$CellType_predict,
-                                  '_',
-                                  scEiaD_droplet@meta.data$organism
-                                  ), 
-                              col.name = 'regionCT')
+# Create new column with a pasted together retina region and a CellType
+scEiaD <- AddMetaData(scEiaD, 
+                      metadata = 
+                        paste0(
+                          scEiaD@meta.data$retina_region, 
+                          '_', 
+                          scEiaD@meta.data$CellType_predict,
+                          '_',
+                          scEiaD@meta.data$organism
+                        ), 
+                      col.name = 'regionCT')
 
-# filter down scEiaD
-Idents(scEiaD_droplet) <- scEiaD_droplet@meta.data$regionCT
-scEiaD_droplet__subset <- subset(scEiaD_droplet, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
 
-# create SCE object so we can use the scran test which balances covariates
-sce <- as.SingleCellExperiment(scEiaD_droplet__subset)
+# filter down scEiaD to only human and in semi-supported (more than 10 cones cells) studies
+Idents(scEiaD) <- scEiaD@meta.data$regionCT
+scEiaD__subset <- subset(scEiaD, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
+scEiaD__subset <- subset(scEiaD__subset, 
+                         subset = study_accession %in% 
+                           (scEiaD__subset@meta.data %>% group_by(study_accession) %>% 
+                              summarise(Count = n()) %>% filter(Count > 10) %>% 
+                              pull(study_accession)))
+# create SCE object so can create a pseudobulk matrix to run DESeq2 on
+sce <- as.SingleCellExperiment(scEiaD__subset)
+summed <- scater::aggregateAcrossCells(sce, 
+                                       ids=colData(sce)[,c("regionCT", "study_accession")])
+# pull out the counts to build the DESeq2 object
+mat <- assay(summed, 'counts')
+colnames(mat) <-colData(summed) %>% as_tibble() %>% 
+  mutate(names = glue::glue("{study_accession}_{retina_region}")) %>% pull(names)
 
-# run test, blocking (covariate) for study accession
-sce_diff_test <- findMarkers(sce,
-                group = sce$regionCT,
-                block = sce$study_accession,
-                pval.type = 'all',
-                test="wilcox")
-# while the default test is a wilcox which returns an AUC 
-# I like to also run a t test which returns a logFC which is useful in filtering
-# as something with a high AUC (power to distinguish between groups) but
-# a low logFC is less likely to be interesting
-sce_diff_test_t <- findMarkers(sce,
-                group = sce$regionCT,
-                block = sce$study_accession,
-                pval.type = 'all',
-                test.type = 't')
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(countData = round(mat),
+                              colData = colData(summed),
+                              design= ~ study_accession + retina_region) # study as covariate, testing against fovea / not fovea
+dds <- DESeq(dds)
+deseq_res <- results(dds)
+```
 
-# get human understandable gene name
+### Wrinkle
+
+Now scEiaD is based on the Ensembl gene id (like ENSG00000185527). That's not very friendly to humans so I added a bit of code to link the Ensembl ID to the gene name and plot the top 16 diff genes (padj < 0.05). 
+```{r}
+# get human gene names 
 library(org.Hs.eg.db)
-symbols <- mapIds(org.Hs.eg.db, keys = row.names(sce_diff_test$`Macula_Cone_Homo sapiens`), keytype = "ENSEMBL", column="SYMBOL")
-auc_test <- sce_diff_test$`Peripheral_Cone_Homo sapiens` %>% 
-  as_tibble(rownames = 'name') %>% 
+symbols <- mapIds(org.Hs.eg.db, keys = row.names(deseq_res), keytype = "ENSEMBL", column="SYMBOL")
+
+deseq_res %>% as_tibble(rownames = 'name') %>%  
   left_join(symbols %>% enframe()) %>% 
-  filter(FDR < 0.01) %>% 
-  dplyr::rename(p.value.auc = p.value,
-         FDR.auc = FDR)
-t_test <- sce_diff_test_t$`Peripheral_Cone_Homo sapiens` %>% 
-  as_tibble(rownames = 'name') %>% 
-  filter(FDR < 0.01) %>% 
-    dplyr::rename(p.value.t = p.value,
-         FDR.t = FDR)
-
-auc_test %>% 
-  left_join(t_test, by = 'name') %>% 
-  filter(FDR.auc < 0.01, FDR.t < 0.01) %>% 
-  filter(summary.AUC > 0.7 | summary.AUC < 0.3) %>% 
-  filter(abs(summary.logFC) > 1) %>% 
-  arrange(-`logFC.Macula_Cone_Homo.sapiens`)
+  dplyr::rename(Ensembl = name, Gene = value) %>% 
+  filter(padj < 0.05) %>% 
+  arrange(pvalue) %>% DT::datatable()
 ```
 
-## Always look at the plots
+### Always look at the plots
 
-### PDE6H 
-Top gene more highly expressed in the macula compared to the periphery. But ... seems to be driven by just one study (SRP151023). So this doesn't look like a good candidate to me. 
+#### PDE6G 
+Top gene more highly expressed in the macula compared to the periphery. Seems pretty consistently higher across all the studies. 
 ```{r}
-VlnPlot(scEiaD_droplet__subset, features = c('ENSG00000139053'))
+scEiaD__subset <- ScaleData(scEiaD__subset)
+VlnPlot(scEiaD__subset, features = c('ENSG00000185527'), log = TRUE)
 
-VlnPlot(scEiaD_droplet__subset, c('ENSG00000139053'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD_droplet__subset$regionCT)
+VlnPlot(scEiaD__subset, c('ENSG00000185527'), split.by = 'retina_region', group.by='study_accession', log = TRUE) 
 ```
 
-### PCP4
-The effect is consistent across multiple studies, which increases confidence this is a real pattern.
-
-PCP4 modulates calmodulin, which is involved in cone photoreceptor ribbon replenishment (https://pubmed.ncbi.nlm.nih.gov/25311636/). So maybe not crazy? Or maybe it is. I only know a dangerous amount about retinal function. 
+#### HSPB1
+Now we see the opposite side - the top gene that is higher in peripheral vs macula. Again looks fairly consistent across all the studies.
 ```{r}
-VlnPlot(scEiaD_droplet__subset, features = c('ENSG00000183036'))
+VlnPlot(scEiaD__subset, features = c('ENSG00000099860'))
 
-VlnPlot(scEiaD_droplet__subset, c('ENSG00000183036'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD_droplet__subset$regionCT)
+VlnPlot(scEiaD__subset, c('ENSG00000099860'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD__subset$regionCT)
+```
+
+
+#### HSPB1
+Now we see the opposite side - the top gene that is higher in peripheral vs macula. Again looks fairly consistent across all the studies.
+```{r}
+VlnPlot(scEiaD__subset, features = c('ENSG00000106211'))
+
+VlnPlot(scEiaD__subset, c('ENSG00000106211'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD__subset$regionCT)
+```
+
+
+#### PRPH2
+Yan et al (https://www.nature.com/articles/s41598-020-66092-9) proposed PRPH2 as a cone fovea/peripheral specific gene. We can see whether that effect is still shown across multiple studies in scEiaD. We see the padj is not impressive in our diff test. 
+
+```{r}
+# first grab the ensembl id
+deseq_res %>% as_tibble(rownames = 'name') %>%  
+  left_join(symbols %>% enframe()) %>% 
+  dplyr::rename(Ensembl = name, Gene = value) %>% 
+  filter(Gene == 'PRPH2')
+```
+
+The plots certainly do not DISPROVE the Yan et al hypothesis - you still see that the trend is (mostly) the same across all the studies. However the p value is likely low for because the effect size (fold change) is modest across most studies (and in one case, the effect is opposite). As a exercise to the reader, you could re-do the pseudobulk test, removing SRP194595 and seeing whether padj value you get returned is substantially different. 
+```{r}
+VlnPlot(scEiaD__subset, features = c('ENSG00000112619'))
+
+VlnPlot(scEiaD__subset, c('ENSG00000112619'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD__subset$regionCT)
+
 ```
 
