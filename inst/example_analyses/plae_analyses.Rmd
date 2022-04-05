@@ -187,7 +187,7 @@ scEiaD@meta.data %>%
 
 The most common is cluster 62 and 40
 
-### Compare cluster 46 - Neurogenic vs cluster 47 - Neurogenic
+### Compare cluster 62 - Neurogenic vs cluster 40 - Neurogenic
 This will take a few minutes to run. This is why we cannot offer on-demand custom diff testing as while it runs the whole app shuts down for *everyone* while it computes. 
 ```{r}
 # Create new column with a pasted together cluster ID and a CellType
@@ -205,11 +205,11 @@ diff_test <- FindMarkers(scEiaD, ident.1 = '62_Neurogenic Cell', ident.2 = '40_N
 diff_test %>% arrange(p_val) %>% filter(abs(avg_log2FC) > 2) %>% head(5)
 ```
 
-We see the top hit (by p value and log2FC > 2) is HMGB2 (ENSG00000164104), which is associated with a transition from quiescent to proliferative neurogenesis (https://pubmed.ncbi.nlm.nih.gov/28771884/). 
+We see the second hit (by p value and log2FC > 2) is INSM1 (ENSG00000173404). It was reported by Anne Morris's group (https://iovs.arvojournals.org/article.aspx?articleid=2148558) that knocking down this gene leads to differentiation issues in the eye.
 
 
 ## Compare macula cones vs peripheral cones
-Let us now demonstrate how having a deeply collated set of data can be of value in asking more specific questions, like "how to macula/fovea cones differ relative to peripheral cones."
+Let us now demonstrate how having a deep and sort of well annotated set of data can be of value in asking more specific questions, like "how do macula/fovea cones differ relative to peripheral cones."
 
 First, we need to see whether this is even a tractable question.
 ```{r}
@@ -222,7 +222,7 @@ scEiaD@meta.data %>%
 ```
 Yes, we have several human studies with macula / peripheral cone cells. 
 
-Let's demonstrate how we can quickly run a conservative differential expression test the leverages the many studies we have. The "traditional" scRNA diff tests often return insane numbers of highly differentially expressed genes, which is highly annoying as then you have to plot each result individually to confirm that it does not look wacky. We are going to build a "pseudo bulk" experiment here where we sum all the counts by gene, cell type (in this case we are doing macula cones *versus* peripheral cones), and study. This "pseudo" count table can then be used in a classic differential testing system like edgeR, limma, or DESeq2 (we will use the later).
+Let's demonstrate how we can quickly run a conservative differential expression test the leverages the many studies we have. The "traditional" scRNA diff tests often return insane numbers of highly differentially expressed genes (the test we ran aboves returns `r diff_test %>% filter(p_val_adj < 0.05) %>% nrow()` gene with a padj < 0.05 !), which is highly annoying as then you really have to plot each result individually to confirm that it does not look wacky. We are going to build a "pseudo bulk" experiment here where we sum all the counts by gene, cell type (in this case we are doing macula cones *versus* peripheral cones), and study. This "pseudo" count table can then be used in a classic differential testing system like edgeR, limma, or DESeq2 (we will use the later).
 
 ```{r}
 # Create new column with a pasted together retina region and a CellType
