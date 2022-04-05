@@ -434,24 +434,24 @@ shinyUI(
                       fluidRow(column(width = 8, offset = 1, h2("Run plae Locally"))),
                       fluidRow(column(width = 8, offset = 1, 'If you have 500GB (!) of free hard drive space, you can run plae on your own computer. ', tags$a(href="https://www.github.com/davemcg/plaeApp", "Installation instructions are available in our Github repository"), ' (this is the codebase for the app you are using now).')),
                       fluidRow(column(width = 8, offset = 1, h2("Seurat Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.01.Rdata", "All (~29 GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_seurat_v3.h5Seurat", "All (h5Seurat, ~32 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/scEiaD_all_seurat_v3.Rdata", "All (~29 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/scEiaD_all_seurat_v3.h5Seurat", "All (h5Seurat, ~32 GB)")))),
                       fluidRow(column(width = 8, offset = 1, div(DT::dataTableOutput('seurat_table'), style='font-size:75%'))),
                       br(),
                       fluidRow(column(width = 8, offset = 1, h2("AnnData Objects"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/scEiaD_all_anndata.01.h5ad", "All (~32 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/scEiaD_all_anndata.h5ad", "All (~32 GB)")))),
                       fluidRow(column(width = 8, offset = 1, div(DT::dataTableOutput('anndata_table'), style='font-size:75%'))),
                       br(),
                       fluidRow(column(width = 8, offset = 1, h2("Diff Testing Results"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/wilcox_diff_resultsCellType(Predict).tsv.gz", "CellType against CellType (Predict)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/wilcox_diff_resultsCluster.tsv.gz", "Cluster against Cluster")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/wilcox_diff_results.tsv.gz", "All Diff Results (~1.1GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/wilcox_diff_resultsCellType.tsv.gz", "CellType (Predict) against CellType testing")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/wilcox_diff_resultsCellType(Predict).tsv.gz", "CellType against CellType (Predict)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/wilcox_diff_resultsCluster.tsv.gz", "Cluster against Cluster")))),
                       fluidRow(column(width = 8, offset = 1, h2("Metadata"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/metadata_filter.tsv.gz", "Cell Metadata")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/metadata_filter.tsv.gz", "Cell Metadata")))),
                       fluidRow(column(width = 8, offset = 1, h2("Counts"))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/counts.Rdata", "Kallisto counts, R sparse matrix (12 GB)")))),
-                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix (15 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/counts.Rdata", "Kallisto counts, R sparse matrix (12 GB)")))),
+                      fluidRow(column(width = 8, offset = 1, tags$li(tags$a(href="http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/counts_unfiltered.Rdata", "Kallisto counts, no filtering, R sparse matrix (15 GB)")))),
                       br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
                       fluidRow(includeHTML("www/footer.html"))
              ),
@@ -459,7 +459,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.85'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.90'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -517,6 +517,12 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.90 (2022-04-05): Updated scEiaD scVI model once more. We simplified pan species gene name alignment by removing \"one to many\" or \
+                                 "many to one\" name alignments. All expressed genes are still retained in the individual species (if not present in the gene name name merged matrix), but we are less aggressive about merging gene names across species as we discovered some edge cases where many genes were getting
+                                                 merged into one and vice versa. This necessitated a new core gene <-> cell count matrix and thus a new scVI model. We also took the opportunity to add a new mouse retina development dataset from
+                                                 Balasubramanian et al. and a new ocular compartment dataset from Gautam et al. We leverage the new(ish) scANVI scVI approach in which we use the community
+                                                 cell type labels to subtly improve the scVI modelling of the cell types. We hope this is the final update (hah) before we submit this work.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.85 (2022-02-15): Updated example analysis to match current data, fixed 508/a11y compliance issues with the document.
                                                  Added *study level* seurat and anndata objects to "Data".
                                                  Updated the large downloadable Seurat / anndata objects with intronic counts data (velocity?!).
