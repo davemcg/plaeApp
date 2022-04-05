@@ -21,20 +21,20 @@ library(shinyalert)
 library(fst)
 library(dbplyr)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_v3///MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
 
-x_dir <- 1
+x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_v3/2021_11_09_meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD_2022_02/meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 
 # %>%
@@ -42,12 +42,12 @@ meta_filter <- read_fst('~/data/scEiaD_v3/2021_11_09_meta_filter.fst') %>%
 #    right_join(umap %>% select(Barcode, UMAP_1, UMAP_2), by = 'Barcode')
 
 tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b) %>%
   filter(!CellType_predict %in%
            c("Limbal Progenitor","Secretory Cell", "JCT",
@@ -55,8 +55,8 @@ celltype_predict_labels <-scEiaD_2020_v01 %>% tbl('celltype_predict_labels')  %>
              "Cholangiocyte", "Corneal Endothelial",
              "Bladder Urothelial","Proliferating Cornea"))
 celltype_labels <- scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b) %>%
   filter(!CellType %in%
            c("Limbal Progenitor","Secretory Cell", "JCT",
@@ -64,8 +64,8 @@ celltype_labels <- scEiaD_2020_v01 %>% tbl('celltype_labels') %>% collect %>%
              "Cholangiocyte", "Corneal Endothelial",
              "Bladder Urothelial","Proliferating Cornea"))
 cluster_labels <-scEiaD_2020_v01 %>% tbl('cluster_labels') %>% collect %>%
-  mutate(UMAP_a = UMAP_2 * x_dir,
-         UMAP_b = UMAP_1 * y_dir) %>%
+  mutate(UMAP_a = UMAP_1 * x_dir,
+         UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
 mf <- meta_filter %>% sample_frac(0.2)
 
@@ -668,7 +668,7 @@ shinyServer(function(input, output, session) {
       click <- input$meta_plot_click
 
       tab <- nearPoints(meta_filter, input$meta_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
-        select(Barcode, Tissue, organism, CellType, CellType_predict, cluster, study_accession)
+        select(Barcode, Tissue, organism, CellType, CellType_predict, SubCellType, cluster, study_accession)
 
       output$meta_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
@@ -677,7 +677,7 @@ shinyServer(function(input, output, session) {
       click <- input$gene_scatter_plot_click
 
       tab <- nearPoints(meta_filter, input$gene_scatter_plot_click, xvar = "UMAP_1", yvar = "UMAP_2", maxpoints = 5) %>%
-        select(Barcode, Tissue, organism, CellType, CellType_predict, cluster, study_accession)
+        select(Barcode, Tissue, organism, CellType, CellType_predict, SubCellType, cluster, study_accession)
 
       output$gene_scatter_click_info <- renderDataTable(tab %>% DT::datatable(options = list(dom = 't', ordering=F, scrollX = TRUE)))
     })
