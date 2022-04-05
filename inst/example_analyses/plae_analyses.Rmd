@@ -73,7 +73,7 @@ We can have quantified information on where ATOH7 is expressed by Cell Type (pre
 
 ![screenshot of atoh7 gene info table](screenshots/atoh7_table.png){width=75%}
 
-We see that about 50% of the mouse and human neurogenic cell type express ATOH7. In raw counts that is 16,449 of 28,811 total mouse neurogenic cells. They have an average expression of 1.86. You can sort or filter the table based on queries. If you wanted to see ATOH7 expression in the RGCs this is trivial to do by typing in the box below.
+We see that 40 - 70 % of the mouse and human neurogenic cell type express ATOH7. In raw counts that is 10,117 of 14,502 total mouse neurogenic cells. They have an average expression of 2.15. You can sort or filter the table based on queries. If you wanted to see ATOH7 expression in the RGCs this is trivial to do by typing in the box below.
 
 ![screenshot of atoh7 gene info table with filtering shown for cell type](screenshots/atoh7_table_search.png){width=75%}
 
@@ -120,7 +120,7 @@ So yes, now we can see the data.
 So each point is an independent study. We see high ATOH7 expression in the neurogenic population, across many studies. But we also see one of studies with ATOH7 expression in cones. The legend shows which colors correspond to which study.
 
 ![screenshot of legend of expression plot](screenshots/atoh7_exp_legend.png)
-One of the studies is a bright pink...probably SRP200599. We can confirm that by replotting the data with a filter that only shows study_accession SRP200599.
+One of the studies is a bright teal...probably SRP200599. We can confirm that by replotting the data with a filter that only shows study_accession SRP200599.
 
 ![](screenshots/atoh7_exp_SRP200599.png)
 
@@ -209,7 +209,7 @@ We see the second hit (by p value and log2FC > 2) is INSM1 (ENSG00000173404). It
 
 
 ## Compare macula cones vs peripheral cones
-Let us now demonstrate how having a deep and sort of well annotated set of data can be of value in asking more specific questions, like "how do macula/fovea cones differ relative to peripheral cones."
+Let us now demonstrate how having a large annotated set of data can be of value in asking more specific questions, like "how do macula/fovea cones differ relative to peripheral cones."
 
 First, we need to see whether this is even a tractable question.
 ```{r}
@@ -265,7 +265,7 @@ deseq_res <- results(dds)
 
 ### Wrinkle
 
-Now scEiaD is based on the Ensembl gene id (like ENSG00000185527). That's not very friendly to humans so I added a bit of code to link the Ensembl ID to the gene name and plot the top 16 diff genes (padj < 0.05). 
+scEiaD is based on the Ensembl gene id (like ENSG00000185527). That's not very friendly to humans so I added a bit of code to link the Ensembl ID to the gene name and plot the top 16 diff genes (padj < 0.05). 
 ```{r}
 # get human gene names 
 library(org.Hs.eg.db)
@@ -295,15 +295,6 @@ Now we see the opposite side - the top gene that is higher in peripheral vs macu
 VlnPlot(scEiaD__subset, features = c('ENSG00000099860'))
 
 VlnPlot(scEiaD__subset, c('ENSG00000099860'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD__subset$regionCT)
-```
-
-
-#### HSPB1
-Now we see the opposite side - the top gene that is higher in peripheral vs macula. Again looks fairly consistent across all the studies.
-```{r}
-VlnPlot(scEiaD__subset, features = c('ENSG00000106211'))
-
-VlnPlot(scEiaD__subset, c('ENSG00000106211'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD__subset$regionCT)
 ```
 
 
