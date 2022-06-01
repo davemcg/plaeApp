@@ -21,7 +21,7 @@ library(shinyalert)
 library(fst)
 library(dbplyr)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/ARC168/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
@@ -387,7 +387,7 @@ shinyServer(function(input, output, session) {
     # diff table updateSelect ------
     if (is.null(query[['diff_gene']])){
       updateSelectizeInput(session, 'diff_gene',
-                           choices = scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC_genes') %>% collect() %>% pull(1),
+                           choices = scEiaD_2020_v01 %>% tbl('diff_testing_genes') %>% collect() %>% pull(1),
                            options = list(placeholder = 'Type to search'),
                            selected = 'RHO (ENSG00000163914)',
                            server = TRUE)
@@ -395,24 +395,31 @@ shinyServer(function(input, output, session) {
     if (is.null(query[['diff_base']])){
       group = input$search_by
       choices = scEiaD_2020_v01 %>%
-        tbl('wilcox_diff_AUC_sets') %>%
+        tbl('diff_testing_sets') %>%
         filter(Group == group) %>%
         collect() %>% filter(!grepl('Doubl', Base)) %>%
-        pull(Base)
+        pull(Base) %>%
+        sort()
       updateSelectizeInput(session, 'diff_base',
                            choices = choices,
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
-    updateSelectizeInput(session, 'diff_against',
-                         choices = scEiaD_2020_v01 %>%
-                           tbl('wilcox_diff_AUC_sets') %>%
-                           filter(Group == group) %>%
-                           collect() %>% filter(!grepl('Doubl', Base)) %>%
-                           pull(Base),
-                         selected = '',
-                         options = list(placeholder = 'Optional Filtering'),
-                         server = TRUE)
+   # if (!input$diff_base){
+   # need(input$diff_base)
+    observeEvent(input$diff_base, {
+      base = input$diff_base
+      updateSelectizeInput(session, 'diff_against',
+                           choices = scEiaD_2020_v01 %>%
+                             tbl('diff_testing_sets') %>%
+                             filter(Group == group, Base == base) %>%
+                             collect() %>% filter(!grepl('Doubl', Base)) %>%
+                             pull(Against) %>%
+                             sort(),
+                           selected = '',
+                           options = list(placeholder = 'Optional Filtering'),
+                           server = TRUE)
+    })
 
     # Meta Plot modal ----------
     observeEvent(input$BUTTON_show_meta_legend, {
@@ -880,22 +887,24 @@ shinyServer(function(input, output, session) {
     if (input$search_by == 'Gene'){
       # out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
       #   filter(Gene %in% gene) #%>%
-      out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
-        filter(Gene %in% gene, Base != 'Doublet') %>%
+      out_auc <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
+        filter(Gene %in% gene, Base != 'Doublet', Against != 'All') %>%
         head(2000) %>%
         collect() %>%
-        select(Base, `Tested Against`, AUC, logFC) %>%
+        select(Base, `Against`, Organism, padj, log2FoldChange, baseMean) %>%
         mutate(
-          AUC = format(AUC, digits = 3) %>% as.numeric(.),
-          logFC = format(logFC, digits = 3) %>% as.numeric(.))
+          padj = format(as.numeric(padj), digits = 3) %>% as.numeric(),
+          log2FoldChange = format(log2FoldChange, digits = 2) %>% as.numeric(.),
+          baseMean = format(baseMean, digits = 1) %>% as.numeric(.))
     }
     else {
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
+
       if (input$diff_against == ''){
-        out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
-          filter(Base == diff_base) %>%
+        out_auc <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
+          filter(Base == diff_base, Against != 'All') %>%
           head(2000) %>%
           filter(Base == diff_base,
                  Group == filter_term)
@@ -903,24 +912,27 @@ shinyServer(function(input, output, session) {
         #   filter(Base == diff_base) %>%
         #   filter(Group == filter_term)
       } else {
+
         against <- input$diff_against
-        out_auc <- scEiaD_2020_v01 %>% tbl('wilcox_diff_AUC') %>%
+
+        cat(against)
+        out_auc <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
           filter(Base == diff_base,
                  Group == filter_term,
-                 `Tested Against` == against) %>%
+                 `Against` == against) %>%
           head(2000)
       }
       out_auc <- out_auc %>%
-        select(Gene, Base, `Tested Against`, AUC, logFC) %>%
+        select(Gene, Base, `Against`, Organism, padj, log2FoldChange, baseMean) %>%
         collect() %>%
         mutate(
-          AUC = format(AUC, digits = 3),
-          AUC = as.numeric(AUC),
-          logFC = format(logFC, digits = 3) %>% as.numeric(.))
+          padj = format(as.numeric(padj), digits = 3) %>% as.numeric(),
+          log2FoldChange = format(log2FoldChange, digits = 2) %>% as.numeric(.),
+          baseMean = format(baseMean, digits = 1) %>% as.numeric(.))
     }
     out_auc %>%
       DT::datatable(extensions = 'Buttons',
-                    caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 2: Pairwise AUC Diff Testing'),
+                    caption = htmltools::tags$caption( style = 'caption-side: top; text-align: left; color:black; font-size:200% ;','Table 2: Pairwise Diff Testing'),
                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
                     options = list(pageLength = 10, scrollX = TRUE,
                                    dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
@@ -931,32 +943,33 @@ shinyServer(function(input, output, session) {
     gene <- input$diff_gene
     if (input$search_by == 'Gene'){
       table_name = 'Table 1: Group - Gene - Base Diff Testing'
-      out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Gene %in% gene) %>%
-        select(Group, Base,  p.value, FDR,  mean_auc, mean_logFC) %>%
+      out_gene <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
+        filter(Gene %in% gene, Against == 'All') %>%
+        select(Group, Base, `Against`, Organism, padj, log2FoldChange, baseMean) %>%
+        head(2000) %>%
         collect() %>%
-        mutate(Group = as.factor(Group)) %>%
-        mutate(PValue = format(as.numeric(p.value), digits = 3) %>% as.numeric(),
-               FDR = format(as.numeric(FDR), digits = 3) %>% as.numeric(),
-               `Mean AUC` = format(mean_auc, digits = 3) %>% as.numeric(),
-               `Mean logFC` = format(mean_logFC, digits = 3) %>% as.numeric()) %>%
-        select(-p.value, -mean_auc, -mean_logFC)
+        mutate(
+          padj = format(as.numeric(padj), digits = 3) %>% as.numeric(.),
+          log2FoldChange = format(log2FoldChange, digits = 2) %>% as.numeric(.),
+          baseMean = format(baseMean, digits = 1) %>% as.numeric(.)) %>%
+        mutate(Group = as.factor(Group))
     } else {
       table_name = 'Table 1: Group - Gene - Base Diff Testing'
       req(input$diff_base)
       diff_base <- input$diff_base
       filter_term <- input$search_by
-      out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
-        filter(Base == diff_base,
+      out_gene <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
+        filter(Against == 'All',
+               Base == diff_base,
                Group == filter_term) %>%
-        select(Gene, Base,  p.value, FDR, mean_auc, mean_logFC) %>%
+        select(Gene, Group, Base, `Against`, Organism, padj, log2FoldChange, baseMean) %>%
         head(2000) %>%
         collect() %>%
-        mutate(PValue = format(as.numeric(p.value), digits = 3) %>% as.numeric(),
-               FDR = format(as.numeric(FDR), digits = 3) %>% as.numeric(),
-               `Mean AUC` = format(mean_auc, digits = 3) %>% as.numeric(),
-               `Mean logFC` = format(mean_logFC, digits = 3) %>% as.numeric()) %>%
-        select(-p.value, -mean_auc, -mean_logFC)
+        mutate(
+          padj = format(as.numeric(padj), digits = 3) %>% as.numeric(),
+          log2FoldChange = format(log2FoldChange, digits = 2) %>% as.numeric(.),
+          baseMean = format(baseMean, digits = 1) %>% as.numeric(.)) %>%
+        mutate(Group = as.factor(Group))
     }
     out_gene %>%
       DT::datatable(extensions = 'Buttons',
@@ -975,14 +988,14 @@ shinyServer(function(input, output, session) {
     content = function(file) {
       gene <- input$diff_gene
       if (input$search_by == 'Gene'){
-        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        out <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
           filter(Gene %in% gene) %>%
           head(2000)
       } else {
         req(input$diff_term)
         test_val <- input$diff_term
         filter_term <- input$search_by
-        out <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
+        out <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
           filter(Group == test_val) %>%
           head(2000) %>%
           filter(Base == filter_term)
@@ -1062,21 +1075,21 @@ shinyServer(function(input, output, session) {
   ### alt resource ----
   output$outside_resources_table  <- DT::renderDataTable(server = TRUE, {
     feature_table <- rbind(
-    c('PLAE','Yes','Yes', 'Yes', '887', '<a href=https://plae.nei.nih.gov>https://plae.nei.nih.gov</a>'),
-    c('Spectacle', 'Yes' ,'No', 'No', '~1500', '<a href=https://singlecell-eye.org>https://singlecell-eye.org</a>'),
-    c('UCSC Cell Browser', 'Yes', 'No', 'Yes', '62', '<a href=https://cells.ucsc.edu>https://cells.ucsc.edu</a>' ),
-    c('Tabula Sapiens', 'No', 'N/A', 'Yes', '10', '<a href=https://tabula-sapiens-portal.ds.czbiohub.org>https://tabula-sapiens-portal.ds.czbiohub.org</a>'),
-    c('PanglaoDB', 'Yes', 'No', 'Yes', '47', '<a href=https://panglaodb.se>https://panglaodb.se</a>'),
-    c('Protein Atlas', 'Yes','No', 'Yes', '5',  '<a href=https://www.proteinatlas.org/humanproteome/celltype>https://www.proteinatlas.org/humanproteome/celltype</a>')) %>%
-    as_tibble()
-  colnames(feature_table) <- c('Resource Name', 'Independent Datasets', 'Harmonization', 'Ocular and non-Ocular Data', 'Ocular Cell Count\n(thousands)', 'URL')
-  feature_table %>%  DT::datatable(extensions = 'Buttons',
-                                   escape = FALSE,
-                                   filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
-                                   options = list(
-                                     pageLength = 10, scrollX = TRUE,
-                                     dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
-    DT::formatStyle(columns = c(8), width='250px')
+      c('PLAE','Yes','Yes', 'Yes', '887', '<a href=https://plae.nei.nih.gov>https://plae.nei.nih.gov</a>'),
+      c('Spectacle', 'Yes' ,'No', 'No', '~1500', '<a href=https://singlecell-eye.org>https://singlecell-eye.org</a>'),
+      c('UCSC Cell Browser', 'Yes', 'No', 'Yes', '62', '<a href=https://cells.ucsc.edu>https://cells.ucsc.edu</a>' ),
+      c('Tabula Sapiens', 'No', 'N/A', 'Yes', '10', '<a href=https://tabula-sapiens-portal.ds.czbiohub.org>https://tabula-sapiens-portal.ds.czbiohub.org</a>'),
+      c('PanglaoDB', 'Yes', 'No', 'Yes', '47', '<a href=https://panglaodb.se>https://panglaodb.se</a>'),
+      c('Protein Atlas', 'Yes','No', 'Yes', '5',  '<a href=https://www.proteinatlas.org/humanproteome/celltype>https://www.proteinatlas.org/humanproteome/celltype</a>')) %>%
+      as_tibble()
+    colnames(feature_table) <- c('Resource Name', 'Independent Datasets', 'Harmonization', 'Ocular and non-Ocular Data', 'Ocular Cell Count\n(thousands)', 'URL')
+    feature_table %>%  DT::datatable(extensions = 'Buttons',
+                                     escape = FALSE,
+                                     filter = list(position = 'bottom', clear = TRUE, plain = TRUE),
+                                     options = list(
+                                       pageLength = 10, scrollX = TRUE,
+                                       dom = 'rtBip', buttons = c('pageLength','copy'))) %>%
+      DT::formatStyle(columns = c(8), width='250px')
   })
 
 })
