@@ -457,7 +457,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.90'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.91'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -515,6 +515,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.91 (2022-04-29): Updated diff testing model to pseudoBulk based approach. Now run on a per-species basis.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.90 (2022-04-05): Updated scEiaD scVI model once more. We simplified pan species gene name alignment by removing \"one to many\" or \
                                  "many to one\" name alignments. All expressed genes are still retained in the individual species (if not present in the gene name name merged matrix), but we are less aggressive about merging gene names across species as we discovered some edge cases where many genes were getting
                                                  merged into one and vice versa. This necessitated a new core gene <-> cell count matrix and thus a new scVI model. We also took the opportunity to add a new mouse retina development dataset from
