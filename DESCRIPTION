@@ -11,10 +11,12 @@ Description: Shiny App for scEiaD.
 License: LICENSE
 Encoding: UTF-8
 LazyData: true
+biocViews:
 Imports:
   aplot,
   cachem (>= 1.0.0),
   Cairo,
+  ComplexHeatmap,
   cowplot,
   dbplyr (>= 2.0.0),
   dplyr (>= 1.0.0),

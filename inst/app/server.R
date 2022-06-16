@@ -21,7 +21,7 @@ library(shinyalert)
 library(fst)
 library(dbplyr)
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/ARC168/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
@@ -238,6 +238,16 @@ shinyServer(function(input, output, session) {
                            server = TRUE)
     })
 
+    # heatmap updateSelectizeInput ----
+    if (is.null(query[['heatmap_Gene']])){
+      updateSelectizeInput(session, 'heatmap_Gene',
+                           label = 'Genes: ',
+                           choices = scEiaD_2020_v01 %>% tbl('genes') %>% collect() %>% pull(1),
+                           options = list(placeholder = 'Type to search'),
+                           selected = c('ARR3 (ENSG00000120500)','AIF1L (ENSG00000126878)','GAD1 (ENSG00000128683)','POU4F2 (ENSG00000151615)','WIF1 (ENSG00000156076)','RHO (ENSG00000163914)','ONECUT1 (ENSG00000169856)','GRIK1 (ENSG00000171189)','AIF1 (ENSG00000204472)'),
+                           server = TRUE)
+    }
+
     # insitu updateSelectizeInput ----
     if (is.null(query[['insitu_Gene']])){
       updateSelectizeInput(session, 'insitu_Gene',
@@ -405,8 +415,8 @@ shinyServer(function(input, output, session) {
                            options = list(placeholder = 'Type to search'),
                            server = TRUE)
     }
-   # if (!input$diff_base){
-   # need(input$diff_base)
+    # if (!input$diff_base){
+    # need(input$diff_base)
     observeEvent(input$diff_base, {
       base = input$diff_base
       updateSelectizeInput(session, 'diff_against',
@@ -517,6 +527,15 @@ shinyServer(function(input, output, session) {
                                                      both amount of expression (by color intensity) and percent cells
                                                      that detect the transcript (by size of dot) with a user selected
                                                      combination of grouping features (e.g. organism and CellType).</p>"),
+                                                easyClose = TRUE))
+    })
+    observeEvent(input$heatmap_help, {
+      showModal(shinyjqui::draggableModalDialog(size = 's',
+                                                title = "Heatmap",
+                                                HTML("<p>The heatmap visualization differs from the dotplot as instead of
+                                                     displaying absolute expression it instead displays *relative* expression.
+                                                     This is calculated from the DESeq2-based differential expression of the group
+                                                     of interest (e.g. Rods) against all others.</p>"),
                                                 easyClose = TRUE))
     })
     observeEvent(input$diff_testing_help, {
@@ -836,13 +855,35 @@ shinyServer(function(input, output, session) {
     output$dotplot <- renderPlot({
       draw_dotplot()
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
+
+    ## heatmap ---------
+    source('make_heatmap.R')
+    draw_heatmap <- eventReactive(input$BUTTON_draw_heatmap,
+                                  {make_heatmap(input, scEiaD_2020_v01)}
+    )
+    output$heatmap <- renderPlot({
+      draw_heatmap()
+    }, height = eventReactive(input$BUTTON_draw_heatmap, {input$heatmap_height %>% as.numeric()}))
   })
+
+
   output$BUTTON_download_dotplot <- downloadHandler(
     filename = function() { ('plae_dotplot.png') },
     content = function(file) {
       ggsave(file, plot = make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df),
              height =
                input$dotplot_height %>% as.numeric() / 50,
+             width = 12,
+             device = "png")
+    }
+  )
+
+  output$BUTTON_download_heatmap <- downloadHandler(
+    filename = function() { ('plae_heatmap.png') },
+    content = function(file) {
+      ggsave(file, plot = make_heatmap(input, scEiaD_2020_v01),
+             height =
+               input$heatmap_height %>% as.numeric() / 50,
              width = 12,
              device = "png")
     }
@@ -888,9 +929,10 @@ shinyServer(function(input, output, session) {
       # out_gene <- scEiaD_2020_v01 %>% tbl('wilcox_diff_testing') %>%
       #   filter(Gene %in% gene) #%>%
       out_auc <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
-        filter(Gene %in% gene, Base != 'Doublet', Against != 'All') %>%
+        filter(Gene ==gene) %>%
         head(2000) %>%
         collect() %>%
+        filter(Base != 'Doublet', Against != 'All') %>%
         select(Base, `Against`, Organism, padj, log2FoldChange, baseMean) %>%
         mutate(
           padj = format(as.numeric(padj), digits = 3) %>% as.numeric(),
@@ -944,9 +986,10 @@ shinyServer(function(input, output, session) {
     if (input$search_by == 'Gene'){
       table_name = 'Table 1: Group - Gene - Base Diff Testing'
       out_gene <- scEiaD_2020_v01 %>% tbl('diff_testing') %>%
-        filter(Gene %in% gene, Against == 'All') %>%
+        filter(Gene %in% gene) %>%
         select(Group, Base, `Against`, Organism, padj, log2FoldChange, baseMean) %>%
         head(2000) %>%
+        filter( Against == 'All') %>%
         collect() %>%
         mutate(
           padj = format(as.numeric(padj), digits = 3) %>% as.numeric(.),

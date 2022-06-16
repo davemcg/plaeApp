@@ -349,6 +349,34 @@ shinyUI(
                                         br(), br(),
                                         plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white')),
                                  linebreaks(120),
+                                 fluidRow(includeHTML("www/footer.html"))),
+                        tabPanel('Heatmap', # Heatmap ---------
+                                 column(8,
+                                        fluidRow(column(6, tags$h1('Heatmap'))),
+                                        fluidRow(
+                                          column(6, selectizeInput('heatmap_Gene', strong('Genes: '),
+                                                                   choices=NULL, multiple=TRUE)),
+                                          column(4, selectizeInput('heatmap_height', strong('Plot Height: '),
+                                                                   choices = seq(400, 2000, by = 100), selected = 800))),
+                                        fluidRow(
+                                          column(4, selectizeInput('heatmap_groups', strong('Group by: '),
+                                                                   choices=c('Cluster', 'CellType','CellType (Predict)'),
+                                                                   select = c('CellType (Predict)'),
+                                                                   multiple=FALSE)),
+                                          column(4, selectizeInput('heatmap_organism', strong('Organism: '),
+                                                                   choices=c('Homo sapiens', 'Mus musculus', 'Macaca fascicularis'),
+                                                                   multiple=FALSE)),
+                                        ),
+                                        actionButton('BUTTON_draw_heatmap','Draw Heatmap!', icon = icon("arrow-down"),
+                                                     alt = 'button draw heatmap below',
+                                                     style='background-color: #3269FF; color: #ffffff'),
+                                        downloadButton('BUTTON_download_heatmap','Download Heatmap',
+                                                       alt = 'button download heatmap',
+                                                       style='background-color: #3269FF; color: #ffffff'),
+                                        actionButton("heatmap_help", "Page Pop Up Info"),
+                                        br(), br(),
+                                        plotOutput('heatmap') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white')),
+                                 linebreaks(120),
                                  fluidRow(includeHTML("www/footer.html")))
              ),
              # diff testing  tables ------------
@@ -515,7 +543,7 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
-                                 fluidRow(column(width = 8, offset = 1, '0.91 (2022-04-29): Updated diff testing model to pseudoBulk based approach. Now run on a per-species basis.')),
+                                 fluidRow(column(width = 8, offset = 1, '0.91 (2022-06-17): Updated diff testing model to pseudoBulk based approach. Now run on a per-species basis. Added heatmap visualization which uses the DESeq2 pseudobulk differential experession changes.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.90 (2022-04-05): Updated scEiaD scVI model once more. We simplified pan species gene name alignment by removing \"one to many\" or \
                                  "many to one\" name alignments. All expressed genes are still retained in the individual species (if not present in the gene name name merged matrix), but we are less aggressive about merging gene names across species as we discovered some edge cases where many genes were getting
