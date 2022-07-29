@@ -20,6 +20,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 library(dbplyr)
+suppressPackageStartupMessages(library(ComplexHeatmap))
 
 scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
 
@@ -342,6 +343,21 @@ shinyServer(function(input, output, session) {
                              select(-Gene, -cell_ct, -cell_exp_ct, -counts) %>% colnames() %>% sort(),
                            selected = c('study_accession'),
                            server = TRUE)
+    }
+
+    # heatmap updateSelectize ----
+    if (is.null(query[['heatmap_filter_on']])){
+      observeEvent(input$heatmap_groups, {
+        if (input$heatmap_groups == ''){
+          choice = ''
+        } else {
+          choice = meta_filter[,input$heatmap_groups] %>% t() %>% c() %>% unique() %>% sort()
+        }
+
+        updateSelectizeInput(session, 'heatmap_filter_on',
+                             choices = choice,
+                             server = TRUE)
+      })
     }
 
 
@@ -858,8 +874,10 @@ shinyServer(function(input, output, session) {
 
     ## heatmap ---------
     source('make_heatmap.R')
+
     draw_heatmap <- eventReactive(input$BUTTON_draw_heatmap,
-                                  {make_heatmap(input, scEiaD_2020_v01)}
+                                  {
+                                    make_heatmap(input, scEiaD_2020_v01)}
     )
     output$heatmap <- renderPlot({
       draw_heatmap()
