@@ -6,7 +6,7 @@ The code-base for plae.nei.nih.gov
 By cloning this repo and downloading (see below) the scEiaD database, you can run PLAE on your local computer.
 
 ## Warning
-scEiaD is a sqlite file that is approximately **420GB when uncompressed**. Not a typo! 
+scEiaD is a sqlite file that is approximately **306 GB when uncompressed**. Not a typo! 
 
 # Installation (bash)
 
@@ -17,12 +17,12 @@ scEiaD is a sqlite file that is approximately **420GB when uncompressed**. Not a
   - `remotes::install_github('davemcg/plaeApp')`
   -  Get scEiaD (run in bash/Terminal) and the metadata in [FST](https://www.fstpackage.org)
 
-    wget http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite.gz
-    wget http://hpc.nih.gov/~mcgaugheyd/scEiaD/2021_11_11/meta_filter.fst
+    wget http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite.gz
+    wget http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/meta_filter.fst
     
   -  Decompress sqlite file
   
-    pigz -d -p 8 MOARTABLES__anthology_limmaFALSE___6000-counts-universe-batch-scVIprojection-10-15-0.1-50-20.sqlite.gz
+    pigz -d -p 8 MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite.gz
   - Edit absolute path to sqlite file in `inst/app/server.R`
 
 # Note
