@@ -179,22 +179,26 @@ shinyUI(
                         # exp_plots ------
                         tabPanel('Expression Plot',
                                  column(12,
-                                        fluidRow(column(6, tags$h1('Expression Plot'))),
+                                        fluidRow(column(9, tags$h1('Expression Plot'))),
                                         fluidRow(
-                                          column(4,
+                                          column(3,
                                                  (selectizeInput('exp_plot_genes', strong('Gene(s): '),
                                                                  choices = NULL, multiple = TRUE))),
                                           column(2,
                                                  selectizeInput('exp_plot_height', strong('Plot Height: '),
                                                                 choices = seq(200, 4000, by = 100),
                                                                 selected = 400, multiple = FALSE)),
-                                          column(3,
+                                          column(2,
                                                  selectInput('exp_plot_ylab', strong('Value: '),
-                                                             choices = c('Mean log2(Counts + 1)', '% of Cells Detected')))
+                                                             choices = c('Mean log2(Counts + 1)', '% of Cells Detected'))),
+                                          column(2,
+                                                 selectInput('exp_plot_flip', strong("Facet on: "),
+                                                             choices = c("Gene", "Cell Grouping"),
+                                                             selected = "Cell Grouping"))
                                         ),
                                         fluidRow(
                                           column(3,
-                                                 (selectizeInput('exp_plot_facet', strong('Facet on: '),
+                                                 (selectizeInput('exp_plot_facet', strong('Cell Grouping: '),
                                                                  choices = c('CellType','cluster','CellType_predict'),
                                                                  selected = 'CellType_predict',
                                                                  multiple = FALSE))),
@@ -203,8 +207,7 @@ shinyUI(
                                                                  choices = NULL, multiple = FALSE))),
                                           column(3,
                                                  numericInput('exp_plot_col_num', strong('Number of columns: '),
-                                                              min = 1, max = 30, value = 5)),
-                                        ),
+                                                              min = 1, max = 30, value = 5))),
                                         fluidRow(
                                           column(3, selectizeInput('exp_filter_cat', strong('Filter Category: '),
                                                                    choices = NULL, multiple = TRUE)),
@@ -357,7 +360,7 @@ shinyUI(
                                           column(6, selectizeInput('heatmap_Gene', strong('Genes: '),
                                                                    choices=NULL, multiple=TRUE)),
                                           column(2, selectizeInput('heatmap_height', strong('Plot Height: '),
-                                                                   choices = seq(200, 1000, by = 100), selected = 400))),
+                                                                   choices = seq(400, 2000, by = 100), selected = 400))),
                                         fluidRow(
                                           column(4, selectizeInput('heatmap_groups', strong('Group by: '),
                                                                    choices=c('cluster', 'CellType','CellType_predict'),
@@ -394,12 +397,12 @@ shinyUI(
                                                            to a "pseudoBulk" approach where gene counts are summed by study and the test of interest (e.g. Cluster). The summed counts are "bulk-like"
                                                            in their statistical properties and we simply apply them to a DESeq2 based differential test where we use the study as a covariate.'),
                                                   br(),
-                                                  fluidRow('Two types of contrasts are extracted: test of interest (e.g. Cluster) against all other tests (Clusters) or in a pair-wise manner
-                                                           where we test, for example, cluster 2 against cluster 10.'),
+                                                  fluidRow('Two types of contrasts are extracted: in Table 1 we show a comparison (e.g. Rod) against all other remaining (everything not rod) and in Table 2 we use a contrast run in a pair-wise manner
+                                                           where we test, for example, cluster 2 directly against against cluster 10.'),
                                                   br(),
                                                   br(),
                                                   fluidRow(
-                                                    selectInput('search_by', strong('Search by: '),
+                                                    selectizeInput('search_by', strong('Search by: '),
                                                                 choices = c('Gene',
                                                                             "CellType (Predict)",
                                                                             "CellType",
@@ -567,7 +570,7 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
-                                 fluidRow(column(width = 8, offset = 1, '0.91 (2022-06-17): Updated diff testing model to pseudoBulk based approach. Now run on a per-species basis. Added heatmap visualization which uses the DESeq2 pseudobulk differential experession changes. Fixed bug that removed RPC from the "Exp Plot" view.')),
+                                 fluidRow(column(width = 8, offset = 1, '0.91 (2022-07-30): Updated diff testing model to a pseudoBulk / DESeq2 based approach. Now run on a per-species basis. Added heatmap visualization which uses the DESeq2 pseudobulk differential experession changes. Fixed bug that removed RPC from the Expression Plot view as well as display zero expression studies. Expression Plot view has a new option which flips flops the facet / x axis from Gene to whatever the cell type label is (CellType, CellType_predict, cluster).')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.90 (2022-04-05): Updated scEiaD scVI model once more. We simplified pan species gene name alignment by removing \"one to many\" or \
                                  "many to one\" name alignments. All expressed genes are still retained in the individual species (if not present in the gene name name merged matrix), but we are less aggressive about merging gene names across species as we discovered some edge cases where many genes were getting

@@ -22,14 +22,14 @@ library(fst)
 library(dbplyr)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
 
 x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('~/data/scEiaD_2022_02/meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD_2022_02//meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -561,7 +561,9 @@ shinyServer(function(input, output, session) {
 
                               <li>CellType, which are based on published cell type assignments</li>
                               <li>CellType (predict), which uses ML to project CellType labels onto (nearly) all of the cells</li>
-                              <li>Cluster (droplet), which are created from leiden method on the scVI correct lower dimension space.</li>
+                              <li>Cluster, which are created from leiden method on the scVI correct lower dimensional space.</li>
+                              <br></br>
+                              <li>All tests are run on individual species (Human, Mouse, Macaque)</li>
                             </ul></p>"),
                                                 easyClose = TRUE))
     })
@@ -575,52 +577,40 @@ shinyServer(function(input, output, session) {
                                                      the counts data into groups (e.g. sum all CRX counts in labelled Rods for Clark et al.,
                                                      Lu et al., etc). This makes the data bulk (traditional) RNA-seq like in its
                                                      statistical properties, which allows us to use more established tools (like edgeR)
-                                                     for the differential testing.</p>
-
-                                                     <p>Model design for [ ] against Remaining and Pairwise [ ] against [ ]</p>
-                                                     <ul>
-                                                     <li>design <- model.matrix(~0+group+org_covariate) where group is CellType/Cluster and
-                                                     org_covariate is Human/Mouse/Macaque</li>
-                                                     </ul>
-                                                     <p>Model design for Organism specific test within [ ]</p>
-                                                     <ul>
-                                                     <li>design <- model.matrix(~0+group) where group is Human/Mouse/Macaque and
-                                                     the test is limited by contrasts to a specific CellType or Cluster</li>
-                                                     </ul>
-                                                     <p>The edgeR glmQLFTest is used to fit the linear model for the differential testing.</p>"),
+                                                     for the differential testing.</p>"),
                                                 easyClose = TRUE))
     })
 
-    ## exp plot
-    observeEvent(input$exp_plot_help, {
-      # Show a modal when the button is pressed
-      shinyalert("Help", 'help_text', type = "info")
-    })
-    ## insitu
-    observeEvent(input$insitu_help, {
-      # Show a modal when the button is pressed
-      shinyalert("Help", 'help_text', type = "info")
-    })
-    ## facet umap
-    observeEvent(input$facet_umap_help, {
-      # Show a modal when the button is pressed
-      shinyalert("Help", 'help_text', type = "info")
-    })
-    ## temporal plot
-    observeEvent(input$temporal_plot_help, {
-      # Show a modal when the button is pressed
-      shinyalert("Help", 'help_text', type = "info")
-    })
-    ## dotplot
-    observeEvent(input$dotplot_help, {
-      # Show a modal when the button is pressed
-      shinyalert("Help", 'help_text', type = "info")
-    })
-    ## diff testing
-    observeEvent(input$diff_testing_help, {
-      # Show a modal when the button is pressed
-      shinyalert("Help", 'help_text', type = "info")
-    })
+    # ## exp plot
+    # observeEvent(input$exp_plot_help, {
+    #   # Show a modal when the button is pressed
+    #   shinyalert("Help", 'help_text', type = "info")
+    # })
+    # ## insitu
+    # observeEvent(input$insitu_help, {
+    #   # Show a modal when the button is pressed
+    #   shinyalert("Help", 'help_text', type = "info")
+    # })
+    # ## facet umap
+    # observeEvent(input$facet_umap_help, {
+    #   # Show a modal when the button is pressed
+    #   shinyalert("Help", 'help_text', type = "info")
+    # })
+    # ## temporal plot
+    # observeEvent(input$temporal_plot_help, {
+    #   # Show a modal when the button is pressed
+    #   shinyalert("Help", 'help_text', type = "info")
+    # })
+    # ## dotplot
+    # observeEvent(input$dotplot_help, {
+    #   # Show a modal when the button is pressed
+    #   shinyalert("Help", 'help_text', type = "info")
+    # })
+    # ## diff testing
+    # observeEvent(input$diff_testing_help, {
+    #   # Show a modal when the button is pressed
+    #   shinyalert("Help", 'help_text', type = "info")
+    # })
 
 
     # BREAK -------
