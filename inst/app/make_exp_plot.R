@@ -112,7 +112,7 @@ make_exp_plot <- function(input, db, meta_filter){
       scale_radius(range=c(2, 6)) +
       scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
       theme(legend.position="bottom") +
-      facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free', ~Gene)
+      facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_y', ~Gene)
   } else {
   box_data %>%
     ggplot(aes(x=Gene, y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
@@ -123,6 +123,6 @@ make_exp_plot <- function(input, db, meta_filter){
     scale_radius(range=c(2, 6)) +
     scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
     theme(legend.position="bottom") +
-    facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free', vars(!!as.symbol(paste(input$exp_plot_facet, collapse = ','))))
+    facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_y', vars(!!as.symbol(paste(input$exp_plot_facet, collapse = ','))))
   }
 }

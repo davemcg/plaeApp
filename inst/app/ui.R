@@ -195,7 +195,7 @@ shinyUI(
                                           column(3,
                                                  selectInput('exp_plot_flip', strong("Facet on: "),
                                                              choices = c("Gene", "Cell Grouping"),
-                                                             selected = "Cell Grouping"))
+                                                             selected = "Gene"))
                                         ),
                                         fluidRow(
                                           column(3,
@@ -513,7 +513,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.91'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.92'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -571,6 +571,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.92 (2022-08-30): Default in Exp Plot now facets on Gene. Exp Plot facet_wrap now on "free_y" instead of "free" to save space.')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.91 (2022-07-30): Updated diff testing model to a pseudoBulk / DESeq2 based approach. Now run on a per-species basis. Added heatmap visualization which uses the DESeq2 pseudobulk differential experession changes. Fixed bug that removed RPC from the Expression Plot view as well as display zero expression studies. Expression Plot view has a new option which flips flops the facet / x axis from Gene to whatever the cell type label is (CellType, CellType_predict, cluster).')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.90 (2022-04-05): Updated scEiaD scVI model once more. We simplified pan species gene name alignment by removing \"one to many\" or \
