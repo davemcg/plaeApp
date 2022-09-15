@@ -207,7 +207,6 @@ diff_test %>% arrange(p_val) %>% filter(abs(avg_log2FC) > 2) %>% head(5)
 
 We see the second hit (by p value and log2FC > 2) is INSM1 (ENSG00000173404). It was reported by Anne Morris's group (https://iovs.arvojournals.org/article.aspx?articleid=2148558) that knocking down this gene leads to differentiation issues in the eye.
 
-
 ## Compare macula cones vs peripheral cones
 Let us now demonstrate how having a large annotated set of data can be of value in asking more specific questions, like "how do macula/fovea cones differ relative to peripheral cones."
 
@@ -222,7 +221,7 @@ scEiaD@meta.data %>%
 ```
 Yes, we have several human studies with macula / peripheral cone cells. 
 
-Let's demonstrate how we can quickly run a conservative differential expression test the leverages the many studies we have. The "traditional" scRNA diff tests often return insane numbers of highly differentially expressed genes (the test we ran aboves returns `r diff_test %>% filter(p_val_adj < 0.05) %>% nrow()` gene with a padj < 0.05 !), which is highly annoying as then you really have to plot each result individually to confirm that it does not look wacky. We are going to build a "pseudo bulk" experiment here where we sum all the counts by gene, cell type (in this case we are doing macula cones *versus* peripheral cones), and study. This "pseudo" count table can then be used in a classic differential testing system like edgeR, limma, or DESeq2 (we will use the later).
+Let's demonstrate how we can quickly run a conservative differential expression test the leverages the many studies we have. The "traditional" scRNA diff tests often return insane numbers of highly differentially expressed genes (the test we ran aboves returns many many genes with a padj < 0.05), which is highly annoying as then you really have to plot each result individually to confirm that it does not look wacky. We are going to build a "pseudo bulk" experiment here where we sum all the counts by gene, cell type (in this case we are doing macula cones *versus* peripheral cones), and study. This "pseudo" count table can then be used in a classic differential testing system like edgeR, limma, or DESeq2 (we will use the later).
 
 ```{r}
 # Create new column with a pasted together retina region and a CellType
@@ -265,20 +264,25 @@ deseq_res <- results(dds)
 
 ### Wrinkle
 
-scEiaD is based on the Ensembl gene id (like ENSG00000185527). That's not very friendly to humans so I added a bit of code to link the Ensembl ID to the gene name and plot the top 16 diff genes (padj < 0.05). 
+scEiaD is built on the Ensembl gene id (for examples ENSG00000185527). That's not very friendly to humans so I added a bit of code to link the Ensembl ID to the gene name and show the top 16 diff genes (padj < 0.05) as a table. 
 ```{r}
 # get human gene names 
 library(org.Hs.eg.db)
 symbols <- mapIds(org.Hs.eg.db, keys = row.names(deseq_res), keytype = "ENSEMBL", column="SYMBOL")
 
-deseq_res %>% as_tibble(rownames = 'name') %>%  
+region_table <- deseq_res %>% as_tibble(rownames = 'name') %>%  
   left_join(symbols %>% enframe()) %>% 
   dplyr::rename(Ensembl = name, Gene = value) %>% 
+  relocate(Gene)
+
+region_table %>% 
   filter(padj < 0.05) %>% 
   arrange(pvalue) %>% DT::datatable()
 ```
 
 ### Always look at the plots
+
+We use the "ScaleData" function from Seurat to zero center and scale the counts for each dataset
 
 #### PDE6G 
 Top gene more highly expressed in the macula compared to the periphery. Seems pretty consistently higher across all the studies. 
@@ -289,31 +293,22 @@ VlnPlot(scEiaD__subset, features = c('ENSG00000185527'), log = TRUE)
 VlnPlot(scEiaD__subset, c('ENSG00000185527'), split.by = 'retina_region', group.by='study_accession', log = TRUE) 
 ```
 
-#### HSPB1
-Now we see the opposite side - the top gene that is higher in peripheral vs macula. Again looks fairly consistent across all the studies.
-```{r}
-VlnPlot(scEiaD__subset, features = c('ENSG00000099860'))
 
-VlnPlot(scEiaD__subset, c('ENSG00000099860'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD__subset$regionCT)
+#### All genes
+```{r}
+for (i in region_table %>% 
+  filter(padj < 0.05) %>% 
+  pull(Ensembl)){
+  #print(i)
+  gene_name <- region_table %>% filter(Ensembl == i) %>% pull(Gene)
+  print(VlnPlot(scEiaD__subset, i, split.by = 'retina_region', group.by='study_accession', log = TRUE) + ggtitle(gene_name))
+}
 ```
 
-
-#### PRPH2
-Yan et al (https://www.nature.com/articles/s41598-020-66092-9) proposed PRPH2 as a cone fovea/peripheral specific gene. We can see whether that effect is still shown across multiple studies in scEiaD. We see the padj is not impressive in our diff test. 
-
+# Output and Session Info
 ```{r}
-# first grab the ensembl id
-deseq_res %>% as_tibble(rownames = 'name') %>%  
-  left_join(symbols %>% enframe()) %>% 
-  dplyr::rename(Ensembl = name, Gene = value) %>% 
-  filter(Gene == 'PRPH2')
-```
-
-The plots certainly do not DISPROVE the Yan et al hypothesis - you still see that the trend is (mostly) the same across all the studies. However the p value is likely low for because the effect size (fold change) is modest across most studies (and in one case, the effect is opposite). As a exercise to the reader, you could re-do the pseudobulk test, removing SRP194595 and seeing whether padj value you get returned is substantially different. 
-```{r}
-VlnPlot(scEiaD__subset, features = c('ENSG00000112619'))
-
-VlnPlot(scEiaD__subset, c('ENSG00000112619'), split.by = 'regionCT', group.by='study_accession', ) + aes(color=scEiaD__subset$regionCT)
-
+sessionInfo()
+save(scEiaD__subset,region_table, deseq_res, file = 'pseudoBulk_cone_region_files.Rdata' )
+write_csv(region_table, file = 'pseudoBulk_cone_region_table.csv.gz' )
 ```
 
