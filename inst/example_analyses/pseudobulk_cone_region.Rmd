@@ -1,0 +1,114 @@
+---
+title: "Pseudobulk Differential Testing of Fovea vs Peripheral Cones"
+output: html_notebook
+---
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(SingleCellExperiment)
+library(scran)
+library(org.Hs.eg.db)
+#system('wget -O ~/data/scEiaD_2022_02/scEiaD_all_seurat_v3.Rdata https://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/scEiaD_all_seurat_v3.Rdata)
+# the -O renames the file and puts it in the ~/data/scEiaD directory
+load('~/data/scEiaD_2022_02/scEiaD_all_seurat_v3.Rdata')
+```
+
+## Compare macula cones vs peripheral cones
+Let us now demonstrate how having a large annotated set of data can be of value in asking more specific questions, like "how do macula/fovea cones differ relative to peripheral cones."
+
+First, we need to see whether this is even a tractable question.
+```{r}
+scEiaD@meta.data %>% 
+  as_tibble() %>% 
+  group_by(retina_region, organism, study_accession, CellType_predict) %>% 
+  summarise(Count = n()) %>% 
+  filter(CellType_predict %in% c("Cone")) %>% 
+  filter(Count > 10, !is.na(retina_region))
+```
+Yes, we have several human studies with macula / peripheral cone cells. 
+
+Let's demonstrate how we can quickly run a conservative differential expression test the leverages the many studies we have. The "traditional" scRNA diff tests often return insane numbers of highly differentially expressed genes (the test we ran aboves returns many many genes with a padj < 0.05), which is highly annoying as then you really have to plot each result individually to confirm that it does not look wacky. We are going to build a "pseudo bulk" experiment here where we sum all the counts by gene, cell type (in this case we are doing macula cones *versus* peripheral cones), and study. This "pseudo" count table can then be used in a classic differential testing system like edgeR, limma, or DESeq2 (we will use the later).
+
+```{r}
+# Create new column with a pasted together retina region and a CellType
+scEiaD <- AddMetaData(scEiaD, 
+                      metadata = 
+                        paste0(
+                          scEiaD@meta.data$retina_region, 
+                          '_', 
+                          scEiaD@meta.data$CellType_predict,
+                          '_',
+                          scEiaD@meta.data$organism
+                        ), 
+                      col.name = 'regionCT')
+
+
+# filter down scEiaD to only human and in semi-supported (more than 10 cones cells) studies
+Idents(scEiaD) <- scEiaD@meta.data$regionCT
+scEiaD__subset <- subset(scEiaD, idents = c('Macula_Cone_Homo sapiens','Peripheral_Cone_Homo sapiens'))
+scEiaD__subset <- subset(scEiaD__subset, 
+                         subset = study_accession %in% 
+                           (scEiaD__subset@meta.data %>% group_by(study_accession) %>% 
+                              summarise(Count = n()) %>% filter(Count > 10) %>% 
+                              pull(study_accession)))
+# create SCE object so can create a pseudobulk matrix to run DESeq2 on
+sce <- as.SingleCellExperiment(scEiaD__subset)
+summed <- scater::aggregateAcrossCells(sce, 
+                                       ids=colData(sce)[,c("regionCT", "study_accession")])
+# pull out the counts to build the DESeq2 object
+mat <- assay(summed, 'counts')
+colnames(mat) <-colData(summed) %>% as_tibble() %>% 
+  mutate(names = glue::glue("{study_accession}_{retina_region}")) %>% pull(names)
+
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(countData = round(mat),
+                              colData = colData(summed),
+                              design= ~ study_accession + retina_region) # study as covariate, testing against fovea / not fovea
+dds <- DESeq(dds)
+deseq_res <- results(dds)
+```
+
+### Wrinkle
+
+scEiaD is built on the Ensembl gene id (for examples ENSG00000185527). That's not very friendly to humans so I added a bit of code to link the Ensembl ID to the gene name and plot the top 16 diff genes (padj < 0.05). 
+```{r}
+# get human gene names 
+library(org.Hs.eg.db)
+symbols <- mapIds(org.Hs.eg.db, keys = row.names(deseq_res), keytype = "ENSEMBL", column="SYMBOL")
+
+region_table <- deseq_res %>% as_tibble(rownames = 'name') %>%  
+  left_join(symbols %>% enframe()) %>% 
+  dplyr::rename(Ensembl = name, Gene = value) %>% 
+  relocate(Gene) %>% 
+  filter(padj < 0.05)
+
+region_table %>% 
+  arrange(pvalue) %>% DT::datatable()
+```
+
+### Always look at the plots
+
+#### PDE6G 
+Top gene more highly expressed in the macula compared to the periphery. Seems pretty consistently higher across all the studies. 
+```{r}
+scEiaD__subset <- ScaleData(scEiaD__subset)
+VlnPlot(scEiaD__subset, features = c('ENSG00000185527'), log = TRUE)
+
+VlnPlot(scEiaD__subset, c('ENSG00000185527'), split.by = 'retina_region', group.by='study_accession', log = TRUE) 
+```
+
+
+#### All genes
+```{r}
+for (i in region_table$Ensembl){
+  #print(i)
+  print(VlnPlot(scEiaD__subset, i, split.by = 'retina_region', group.by='study_accession', log = TRUE) )
+}
+```
+
+# Output and Session Info
+```{r}
+sessionInfo()
+save(scEiaD__subset,region_table, deseq_res, file = 'pseudoBulk_cone_region_files.Rdata' )
+```
