@@ -1,6 +1,6 @@
 Package: plaeApp
 Title: PLatform for Analysis of scEiad
-Version: 0.85.000
+Version: 0.93.000
 Authors@R: 
     person(given = "David",
            family = "McGaughey",
