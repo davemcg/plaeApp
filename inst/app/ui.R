@@ -171,8 +171,8 @@ shinyUI(
                                                     div(DT::dataTableOutput('metadata_stats'), style='font-size:75%'))
                                            ),
                                            fluidRow(column(6,
-                                                           actionButton("umap_table_help", "Page Pop Up Info"),
-                                                           actionButton("data_table_help1", "Data Table Pop Up Info")))),
+                                                           actionButton("umap_table_help", "Page Pop Up Info", style='background-color: #6633ff; color: #ffffff'),
+                                                           actionButton("data_table_help1", "Data Table Pop Up Info", style='background-color: #6633ff; color: #ffffff')))),
                                  linebreaks(8),
                                  fluidRow(includeHTML("www/footer.html"))
                         ),
@@ -226,7 +226,7 @@ shinyUI(
                                         br(),
                                         fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white'))),
                                         br(),
-                                        actionButton("exp_plot_help", "Page Pop Up Info"),),
+                                        actionButton("exp_plot_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),),
                                  linebreaks(160),
                                  fluidRow(includeHTML("www/footer.html"))),
 
@@ -262,8 +262,8 @@ shinyUI(
                                                            fluidRow(
                                                              div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
                                           ),
-                                          actionButton("insitu_help", "Page Pop Up Info"),
-                                          actionButton("data_table_help2", "Data Table Pop Up Info")
+                                          actionButton("insitu_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
+                                          actionButton("data_table_help2", "Data Table Pop Up Info", style='background-color: #6633ff; color: #ffffff')
                                    )),
                                  linebreaks(120),
                                  fluidRow(includeHTML("www/footer.html"))),
@@ -303,12 +303,12 @@ shinyUI(
                                                  plotOutput('facet_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white'))
                                         ),
                                         br(),
-                                        actionButton("facet_umap_help", "Page Pop Up Info")),
+                                        actionButton("facet_umap_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff')),
                                  linebreaks(72),
                                  fluidRow(includeHTML("www/footer.html"))),
                         # temporal plot -----
                         # tabPanel('Temporal Gene x Cell Type',
-                        #          actionButton("temporal_plot_help", "Page Pop Up Info"),
+                        #          actionButton("temporal_plot_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                         #          column(10,
                         #                 fluidRow(
                         #                   column(10,
@@ -349,7 +349,7 @@ shinyUI(
                                         downloadButton('BUTTON_download_dotplot','Download Dot Plot',
                                                        alt = 'button download dotplot',
                                                        style='background-color: #3269FF; color: #ffffff'),
-                                        actionButton("dotplot_help", "Page Pop Up Info"),
+                                        actionButton("dotplot_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                                         br(), br(),
                                         plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white')),
                                  linebreaks(120),
@@ -368,7 +368,7 @@ shinyUI(
                                                                    select = c('CellType_predict'),
                                                                    multiple=FALSE)),
                                           column(3, selectizeInput('heatmap_organism', strong('Organism: '),
-                                                                   choices=c('Homo sapiens', 'Mus musculus', 'Macaca fascicularis'),
+                                                                   choices=c('Homo sapiens', 'Mus musculus', 'Macaca fascicularis', 'Gallus gallus'),
                                                                    select = 'Homo sapiens',
                                                                    multiple=TRUE)),
                                           column(3, selectizeInput('heatmap_filter_on', strong('Filter on: '),
@@ -382,7 +382,7 @@ shinyUI(
                                         downloadButton('BUTTON_download_heatmap','Download Heatmap',
                                                        alt = 'button download heatmap',
                                                        style='background-color: #3269FF; color: #ffffff'),
-                                        actionButton("heatmap_help", "Page Pop Up Info"),
+                                        actionButton("heatmap_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                                         br(), br()),
                                  column(12,
                                         plotOutput('heatmap') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white')),
@@ -433,8 +433,8 @@ shinyUI(
                                                     downloadButton("diff_table_download","Download all results as csv"),
                                                     br(), br())),
                                            fluidRow(column(12,
-                                                           actionButton("diff_testing_help", "Page Pop Up Info"),
-                                                           actionButton("data_table_help3", "Data Table Pop Up Info")))),
+                                                           actionButton("diff_testing_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
+                                                           actionButton("data_table_help3", "Data Table Pop Up Info", style='background-color: #6633ff; color: #ffffff')))),
                                  linebreaks(10),
                                  fluidRow(includeHTML("www/footer.html"))),
                         # haystack tables ------------

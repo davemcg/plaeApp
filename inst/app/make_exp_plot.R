@@ -2,6 +2,7 @@ make_exp_plot <- function(input, db, meta_filter){
   # TESTING VALUES
   # db <- scEiaD_2020_v01
   # input <- list()
+  # input$exp_plot_facet <- 'CellType_predict'
   # input$exp_filter_cat <- 'CellType_predict'
   # input$exp_filter_on <- c('Rod' ,'Cone')
   # input$exp_plot_facet <- c('cluster','Stage')
@@ -84,7 +85,7 @@ make_exp_plot <- function(input, db, meta_filter){
              Expression = round(counts * (`%` / 100), 2)) %>%
       select_at(vars(one_of(c('Gene', grouping_features, 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
       arrange(-Expression) %>%
-      rename(`Cell # Detected` = cell_exp_ct,
+      dplyr::rename(`Cell # Detected` = cell_exp_ct,
              `Total Cells` = Count,
              `Mean log2(Counts + 1)` = Expression,
              `% of Cells Detected` = `%`) %>%
@@ -102,8 +103,10 @@ make_exp_plot <- function(input, db, meta_filter){
 
   #box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)
 
+  out <- list()
+  out$box_data <- box_data
   if ((input$exp_plot_flip == "Gene")){
-    box_data %>%
+    out$plot <- box_data %>%
       ggplot(aes(x=!!as.symbol(input$exp_plot_facet), y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
       geom_boxplot(color = 'black', outlier.shape = NA) +
       ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), groupOnX = TRUE) +
@@ -114,15 +117,16 @@ make_exp_plot <- function(input, db, meta_filter){
       theme(legend.position="bottom") +
       facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_y', ~Gene)
   } else {
-  box_data %>%
-    ggplot(aes(x=Gene, y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
-    geom_boxplot(color = 'black', outlier.shape = NA) +
-    ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), groupOnX = TRUE) +
-    cowplot::theme_cowplot() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    scale_radius(range=c(2, 6)) +
-    scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
-    theme(legend.position="bottom") +
-    facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_y', vars(!!as.symbol(paste(input$exp_plot_facet, collapse = ','))))
+    out$plot <- box_data %>%
+      ggplot(aes(x=Gene, y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
+      geom_boxplot(color = 'black', outlier.shape = NA) +
+      ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), groupOnX = TRUE) +
+      cowplot::theme_cowplot() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      scale_radius(range=c(2, 6)) +
+      scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
+      theme(legend.position="bottom") +
+      facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_y', vars(!!as.symbol(paste(input$exp_plot_facet, collapse = ','))))
   }
+  out
 }

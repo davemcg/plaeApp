@@ -22,14 +22,14 @@ library(fst)
 library(dbplyr)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/Thunder//data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
 
 x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD_2022_02//meta_filter.fst') %>%
+meta_filter <- read_fst('/Volumes/Thunder/data/scEiaD_2022_02//meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
@@ -42,7 +42,7 @@ meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD_2022_02//meta_filter.f
 #    select(-UMAP_1, -UMAP_2) %>%
 #    right_join(umap %>% select(Barcode, UMAP_1, UMAP_2), by = 'Barcode')
 
-tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
+tabulamuris_predict_labels <- scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_1 * x_dir,
          UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
@@ -495,13 +495,14 @@ shinyServer(function(input, output, session) {
 
                             Tips:
                             <ul>
-                              <li>You can click and drag to set a box, then double click to zoom in!</li>
-                              <li>Double click again to zoom back</li>
+                              <li><img src = \"umap_table_01.gif\"  width=\"500\"> </li>
+                              <li>If you click anywhere on either UMAP image, you will get information about the five closest cells.</li>
+                              <li>You can click and drag to set a box, then double click to zoom in! Double click again to zoom back out.</li>
                             </ul>"),
                                                 easyClose = TRUE))
     })
     observeEvent(input$exp_plot_help, {
-      showModal(shinyjqui::draggableModalDialog(size = 's',
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
                                                 title = "Expression Plot",
                                                 HTML("<p>This highly flexible scatter plot view allows you to plot gene expression by Cell Type
                                                 (published), Cell Type (our inferred cell labels), or cluster (unsupervised grouping
@@ -509,22 +510,36 @@ shinyServer(function(input, output, session) {
                                                 selecting how the data points are colored and you have advanced filtering
                                                 functionality that lets you select what fields (e.g. Citation) to filter on.</p>
 
+                            <ul><img src = \"exp_plot_01.gif\"  width=\"500\"></ul>
+
+                            WHY IS MY PLOT NOT READABLE????!!!!!!!!
+                            <ul>
+                              <li>This is because you have to adjust the Plot Height and/or the number of columns. Sorry, it is surprisingly tricky to automatically pick
+                                    the best image height and width.
+                              </li>
+                            </ul>
+
                             There are two fundamental ways to view the data:
                             <ul>
                               <li>Expression, which is log2 scaled counts</li>
                               <li>% Cells Detected, which is the proportion of cells that have any detectable transcript</li>
-                            </ul>"),
+                            </ul>
+
+                            Faceting on Gene or Cell Grouping arranges the \"boxes\" differently and allows you to better see expression differences
+                                between genes or cell types."),
                                                 easyClose = TRUE))
     })
     observeEvent(input$insitu_help, {
-      showModal(shinyjqui::draggableModalDialog(size = 's',
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
                                                 title = "In Situ Projection",
                                                 HTML("<p>As developmental biologists may be more experienced in viewing
                                                 stained cross-sections of the retina, we have created this visualization
                                                 which colors each of the major cell type (e.g. Rods, Cones) by the intensity
                                                 of the expression of user selected gene. Like elsewhere in PLAE, you can
                                                 filter to only show data by flexible criteria (e.g. only show gene / cell
-                                                expression infrmation from mouse)</p>"),
+                                                expression infrmation from mouse)</p>
+
+                                                     <ul><img src = \"insitu_01.gif\"  width=\"500\"></ul>"),
                                                 easyClose = TRUE))
     })
     observeEvent(input$facet_umap_help, {
@@ -551,7 +566,9 @@ shinyServer(function(input, output, session) {
                                                 HTML("<p>The heatmap visualization differs from the dotplot as instead of
                                                      displaying absolute expression it instead displays *relative* expression.
                                                      This is calculated from the DESeq2-based differential expression of the group
-                                                     of interest (e.g. Rods) against all others.</p>"),
+                                                     of interest (e.g. Rods) against all others. Chicken (Gallus gallus) information is
+                                                     not included as of now because there is only one study. You cannot run differential
+                                                     expression tests with only one study.</p>"),
                                                 easyClose = TRUE))
     })
     observeEvent(input$diff_testing_help, {
@@ -831,7 +848,7 @@ shinyServer(function(input, output, session) {
     })
 
     output$exp_plot <- renderPlot({
-      exp_plot()
+      exp_plot()$plot
     }, height = eventReactive(input$BUTTON_draw_exp_plot, {as.numeric(input$exp_plot_height)}))
 
     output$BUTTON_download_exp <- downloadHandler(

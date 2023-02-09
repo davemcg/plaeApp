@@ -14,6 +14,7 @@ make_gene_scatter_umap_plot <- function(input,
   # db <- scEiaD_2020_v01
   gene <- input$Gene
 
+  meta_column <- input$meta_column
 
   pt_size <- input$pt_size_gene %>% as.numeric()
   expression_range <- input$gene_scatter_slider
@@ -47,8 +48,17 @@ make_gene_scatter_umap_plot <- function(input,
            counts < as.numeric(expression_range[2]))
   color_range <- range(p$counts)
   #color_range <- c(1,5)
+
+  # keep only background cells matching the user selected filtering options
+  if (class(input$gene_filter_cat) == 'character'){
+    cat(input$gene_filter_cat)
+    mf <- mf %>%
+      #filter(!!as.symbol(input$meta_filter_cat) %in% input$meta_filter_on)
+      filter_at(vars(all_of(input$gene_filter_cat)), all_vars(. %in% input$gene_filter_on))
+  }
   plot <- p %>% ggplot() +
-    geom_scattermost(cbind(mf$UMAP_1, mf$UMAP_2), color = '#707070',
+    geom_scattermost(cbind(mf %>% pull(UMAP_1), mf %>% pull(UMAP_2)),
+                     color = '#707070',
                      pointsize = 0,
                      pixels=c(1000,1000)) +
     geom_scattermost(cbind(p$UMAP_1, p$UMAP_2),

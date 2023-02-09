@@ -56,5 +56,5 @@ make_heatmap <- function(input, db, meta_filter, cat_to_color_df){
                      column_title_rot = 90,
                      column_labels = organism)
 
-  ComplexHeatmap::draw(hm_plot, padding = unit(c(0, 0, 1.5, 0), "in"), row_title = "Genes")
+  ComplexHeatmap::draw(hm_plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
 }
