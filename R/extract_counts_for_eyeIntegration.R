@@ -16,7 +16,9 @@ box_data2 <- box_data %>%
   mutate(cell_exp_ct = ifelse(is.na(cell_exp_ct), 0, cell_exp_ct)) %>%
   mutate(`%` = round((cell_exp_ct / Count) * 100, 2),
          Expression = round(counts * (`%` / 100), 2)) %>%
-  select_at(vars(one_of(c('Gene', 'CellType_predict', 'organism', 'study_accession', 'Stage', 'cell_exp_ct', 'Count', '%', 'Expression')))) %>%
+  select_at(vars(one_of(c('Gene', 'CellType_predict', 'organism', 'study_accession',
+                          'Stage', 'cell_exp_ct', 'Count', '%', 'Expression'
+                          )))) %>%
   arrange(-Expression) %>%
   rename(`Cell # Detected` = cell_exp_ct,
          `Total Cells` = Count,
