@@ -1,23 +1,21 @@
 <body>
 
-
 <div class="container-fluid main-container">
 
 
-
-
-<div class="fluid-row" id="header">
-
-
+<div id="header">
 
 
 </div>
 
 
-<!---
-NOTE WHEN KNITTING/WHATEVER INTO HTML HAND DELETE EVERYTHING EXCEPT THE <body> /<body> section
--->
 <table>
+<colgroup>
+<col width="31%" />
+<col width="13%" />
+<col width="27%" />
+<col width="27%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Analyses</th>
@@ -34,18 +32,24 @@ NOTE WHEN KNITTING/WHATEVER INTO HTML HAND DELETE EVERYTHING EXCEPT THE <body> /
 <td><a href="http://plae.nei.nih.gov/plae_analyses.html">Go</a></td>
 </tr>
 <tr class="even">
+<td>Custom plotting</td>
+<td></td>
+<td></td>
+<td><a href="http://plae.nei.nih.gov/plae_custom_plotting.html">Go</a></td>
+</tr>
+<tr class="odd">
 <td>Using scEiaD Seurat object</td>
 <td></td>
 <td></td>
 <td><a href="https://plae.nei.nih.gov/plae_analyses.html#advanced-stuff---analysis-in-r">Go</a></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>UMAP projection of your data on scEiaD</td>
 <td><a href="https://colab.research.google.com/github/davemcg/scEiaD/blob/master/colab/Query_scEiaD_with_scVI.ipynb">Go</a></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Auto cell type label your data</td>
 <td><a href="https://colab.research.google.com/github/davemcg/scEiaD/blob/master/colab/cell_type_ML_labelling.ipynb">Go</a></td>
 <td><a href="https://github.com/davemcg/scEiaD/blob/master/analysis/run_celltype_predictor_on_outside_data.md">Go</a></td>
@@ -59,44 +63,5 @@ NOTE WHEN KNITTING/WHATEVER INTO HTML HAND DELETE EVERYTHING EXCEPT THE <body> /
 
 </div>
 
-<script>
-
-// add bootstrap table styles to pandoc tables
-function bootstrapStylePandocTables() {
-  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
-}
-$(document).ready(function () {
-  bootstrapStylePandocTables();
-});
-
-
-</script>
-
-<!-- tabsets -->
-
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
-<!-- code folding -->
-
-
-<!-- dynamically load mathjax for compatibility with self-contained -->
-<script>
-  (function () {
-    var script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
-    document.getElementsByTagName("head")[0].appendChild(script);
-  })();
-</script>
 
 </body>
