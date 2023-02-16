@@ -55,6 +55,10 @@ make_heatmap <- function(input, db, meta_filter, cat_to_color_df){
                      use_raster = TRUE,
                      column_title_rot = 90,
                      column_labels = organism)
-
-  ComplexHeatmap::draw(hm_plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
+  out <- list()
+  #out$plot <- ComplexHeatmap::draw(hm_plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
+  out$plot <- hm_plot
+  out$data <- as_tibble(x)
+  out
+  #ComplexHeatmap::draw(hm_plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
 }
