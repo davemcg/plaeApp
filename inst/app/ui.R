@@ -86,13 +86,16 @@ shinyUI(
                                                                                    choices = NULL, selected = NULL, multiple = TRUE)),
                                                              column(5,
                                                                     uiOutput('gene_filter_on_dynamicUI'))),
-                                                    br(),
                                                     fluidRow(
-                                                      column(5, actionButton('BUTTON_draw_scatter','
+                                                      column(4, actionButton('BUTTON_draw_scatter','
                                                                       Draw Scatter Plot', icon = icon("arrow-up"), alt =  'Button scatter up',
                                                                              style='background-color: #3269FF; color: #ffffff')),
-                                                      column(5, downloadButton('BUTTON_download_scatter', 'Download Scatter Plot', alt = 'Download Scatter Plot to PNG in your browser default folder',
-                                                                               style='background-color: #3269FF; color: #ffffff')))),
+
+                                                      column(4, downloadButton('BUTTON_download_scatter', HTML('Download<br>Scatter Plot'), alt = 'Download Scatter Plot to PNG in your browser default folder',
+                                                                               style='background-color: #3269FF; color: #ffffff')),
+                                                      column(4, downloadButton('BUTTON_download_scatter_data', HTML('Download<br>Scatter Data'), alt = 'Download Scatter Plot data to csv in your browser default folder',
+                                                                               style='background-color: #3269FF; color: #ffffff')))
+                                                    ),
                                              # Meta Plot ------
                                              column(6,
                                                     plotOutput('meta_plot',
@@ -137,10 +140,12 @@ shinyUI(
                                                              column(5,
                                                                     uiOutput('meta_filter_on_dynamicUI'))),
                                                     fluidRow(
-                                                      column(5,
+                                                      column(4,
                                                              actionButton('BUTTON_draw_meta',' Draw Meta Plot', icon = icon("arrow-up"), alt = 'meta plot displays at top of page',
                                                                           style='background-color: #3269FF; color: #ffffff')),
-                                                      column(5, downloadButton('BUTTON_download_meta','Download Meta Plot', alt = 'Download Meta Plot to PNG in your browser default folder',
+                                                      column(4, downloadButton('BUTTON_download_meta',HTML('Download<br>Meta Plot'), alt = 'Download Meta Plot to PNG in your browser default folder',
+                                                                               style='background-color: #3269FF; color: #ffffff')),
+                                                      column(4, downloadButton('BUTTON_download_meta_data',HTML('Download<br>Meta Data'), alt = 'Download Meta Plot Data to csv in your browser default folder',
                                                                                style='background-color: #3269FF; color: #ffffff'))),
                                                     br()
                                                     # selectizeInput('meta_filter_on', strong('Select: '),
@@ -222,6 +227,10 @@ shinyUI(
                                                                         style='background-color: #3269FF; color: #ffffff')),
                                                  column(3, downloadButton('BUTTON_download_exp','
                                                                       Download Scatter Plot', alt = 'BUTTON download exp plot',
+                                                                          style='background-color: #3269FF; color: #ffffff')),
+                                                 column(3, downloadButton('BUTTON_download_exp_data',
+                                                                          'Download Scatter Data',
+                                                                          alt = 'BUTTON download exp data',
                                                                           style='background-color: #3269FF; color: #ffffff'))),
                                         br(),
                                         fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white'))),
@@ -349,6 +358,9 @@ shinyUI(
                                         downloadButton('BUTTON_download_dotplot','Download Dot Plot',
                                                        alt = 'button download dotplot',
                                                        style='background-color: #3269FF; color: #ffffff'),
+                                        downloadButton('BUTTON_download_dotplot_data','Download Dot Data',
+                                                       alt = 'button download dotplot data',
+                                                       style='background-color: #3269FF; color: #ffffff'),
                                         actionButton("dotplot_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                                         br(), br(),
                                         plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white')),
@@ -381,6 +393,9 @@ shinyUI(
                                                      style='background-color: #3269FF; color: #ffffff'),
                                         downloadButton('BUTTON_download_heatmap','Download Heatmap',
                                                        alt = 'button download heatmap',
+                                                       style='background-color: #3269FF; color: #ffffff'),
+                                        downloadButton('BUTTON_download_heatmap_data','Download Heatmap Data',
+                                                       alt = 'button download heatmap data',
                                                        style='background-color: #3269FF; color: #ffffff'),
                                         actionButton("heatmap_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                                         br(), br()),
@@ -513,7 +528,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.92'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.93'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,

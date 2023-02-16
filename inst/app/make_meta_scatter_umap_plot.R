@@ -110,7 +110,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
                              axis.ticks = element_blank(),
                              axis.text = element_blank()) +
                        guides(colour = guide_legend(override.aes = list(alpha = 1, size = 7)))
-                     )
+    )
 
   }
 
@@ -140,6 +140,7 @@ make_meta_scatter_umap_plot <- function(input, mf, meta_filter,
   }
   col_size <- {meta_filter[[meta_column]]} %>% n_distinct
   out <- list()
+  out$data <- p_data %>% select(Barcode, UMAP_1, UMAP_2, all_of(meta_column ))
   out$plot <- plot + more
   out$col_size <- col_size
   out

@@ -639,7 +639,7 @@ shinyServer(function(input, output, session) {
     gene_scatter_ranges <- reactiveValues(x = x_range,
                                           y = y_range)
     source('make_gene_scatter_umap_plot.R')
-    gene_scatter_plot <- eventReactive(input$BUTTON_draw_scatter, {
+    gene_scatter_plot_maker <- eventReactive(input$BUTTON_draw_scatter, {
       make_gene_scatter_umap_plot(input,
                                   scEiaD_2020_v01,
                                   mf,
@@ -662,7 +662,7 @@ shinyServer(function(input, output, session) {
       }
     })
     output$gene_scatter_plot <- renderPlot({
-      gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
+      gene_scatter_plot_maker()$plot + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
     })
     # %>%
     #   bindCache(list(input$Gene,
@@ -677,17 +677,28 @@ shinyServer(function(input, output, session) {
     #   bindEvent(input$BUTTON_draw_scatter,
     #             input$gene_scatter_plot_dblclick)
 
-    # gene scatter plot download ------
+    # gene scatter  download ------
     output$BUTTON_download_scatter <- downloadHandler(
       filename = function() { ('plae_gene_scatter.png') },
       content = function(file) {
-        ggsave(file, plot = gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y), device = "png")
+        ggsave(file, plot = gene_scatter_plot_maker()$plot + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y), device = "png")
+      }
+    )
+
+    output$BUTTON_download_scatter_data <- downloadHandler(
+      filename = function() {
+        paste("plae_gene_scatter_data_", Sys.Date(), ".csv.gz", sep="")
+        },
+      content = function(file) {
+        out <- gene_scatter_plot_maker()$data
+        out <- bind_rows(out, mf %>% select(Barcode, UMAP_1, UMAP_2) %>% mutate(counts = 0))
+        readr::write_csv(out, file=file)
       }
     )
 
     # metadata plot --------------
     source('make_meta_scatter_umap_plot.R')
-    meta_plot <- eventReactive(input$BUTTON_draw_meta, {
+    meta_plot_maker <- eventReactive(input$BUTTON_draw_meta, {
       make_meta_scatter_umap_plot(input, mf, meta_filter,
                                   celltype_predict_labels,
                                   celltype_labels,
@@ -738,7 +749,7 @@ shinyServer(function(input, output, session) {
 
 
     output$meta_plot <- renderPlot({
-      plot_data <- meta_plot()
+      plot_data <- meta_plot_maker()
       if (plot_data$col_size < 10) {
         plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y)
       } else {
@@ -757,18 +768,31 @@ shinyServer(function(input, output, session) {
     #                  meta_ranges$y)) %>%
     #   bindEvent(input$BUTTON_draw_meta,
     #             input$meta_plot_dblclick)
-
+    # meta download -----
     output$BUTTON_download_meta <- downloadHandler(
+
       filename = function() { ('plae_meta.png') },
       content = function(file) {
-        if (meta_plot()$col_size < 10) {
-          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y), device = "png")
+        plot_data <- meta_plot_maker()
+        if (plot_data$col_size < 10) {
+          ggsave(file, plot = plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y), device = "png")
         } else {
-          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
+          ggsave(file, plot = plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
                    theme(legend.position = 'none'), device = "png")
         }
       }
     )
+    output$BUTTON_download_meta_data <- downloadHandler(
+      filename = function() {
+        paste("plae_meta_data_", Sys.Date(), ".csv.gz", sep="")
+      },
+      content = function(file) {
+        out <- meta_plot_maker()
+        #out <- bind_rows(out, mf %>% select(Barcode, UMAP_1, UMAP_2) %>% mutate(counts = 0))
+        readr::write_csv(out$data, file=file)
+      }
+    )
+
     output$meta_plot_legend <- renderPlot({
       plot <- meta_plot()$plot
       legend <- cowplot::get_legend(plot)
@@ -854,10 +878,21 @@ shinyServer(function(input, output, session) {
     output$BUTTON_download_exp <- downloadHandler(
       filename = function() { ('plae_exp.png') },
       content = function(file) {
-        ggsave(file, plot = make_exp_plot(input, scEiaD_2020_v01, meta_filter),
+        ggsave(file, plot = make_exp_plot(input, scEiaD_2020_v01, meta_filter)$plot,
                height = as.numeric(input$exp_plot_height) / 50,
                width = 15,
                device = "png")
+      }
+    )
+
+
+    output$BUTTON_download_exp_data <- downloadHandler(
+
+      filename = function() { paste("plae_exp_", Sys.Date(), ".csv", sep="") },
+      content = function(file) {
+        out <- make_exp_plot(input, scEiaD_2020_v01, meta_filter)$box_data
+        write.csv(out,
+                  file = file)
       }
     )
 
@@ -876,7 +911,7 @@ shinyServer(function(input, output, session) {
                                   {make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)}
     )
     output$dotplot <- renderPlot({
-      draw_dotplot()
+      draw_dotplot()$plot
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
 
     ## heatmap ---------
@@ -887,32 +922,52 @@ shinyServer(function(input, output, session) {
                                     make_heatmap(input, scEiaD_2020_v01)}
     )
     output$heatmap <- renderPlot({
-      draw_heatmap()
+      ComplexHeatmap::draw(draw_heatmap()$plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
+
     }, height = eventReactive(input$BUTTON_draw_heatmap, {input$heatmap_height %>% as.numeric()}))
   })
 
-
+## dotplot download ----
   output$BUTTON_download_dotplot <- downloadHandler(
     filename = function() { ('plae_dotplot.png') },
     content = function(file) {
-      ggsave(file, plot = make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df),
+      ggsave(file, plot = make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$plot,
              height =
                input$dotplot_height %>% as.numeric() / 50,
              width = 12,
              device = "png")
     }
   )
-
+  output$BUTTON_download_dotplot_data <-  downloadHandler(
+      filename = function() {
+        paste("plae_dotplot_data_", Sys.Date(), ".csv", sep="")
+      },
+      content = function(file) {
+        out <- make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$data
+        readr::write_csv(out, file=file)
+      }
+    )
+## heatmap download ----
   output$BUTTON_download_heatmap <- downloadHandler(
     filename = function() { ('plae_heatmap.png') },
     content = function(file) {
-      ggsave(file, plot = make_heatmap(input, scEiaD_2020_v01),
-             height =
-               input$heatmap_height %>% as.numeric() / 50,
-             width = 12,
-             device = "png")
+      png(filename = file,
+          height = input$heatmap_height %>% as.numeric(),
+          width = 1200)
+      ComplexHeatmap::draw(make_heatmap(input, scEiaD_2020_v01)$plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
+      dev.off()
     }
   )
+  output$BUTTON_download_heatmap_data <-  downloadHandler(
+    filename = function() {
+      paste("plae_heatmap_data_", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      out <- make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$data
+      readr::write_csv(out, file=file)
+    }
+  )
+
 
   # in situ ----
   # Functions used to generate in situ plots

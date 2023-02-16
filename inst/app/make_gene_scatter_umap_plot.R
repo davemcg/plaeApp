@@ -103,6 +103,8 @@ make_gene_scatter_umap_plot <- function(input,
                             max.iter = 20)
   }
 
-
-  suppressWarnings(plot + more)
+  out <- list()
+  out$plot <- suppressWarnings(plot + more)
+  out$data <- p
+  out
 }
