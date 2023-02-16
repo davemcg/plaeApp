@@ -1,0 +1,264 @@
+---
+title: "Label Yo Cells"
+output: html_notebook
+---
+
+# Set up (via conda) a new environment to install scvi and kb-python
+```{bash}
+conda create -n scEiaD_CT python=3.9
+conda activate scEiaD_CT
+conda install -c anaconda pip
+pip install --quiet kb-python
+pip install --quiet scvi-tools[tutorials]==0.19.0
+```
+
+# Download the counts
+In the past I have tried to advocate for just downloading the built models....but I give up. Using pre-built models is "easy" in the sense that the models are compact in size (a dozen mb or so) but fail horribly in practice as once you change versions (like any versions) of the dozens of software dependencies, then the model is likely to fail to work. Also models trained with a GPU (always? often?) don't work on CPUs, which is another fun wrinkle. 
+
+So, a more practical approach is to make your own damn model. This has additional benefits to you, the reader, as you can customize what cells / studies / species are used to build the model to better match *your* own data. 
+
+
+## Download the cut down data used to train scANVI for scEiaD/plae
+Only the genes used for HVG and the human labelled cells are included here. 
+```{bash}
+wget --quiet -O adata_scANVI.h5ad.gz https://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/scANVI_model/adata.h5ad.gz
+gunzip adata_scANVI.h5ad.gz
+```
+
+### Alternative: Download ALL Data
+
+Why? Some reasons I can think of.
+
+1. Use the mouse to train the model?
+2. Limit to certain time points?
+3. Limit to certain parts of the eye?
+4. Use your own set of HVG?
+
+```{bash}
+wget -O scEiaD_all_anndata.fix01.h5ad http://hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/scEiaD_all_anndata.fix01.h5ad
+```
+
+# Setup R to use the proper python
+OK, let's run scVI (which is a *python* tool) within Rstudio 
+
+The python version printed in the code output block should match the given path. How do you find this path for yourself?????
+
+1. Go to your terminal
+2. Run: `conda activate scEiaD_CT_learner`
+3. Type: `which python`
+4. Copy the path given in the command above into the code block. **THIS MUST HAPPEN BEFORE YOU RUN THE CODE BLOCK AS R/RSTUDIO IS PERSNICKETY ABOUT THE PATH BEING GIVEN BEFORE RETICULATE IS RUN**
+
+```{r}
+Sys.setenv(RETICULATE_PYTHON = "/Users/mcgaugheyd/anaconda3/envs/scEiaD_CT/bin/python")
+library(reticulate)
+py_config()
+```
+
+## Let's go
+For your reference: https://docs.scvi-tools.org/en/stable/tutorials/notebooks/python_in_R.html and https://docs.scvi-tools.org/en/stable/tutorials/notebooks/scvi_in_R.html
+
+The above guides also give some guidance on how to convert Seurat datasets into h5ad for scanpy/scVI usage.
+
+## Load data
+Note: this is happening in python
+```{python}
+import scanpy as sc
+from scipy import sparse
+import scvi 
+import pandas as pd
+import anndata
+adata = sc.read_h5ad('adata_scANVI.h5ad')
+adata
+```
+
+### Optional: Example processing with the full dataset
+```{python}
+# cut down full adata to mouse, non-body
+adata = sc.read_h5ad('scEiaD_all_anndata.fix01.h5ad')
+adata_mouse = adata[adata.obs['organism'] == 'Mus musculus', :].copy()
+adata_mouse = adata_mouse[adata_mouse.obs['Compartment'] != 'Body', :]
+# custom hvg selection
+sc.pp.highly_variable_genes(
+    adata_mouse,
+    n_top_genes=2000,
+    subset=True,
+    flavor="seurat_v3",
+    batch_key="study_accession"
+)
+# set as the "adata" for downstream use
+adata = adata_mouse.copy()
+```
+
+## Load in your own data
+
+### CellRanger example
+This is not ideal, as the count data in scEiaD is quantified using kallisto/bustools with gencode mouse v25 or human v35. CellRanger is STAR based and has some "unusual" behavior where they (by default) count intronic reads in addition to the exonic ones. But asking you to re-quantify your data is perhaps a bridge too far. If you *are* cool with doing that, then keep reading below for how to match our quantification approach.
+
+```{python}
+adata_MINE = sc.read_10x_h5('/Users/mcgaugheyd/data/brooks/sc_mouse_OFC_e10_e11_e12/filtered_feature_bc_matrix.h5' )  
+```
+
+## Requantify like a boss
+
+With kb-python (kallisto bustools) and using my pre-made indexes
+```{bash}
+
+```
+
+
+## Mouse detour
+scEiaD is built around Ensembl ("ENSGENE") IDs. Furthermore, we convert mouse (and macaque and chick) ensgene IDs to *human* ENSGENE, where possible. So if your new data is mouse (and/or is human labelled with gene names (e.g. "Rho")) then you need to change over your gene count matrix to use the ENSGENE IDs.
+
+This downloads a ENSGENE <-> Gene Name table that we use
+```{bash}
+wget hpc.nih.gov/~mcgaugheyd/scEiaD/2022_03_22/human_mouse_gene_conversion.tsv.gz .
+```
+
+Build a dict in python to swapover mouse gene name (eg "Rho") to human ensembl (eg "ENSG00000163914")
+```{python}
+import csv
+import gzip
+
+# Open the tsv.gz file
+with gzip.open("human_mouse_gene_conversion.tsv.gz", "rt") as f:
+    # Create a reader object
+    reader = csv.reader(f, delimiter='\t')
+    
+    # Initialize an empty dictionary
+    gene_id_name_dict = {}
+    
+    # Iterate over the rows of the file
+    for row in reader:
+        # Extract the first and third columns
+        human_ensgene, mouse_name = row[0], row[3]
+        
+        # Add the key-value pair to the dictionary
+        gene_id_name_dict[mouse_name] = human_ensgene
+
+
+# now convert names
+new_var_names = []
+counter = 0
+for gene in adata_MINE.var_names:
+    if gene.upper() not in gene_id_name_dict:
+        new_var_names.append('NA' + str(counter))
+        counter += 1
+    else:
+        new_var_names.append(gene_id_name_dict[gene.upper()])
+        
+
+# check for duplicates and only retain the first one
+# yes this is harsh, but simple and shouldn't matter too much
+undupped_var_names = list()
+counter = 0
+for gene in new_var_names:
+    counter += 1
+    count = new_var_names.count(gene)
+    if count > 1 and gene not in undupped_var_names :
+        undupped_var_names.append(gene)
+    elif count > 1:
+        undupped_var_names.append('DUP' + str(counter))
+    else:
+        undupped_var_names.append(gene)
+
+
+# swap
+adata_MINE.var_names = undupped_var_names
+
+# cut down query (your data) object genes to match that of the 
+# scEiaD data ("adata") 
+# for the "missing" gene situation:
+#   add in the genes with 0 value
+
+var_names = pd.DataFrame(list(adata.var_names))
+# count missing
+n_missing_genes = sum(~var_names[0].isin(adata_MINE.var_names))
+# build dummy anndata object with 0 value with the missing genes
+dummy_adata = anndata.AnnData(X=sparse.csr_matrix((adata_MINE.shape[0], n_missing_genes)))
+# move over meta to dummy
+dummy_adata.obs_names = adata_MINE.obs_names
+# fill in the missing names
+dummy_adata.var_names = var_names[0][~var_names[0].isin(adata_MINE.var_names)]
+# add your adata and the dummy one together
+adata_fixed = anndata.concat([adata_MINE, dummy_adata], axis=1)
+# cut down to finally match the genes in the scEiaD adata
+adata_MINE_HVG = adata_fixed[:, var_names[0]]
+
+# add a tasteful and accurate "study_accession" to your obs
+adata_MINE_HVG.obs['study_accession'] = 'my special data'
+```
+
+## Concatenate (finally)
+Finally we glue your data to the scEiaD data
+```{python}
+adata_full = adata.concatenate(adata_MINE_HVG, batch_key = 'bkey')
+```
+
+
+## Setup and run scVI
+
+On my non-CUPA GPU Mac desktop this takes about 12 minutes. If you had a CUDA (e.g. NVIDIA) GPU this would take about one minute. I suppose the new M1/M2 Mac can be set to GPU accelerate - and the scVI developers give some guidance on how to set it up [here](https://docs.scvi-tools.org/en/stable/installation.html#apple-silicon-prerequisites) 
+
+```{python}
+# make certain counts are in sparse format
+adata_full.X = sparse.csr_matrix(adata_full.X)
+                            
+# run setup_anndata
+scvi.model.SCVI.setup_anndata(adata_full, batch_key='study_accession')
+# set up arches params
+arches_params = dict(
+    use_layer_norm="both",
+    use_batch_norm="none",
+    encode_covariates=True,
+    dropout_rate=0.2,
+    n_layers=2,
+    n_latent = 4000
+)
+
+# create the model
+scVI_model = scvi.model.SCVI(adata_full, **arches_params)
+
+# train the model
+scVI_model.train(max_epochs = 5)
+# move the scVI corrected dims over
+adata_full.obsm["X_scVI"] = scVI_model.get_latent_representation()
+```
+
+# Save your own shiny model
+
+```{python}
+# save the reference model
+dir_path = "my_scANVI_model/scvi/"
+
+# RIGHT BELOW MAKE CERTAIN YOU ARE SAVING THE RIGHT THING
+vae_ref.save(dir_path, overwrite=True)
+```
+
+# Label Time!
+
+## Replace my R "NA' and Python 'NaN' with 'Unknown'
+```{python}
+ct = adata_full.obs['CellType']
+ct.replace('NA', pd.np.nan, inplace=True)
+ct = ct.cat.add_categories('Unknown')
+ct.fillna('Unknown', inplace = True)
+pd.value_counts(ct)
+adata_full.obs['CellType'] = ct
+```
+
+# SCANVI CT prediction
+Warning SCANVI is SLOOOOOOW and even 5 epochs (below what the scVI team recommends (50 or so)) will takes HOURS on a CPU machine. On a GPU machine this will run in a much more reasonable time. But in practice 5 epochs seems to work out OK on my data. 
+```{python}
+scvi.model.SCVI.setup_anndata(adata_full, batch_key='study_accession')
+lvae = scvi.model.SCANVI.from_scvi_model(
+    scVI_model,
+    adata=adata_full,
+    unlabeled_category="Unknown",
+    labels_key="CellType",
+)
+lvae.train(max_epochs=5, n_samples_per_label=100)
+
+adata_full.obs["CellType_predict"] = lvae.predict(adata_full)
+adata_full.obs["X_scANVI"] = lvae.get_latent_representation(adata_full.obs)
+
+```
