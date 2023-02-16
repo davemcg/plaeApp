@@ -36,6 +36,7 @@ meta_filter <- read_fst('~/data/scEiaD_2022_02//meta_filter.fst') %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
+  filter(study_accession != 'Bharti_Nguyen_iRPE_2D_3D') %>%
   mutate(UMAP_a = UMAP_1 * x_dir,
          UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
