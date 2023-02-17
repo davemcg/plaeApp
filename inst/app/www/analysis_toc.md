@@ -1,5 +1,17 @@
 <!---
 NOTE WHEN KNITTING/WHATEVER INTO HTML HAND DELETE EVERYTHING EXCEPT UP TO AND BEYOND <body> /<body> 
+
+PASTE BELOW AT THE TOP
+
+<style>
+      th, td {
+         padding-top: 5px;
+         padding-bottom: 5px;
+         padding-left: 20px;
+         padding-right: 20px;
+      }
+</style>
+
 -->
 
 | Analyses | Colab | Bash | Web Guide |
