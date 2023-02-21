@@ -1,0 +1,74 @@
+---
+title: "plae Custom Plotting"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: monochrome
+    fig_caption: false
+    theme:
+      bootswatch: default
+      primary: "rgb(102,51,255)"
+      secondary: "#555A5F"
+---
+
+# Welcome
+
+This document shows an example of making custom plots from plae data for use in your own presentations / publications. If you need assistance with making a custom figure / table and believe you are missing some data required, please contact me. 
+
+# Step 1
+
+Make plot in plae.nei.nih.gov and download data
+
+![](screenshots/exp_plot_example.png)
+
+
+# Step 2
+
+Look at [source plotting code](http://github.com/davemcg/plaeApp/tree/master/inst/app) and copy out the relevant bits. The names of the functions (I think) are self-explanatory for which kind of plot they make. This example is remaking the "Expression Plot" so we will open up the [make_exp_plot.R](https://github.com/davemcg/plaeApp/blob/master/inst/app/make_exp_plot.R) file. For all of these functions you can just go straight to the bottom and find the plotting part near there. 
+
+## Copied code bit
+```{r, eval = FALSE}
+  ggplot(aes(x=!!as.symbol(input$exp_plot_facet), 
+             y = !!as.symbol(input$exp_plot_ylab), 
+             color = !!as.symbol(grouping_features))) +
+      geom_boxplot(color = 'black', outlier.shape = NA) +
+      ggbeeswarm::geom_quasirandom(aes(size = `Total Cells`), groupOnX = TRUE) +
+      cowplot::theme_cowplot() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      scale_radius(range=c(2, 6)) +
+      scale_colour_manual(values = rep(c(pals::alphabet() %>% unname()), 20)) +
+      theme(legend.position="bottom") +
+      facet_wrap(ncol = as.numeric(input$exp_plot_col_num), scales = 'free_y', ~Gene)
+```
+# Step 3
+
+Load in the downloaded data into R
+
+```{r}
+library(tidyverse)
+library(ggbeeswarm)
+library(cowplot)
+library(pals)
+plae_exp_data <- read_csv("~/Downloads/plae_exp_2023-02-16.csv")
+plae_exp_data
+```
+
+# Step 4
+
+Adjust the code chunk above and make a plot
+```{r, fig.width=15, fig.height=10}
+plae_exp_data %>%   
+  ggplot(aes(x = CellType_predict, 
+             y = `Mean log2(Counts + 1)`, 
+             color = study_accession)) +
+      geom_boxplot(color = 'black', outlier.shape = NA) +
+      geom_quasirandom(aes(size = `Total Cells`), groupOnX = TRUE) +
+      theme_cowplot() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      scale_radius(range=c(2, 6)) +
+      scale_colour_manual(values = rep(c(alphabet() %>% unname()), 20)) +
+      theme(legend.position="bottom") +
+      facet_wrap(ncol = 2, scales = 'free_y', ~Gene)
+```
+

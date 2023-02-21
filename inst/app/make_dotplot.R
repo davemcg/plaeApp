@@ -150,6 +150,7 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
     group1_legend <- plot_grid(get_legend(group1_labels + theme(legend.position="bottom")))
   }
 
+  out <- list()
   if (length(grouping_features) == 2){
 
     group2_labels_df <- order %>% inner_join(cat_to_color_df %>%
@@ -183,7 +184,7 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
       plot_spacer() |
       dp_legened |plot_spacer() |plot_layout(nrow = 1, widths = c(1,0.1, .05,.05,.05,.05,.05))
     bottom <- (group1_legend +plot_spacer())/plot_spacer()/group2_legend
-    top/plot_spacer()/bottom +plot_layout(ncol = 1, heights = c(1,.05, .2))
+    out$plot <- top/plot_spacer()/bottom +plot_layout(ncol = 1, heights = c(1,.05, .2))
 
   } else {
     # group1_labels +
@@ -194,7 +195,10 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
       ct |
       group1_labels |
       plot_spacer() |
-      dp_legened |plot_spacer() | plot_layout(nrow = 1, widths = c(1,0.1, .05,.05, .05,.05))
-    top/plot_spacer() / group1_legend +plot_layout(ncol = 1, heights = c(1,.05, .2))
+      dp_legened |plot_spacer() | plot_layout(nrow = 1, widths = c(1,0.1, .05,.05, .1,.1))
+    out$plot <- top/plot_spacer() / group1_legend +plot_layout(ncol = 1, heights = c(1,.05, .2))
   }
+
+  out$data <- dotplot_data
+  out
 }

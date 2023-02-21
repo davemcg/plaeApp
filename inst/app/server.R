@@ -22,18 +22,22 @@ library(fst)
 library(dbplyr)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/McGaughey_S/data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/Thunder//data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
+#scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
 
 x_dir <- -1
 y_dir <- 1
-meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD_2022_02//meta_filter.fst') %>%
+
+meta_filter <- read_fst('/Volumes/Thunder/data/scEiaD_2022_02//meta_filter.fst') %>%
+# meta_filter <- read_fst('~/data/scEiaD_2022_02//meta_filter.fst') %>%
   as_tibble() %>%
   mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
+ # filter(study_accession != 'Bharti_Nguyen_iRPE_2D_3D') %>%
   mutate(UMAP_a = UMAP_1 * x_dir,
          UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
@@ -42,7 +46,7 @@ meta_filter <- read_fst('/Volumes/McGaughey_S/data/scEiaD_2022_02//meta_filter.f
 #    select(-UMAP_1, -UMAP_2) %>%
 #    right_join(umap %>% select(Barcode, UMAP_1, UMAP_2), by = 'Barcode')
 
-tabulamuris_predict_labels <-scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
+tabulamuris_predict_labels <- scEiaD_2020_v01 %>% tbl('tabulamuris_predict_labels') %>% collect %>%
   mutate(UMAP_a = UMAP_1 * x_dir,
          UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
@@ -495,13 +499,14 @@ shinyServer(function(input, output, session) {
 
                             Tips:
                             <ul>
-                              <li>You can click and drag to set a box, then double click to zoom in!</li>
-                              <li>Double click again to zoom back</li>
+                              <li><img src = \"umap_table_01.gif\"  width=\"500\"> </li>
+                              <li>If you click anywhere on either UMAP image, you will get information about the five closest cells.</li>
+                              <li>You can click and drag to set a box, then double click to zoom in! Double click again to zoom back out.</li>
                             </ul>"),
                                                 easyClose = TRUE))
     })
     observeEvent(input$exp_plot_help, {
-      showModal(shinyjqui::draggableModalDialog(size = 's',
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
                                                 title = "Expression Plot",
                                                 HTML("<p>This highly flexible scatter plot view allows you to plot gene expression by Cell Type
                                                 (published), Cell Type (our inferred cell labels), or cluster (unsupervised grouping
@@ -509,22 +514,36 @@ shinyServer(function(input, output, session) {
                                                 selecting how the data points are colored and you have advanced filtering
                                                 functionality that lets you select what fields (e.g. Citation) to filter on.</p>
 
+                            <ul><img src = \"exp_plot_01.gif\"  width=\"500\"></ul>
+
+                            WHY IS MY PLOT NOT READABLE????!!!!!!!!
+                            <ul>
+                              <li>This is because you have to adjust the Plot Height and/or the number of columns. Sorry, it is surprisingly tricky to automatically pick
+                                    the best image height and width.
+                              </li>
+                            </ul>
+
                             There are two fundamental ways to view the data:
                             <ul>
                               <li>Expression, which is log2 scaled counts</li>
                               <li>% Cells Detected, which is the proportion of cells that have any detectable transcript</li>
-                            </ul>"),
+                            </ul>
+
+                            Faceting on Gene or Cell Grouping arranges the \"boxes\" differently and allows you to better see expression differences
+                                between genes or cell types."),
                                                 easyClose = TRUE))
     })
     observeEvent(input$insitu_help, {
-      showModal(shinyjqui::draggableModalDialog(size = 's',
+      showModal(shinyjqui::draggableModalDialog(size = 'm',
                                                 title = "In Situ Projection",
                                                 HTML("<p>As developmental biologists may be more experienced in viewing
                                                 stained cross-sections of the retina, we have created this visualization
                                                 which colors each of the major cell type (e.g. Rods, Cones) by the intensity
                                                 of the expression of user selected gene. Like elsewhere in PLAE, you can
                                                 filter to only show data by flexible criteria (e.g. only show gene / cell
-                                                expression infrmation from mouse)</p>"),
+                                                expression infrmation from mouse)</p>
+
+                                                     <ul><img src = \"insitu_01.gif\"  width=\"500\"></ul>"),
                                                 easyClose = TRUE))
     })
     observeEvent(input$facet_umap_help, {
@@ -551,7 +570,9 @@ shinyServer(function(input, output, session) {
                                                 HTML("<p>The heatmap visualization differs from the dotplot as instead of
                                                      displaying absolute expression it instead displays *relative* expression.
                                                      This is calculated from the DESeq2-based differential expression of the group
-                                                     of interest (e.g. Rods) against all others.</p>"),
+                                                     of interest (e.g. Rods) against all others. Chicken (Gallus gallus) information is
+                                                     not included as of now because there is only one study. You cannot run differential
+                                                     expression tests with only one study.</p>"),
                                                 easyClose = TRUE))
     })
     observeEvent(input$diff_testing_help, {
@@ -622,7 +643,7 @@ shinyServer(function(input, output, session) {
     gene_scatter_ranges <- reactiveValues(x = x_range,
                                           y = y_range)
     source('make_gene_scatter_umap_plot.R')
-    gene_scatter_plot <- eventReactive(input$BUTTON_draw_scatter, {
+    gene_scatter_plot_maker <- eventReactive(input$BUTTON_draw_scatter, {
       make_gene_scatter_umap_plot(input,
                                   scEiaD_2020_v01,
                                   mf,
@@ -645,7 +666,7 @@ shinyServer(function(input, output, session) {
       }
     })
     output$gene_scatter_plot <- renderPlot({
-      gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
+      gene_scatter_plot_maker()$plot + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y)
     })
     # %>%
     #   bindCache(list(input$Gene,
@@ -660,17 +681,28 @@ shinyServer(function(input, output, session) {
     #   bindEvent(input$BUTTON_draw_scatter,
     #             input$gene_scatter_plot_dblclick)
 
-    # gene scatter plot download ------
+    # gene scatter  download ------
     output$BUTTON_download_scatter <- downloadHandler(
       filename = function() { ('plae_gene_scatter.png') },
       content = function(file) {
-        ggsave(file, plot = gene_scatter_plot() + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y), device = "png")
+        ggsave(file, plot = gene_scatter_plot_maker()$plot + coord_cartesian(xlim = gene_scatter_ranges$x, ylim = gene_scatter_ranges$y), device = "png")
+      }
+    )
+
+    output$BUTTON_download_scatter_data <- downloadHandler(
+      filename = function() {
+        paste("plae_gene_scatter_data_", Sys.Date(), ".csv.gz", sep="")
+        },
+      content = function(file) {
+        out <- gene_scatter_plot_maker()$data
+        out <- bind_rows(out, mf %>% select(Barcode, UMAP_1, UMAP_2) %>% mutate(counts = 0))
+        readr::write_csv(out, file=file)
       }
     )
 
     # metadata plot --------------
     source('make_meta_scatter_umap_plot.R')
-    meta_plot <- eventReactive(input$BUTTON_draw_meta, {
+    meta_plot_maker <- eventReactive(input$BUTTON_draw_meta, {
       make_meta_scatter_umap_plot(input, mf, meta_filter,
                                   celltype_predict_labels,
                                   celltype_labels,
@@ -721,7 +753,7 @@ shinyServer(function(input, output, session) {
 
 
     output$meta_plot <- renderPlot({
-      plot_data <- meta_plot()
+      plot_data <- meta_plot_maker()
       if (plot_data$col_size < 10) {
         plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y)
       } else {
@@ -740,18 +772,31 @@ shinyServer(function(input, output, session) {
     #                  meta_ranges$y)) %>%
     #   bindEvent(input$BUTTON_draw_meta,
     #             input$meta_plot_dblclick)
-
+    # meta download -----
     output$BUTTON_download_meta <- downloadHandler(
+
       filename = function() { ('plae_meta.png') },
       content = function(file) {
-        if (meta_plot()$col_size < 10) {
-          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y), device = "png")
+        plot_data <- meta_plot_maker()
+        if (plot_data$col_size < 10) {
+          ggsave(file, plot = plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y), device = "png")
         } else {
-          ggsave(file, plot = meta_plot()$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
+          ggsave(file, plot = plot_data$plot + coord_cartesian(xlim = meta_ranges$x, ylim = meta_ranges$y) +
                    theme(legend.position = 'none'), device = "png")
         }
       }
     )
+    output$BUTTON_download_meta_data <- downloadHandler(
+      filename = function() {
+        paste("plae_meta_data_", Sys.Date(), ".csv.gz", sep="")
+      },
+      content = function(file) {
+        out <- meta_plot_maker()
+        #out <- bind_rows(out, mf %>% select(Barcode, UMAP_1, UMAP_2) %>% mutate(counts = 0))
+        readr::write_csv(out$data, file=file)
+      }
+    )
+
     output$meta_plot_legend <- renderPlot({
       plot <- meta_plot()$plot
       legend <- cowplot::get_legend(plot)
@@ -831,16 +876,27 @@ shinyServer(function(input, output, session) {
     })
 
     output$exp_plot <- renderPlot({
-      exp_plot()
+      exp_plot()$plot
     }, height = eventReactive(input$BUTTON_draw_exp_plot, {as.numeric(input$exp_plot_height)}))
 
     output$BUTTON_download_exp <- downloadHandler(
       filename = function() { ('plae_exp.png') },
       content = function(file) {
-        ggsave(file, plot = make_exp_plot(input, scEiaD_2020_v01, meta_filter),
+        ggsave(file, plot = make_exp_plot(input, scEiaD_2020_v01, meta_filter)$plot,
                height = as.numeric(input$exp_plot_height) / 50,
                width = 15,
                device = "png")
+      }
+    )
+
+
+    output$BUTTON_download_exp_data <- downloadHandler(
+
+      filename = function() { paste("plae_exp_", Sys.Date(), ".csv", sep="") },
+      content = function(file) {
+        out <- make_exp_plot(input, scEiaD_2020_v01, meta_filter)$box_data
+        write.csv(out,
+                  file = file)
       }
     )
 
@@ -859,7 +915,7 @@ shinyServer(function(input, output, session) {
                                   {make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)}
     )
     output$dotplot <- renderPlot({
-      draw_dotplot()
+      draw_dotplot()$plot
     }, height = eventReactive(input$BUTTON_draw_dotplot, {input$dotplot_height %>% as.numeric()}))
 
     ## heatmap ---------
@@ -870,32 +926,52 @@ shinyServer(function(input, output, session) {
                                     make_heatmap(input, scEiaD_2020_v01)}
     )
     output$heatmap <- renderPlot({
-      draw_heatmap()
+      ComplexHeatmap::draw(draw_heatmap()$plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
+
     }, height = eventReactive(input$BUTTON_draw_heatmap, {input$heatmap_height %>% as.numeric()}))
   })
 
-
+## dotplot download ----
   output$BUTTON_download_dotplot <- downloadHandler(
     filename = function() { ('plae_dotplot.png') },
     content = function(file) {
-      ggsave(file, plot = make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df),
+      ggsave(file, plot = make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$plot,
              height =
                input$dotplot_height %>% as.numeric() / 50,
              width = 12,
              device = "png")
     }
   )
-
+  output$BUTTON_download_dotplot_data <-  downloadHandler(
+      filename = function() {
+        paste("plae_dotplot_data_", Sys.Date(), ".csv", sep="")
+      },
+      content = function(file) {
+        out <- make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$data
+        readr::write_csv(out, file=file)
+      }
+    )
+## heatmap download ----
   output$BUTTON_download_heatmap <- downloadHandler(
     filename = function() { ('plae_heatmap.png') },
     content = function(file) {
-      ggsave(file, plot = make_heatmap(input, scEiaD_2020_v01),
-             height =
-               input$heatmap_height %>% as.numeric() / 50,
-             width = 12,
-             device = "png")
+      png(filename = file,
+          height = input$heatmap_height %>% as.numeric(),
+          width = 1200)
+      ComplexHeatmap::draw(make_heatmap(input, scEiaD_2020_v01)$plot, padding = unit(c(0, 0.5, 1.5, 0.5), "in"), row_title = "Genes")
+      dev.off()
     }
   )
+  output$BUTTON_download_heatmap_data <-  downloadHandler(
+    filename = function() {
+      paste("plae_heatmap_data_", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      out <- make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$data
+      readr::write_csv(out, file=file)
+    }
+  )
+
 
   # in situ ----
   # Functions used to generate in situ plots

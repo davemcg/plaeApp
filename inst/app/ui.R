@@ -86,13 +86,16 @@ shinyUI(
                                                                                    choices = NULL, selected = NULL, multiple = TRUE)),
                                                              column(5,
                                                                     uiOutput('gene_filter_on_dynamicUI'))),
-                                                    br(),
                                                     fluidRow(
-                                                      column(5, actionButton('BUTTON_draw_scatter','
+                                                      column(4, actionButton('BUTTON_draw_scatter','
                                                                       Draw Scatter Plot', icon = icon("arrow-up"), alt =  'Button scatter up',
                                                                              style='background-color: #3269FF; color: #ffffff')),
-                                                      column(5, downloadButton('BUTTON_download_scatter', 'Download Scatter Plot', alt = 'Download Scatter Plot to PNG in your browser default folder',
-                                                                               style='background-color: #3269FF; color: #ffffff')))),
+
+                                                      column(4, downloadButton('BUTTON_download_scatter', HTML('Download<br>Scatter Plot'), alt = 'Download Scatter Plot to PNG in your browser default folder',
+                                                                               style='background-color: #3269FF; color: #ffffff')),
+                                                      column(4, downloadButton('BUTTON_download_scatter_data', HTML('Download<br>Scatter Data'), alt = 'Download Scatter Plot data to csv in your browser default folder',
+                                                                               style='background-color: #3269FF; color: #ffffff')))
+                                                    ),
                                              # Meta Plot ------
                                              column(6,
                                                     plotOutput('meta_plot',
@@ -137,10 +140,12 @@ shinyUI(
                                                              column(5,
                                                                     uiOutput('meta_filter_on_dynamicUI'))),
                                                     fluidRow(
-                                                      column(5,
+                                                      column(4,
                                                              actionButton('BUTTON_draw_meta',' Draw Meta Plot', icon = icon("arrow-up"), alt = 'meta plot displays at top of page',
                                                                           style='background-color: #3269FF; color: #ffffff')),
-                                                      column(5, downloadButton('BUTTON_download_meta','Download Meta Plot', alt = 'Download Meta Plot to PNG in your browser default folder',
+                                                      column(4, downloadButton('BUTTON_download_meta',HTML('Download<br>Meta Plot'), alt = 'Download Meta Plot to PNG in your browser default folder',
+                                                                               style='background-color: #3269FF; color: #ffffff')),
+                                                      column(4, downloadButton('BUTTON_download_meta_data',HTML('Download<br>Meta Data'), alt = 'Download Meta Plot Data to csv in your browser default folder',
                                                                                style='background-color: #3269FF; color: #ffffff'))),
                                                     br()
                                                     # selectizeInput('meta_filter_on', strong('Select: '),
@@ -171,8 +176,8 @@ shinyUI(
                                                     div(DT::dataTableOutput('metadata_stats'), style='font-size:75%'))
                                            ),
                                            fluidRow(column(6,
-                                                           actionButton("umap_table_help", "Page Pop Up Info"),
-                                                           actionButton("data_table_help1", "Data Table Pop Up Info")))),
+                                                           actionButton("umap_table_help", "Page Pop Up Info", style='background-color: #6633ff; color: #ffffff'),
+                                                           actionButton("data_table_help1", "Data Table Pop Up Info", style='background-color: #6633ff; color: #ffffff')))),
                                  linebreaks(8),
                                  fluidRow(includeHTML("www/footer.html"))
                         ),
@@ -222,11 +227,15 @@ shinyUI(
                                                                         style='background-color: #3269FF; color: #ffffff')),
                                                  column(3, downloadButton('BUTTON_download_exp','
                                                                       Download Scatter Plot', alt = 'BUTTON download exp plot',
+                                                                          style='background-color: #3269FF; color: #ffffff')),
+                                                 column(3, downloadButton('BUTTON_download_exp_data',
+                                                                          'Download Scatter Data',
+                                                                          alt = 'BUTTON download exp data',
                                                                           style='background-color: #3269FF; color: #ffffff'))),
                                         br(),
                                         fluidRow(column(10, plotOutput('exp_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white'))),
                                         br(),
-                                        actionButton("exp_plot_help", "Page Pop Up Info"),),
+                                        actionButton("exp_plot_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),),
                                  linebreaks(160),
                                  fluidRow(includeHTML("www/footer.html"))),
 
@@ -262,8 +271,8 @@ shinyUI(
                                                            fluidRow(
                                                              div(DT::dataTableOutput('insitu_gene_stats'), style='font-size:75%'))
                                           ),
-                                          actionButton("insitu_help", "Page Pop Up Info"),
-                                          actionButton("data_table_help2", "Data Table Pop Up Info")
+                                          actionButton("insitu_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
+                                          actionButton("data_table_help2", "Data Table Pop Up Info", style='background-color: #6633ff; color: #ffffff')
                                    )),
                                  linebreaks(120),
                                  fluidRow(includeHTML("www/footer.html"))),
@@ -303,12 +312,12 @@ shinyUI(
                                                  plotOutput('facet_plot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white'))
                                         ),
                                         br(),
-                                        actionButton("facet_umap_help", "Page Pop Up Info")),
+                                        actionButton("facet_umap_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff')),
                                  linebreaks(72),
                                  fluidRow(includeHTML("www/footer.html"))),
                         # temporal plot -----
                         # tabPanel('Temporal Gene x Cell Type',
-                        #          actionButton("temporal_plot_help", "Page Pop Up Info"),
+                        #          actionButton("temporal_plot_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                         #          column(10,
                         #                 fluidRow(
                         #                   column(10,
@@ -349,7 +358,10 @@ shinyUI(
                                         downloadButton('BUTTON_download_dotplot','Download Dot Plot',
                                                        alt = 'button download dotplot',
                                                        style='background-color: #3269FF; color: #ffffff'),
-                                        actionButton("dotplot_help", "Page Pop Up Info"),
+                                        downloadButton('BUTTON_download_dotplot_data','Download Dot Data',
+                                                       alt = 'button download dotplot data',
+                                                       style='background-color: #3269FF; color: #ffffff'),
+                                        actionButton("dotplot_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                                         br(), br(),
                                         plotOutput('dotplot') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white')),
                                  linebreaks(120),
@@ -368,7 +380,7 @@ shinyUI(
                                                                    select = c('CellType_predict'),
                                                                    multiple=FALSE)),
                                           column(3, selectizeInput('heatmap_organism', strong('Organism: '),
-                                                                   choices=c('Homo sapiens', 'Mus musculus', 'Macaca fascicularis'),
+                                                                   choices=c('Homo sapiens', 'Mus musculus', 'Macaca fascicularis', 'Gallus gallus'),
                                                                    select = 'Homo sapiens',
                                                                    multiple=TRUE)),
                                           column(3, selectizeInput('heatmap_filter_on', strong('Filter on: '),
@@ -382,7 +394,10 @@ shinyUI(
                                         downloadButton('BUTTON_download_heatmap','Download Heatmap',
                                                        alt = 'button download heatmap',
                                                        style='background-color: #3269FF; color: #ffffff'),
-                                        actionButton("heatmap_help", "Page Pop Up Info"),
+                                        downloadButton('BUTTON_download_heatmap_data','Download Heatmap Data',
+                                                       alt = 'button download heatmap data',
+                                                       style='background-color: #3269FF; color: #ffffff'),
+                                        actionButton("heatmap_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
                                         br(), br()),
                                  column(12,
                                         plotOutput('heatmap') %>% shinycssloaders::withSpinner(type = 3, size = 0.5, color = "#3269FF", color.background = 'white')),
@@ -433,8 +448,8 @@ shinyUI(
                                                     downloadButton("diff_table_download","Download all results as csv"),
                                                     br(), br())),
                                            fluidRow(column(12,
-                                                           actionButton("diff_testing_help", "Page Pop Up Info"),
-                                                           actionButton("data_table_help3", "Data Table Pop Up Info")))),
+                                                           actionButton("diff_testing_help", "Page Pop Up Info", style = 'background-color: #6633ff; color: #ffffff'),
+                                                           actionButton("data_table_help3", "Data Table Pop Up Info", style='background-color: #6633ff; color: #ffffff')))),
                                  linebreaks(10),
                                  fluidRow(includeHTML("www/footer.html"))),
                         # haystack tables ------------
@@ -513,7 +528,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.92'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.93'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -523,7 +538,8 @@ shinyUI(
                                    fluidRow(column(width = 8, offset = 1, h1('What is scEiaD?'))),
                                    fluidRow(column(width = 8, offset = 1, HTML("<b>s</b>ingle <b>c</b>ell <b>E</b>ye <b>i</b>n <b>a</b> <b>D</b>isk"),)),
                                    br(),
-                                   fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. In front of the retina is the clear lens and cornea, which shape the light onto the retina. scEiaD is a meta-atlas that compiles 1.1 million single-cell eye and body tissue transcriptomes across 45 studies, 37 publications, and 4 species. Deep metadata mining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of ocular single cell expression information to be analyzed in one location.')),
+                                   fluidRow(column(width = 8, offset = 1, 'The light-sensitive portion of the eye is the retina. The retina itself is not a monolithic tissue - there are over 10 major cell types. The cones and rods which convert light into signal are supported by a wide variety of neural cell types with distinct roles in interpretting and transmitting the visual signal to the brain. Behind the retina is the RPE and vasculature, which supports the high energetic needs of the rods and cones. In front of the retina is the clear lens and cornea, which shape the light onto the retina. scEiaD is a meta-atlas that compiles 1.1 million single-cell eye and body tissue transcriptomes across 44 datasets, 35 publications, and 4 species. Deep metadata mining, rigorous quality control analysis, differential gene expression testing, and deep learning based batch effect correction in a unified bioinformatic framework allow the universe of ocular single cell expression information to be analyzed in one location.')),
+
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h1('tldr'))),
                                    fluidRow(column(width = 8, offset = 1, 'You can look up gene expression by retina cell type across loads of different studies, four organisms, and multiple developmental stages.')),
@@ -571,6 +587,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.93 (2023-02-16): Added the ability to download the plot data for the UMAPs, Expression Plot, Dot Plot, and Heatmap. New quick analysis document added',  tags$a(href="(http://plae.nei.nih.gov/plae_custom_plotting.html", "here"), "which gives a quick workthrough about how to recreate the plot locally in R. Enhanced the \"Pop Up\" buttons with more information and GIFs showing some functionality of the app.")),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.92 (2022-08-30): Default in Exp Plot now facets on Gene. Exp Plot facet_wrap now on "free_y" instead of "free" to save space.')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.91 (2022-07-30): Updated diff testing model to a pseudoBulk / DESeq2 based approach. Now run on a per-species basis. Added heatmap visualization which uses the DESeq2 pseudobulk differential experession changes. Fixed bug that removed RPC from the Expression Plot view as well as display zero expression studies. Expression Plot view has a new option which flips flops the facet / x axis from Gene to whatever the cell type label is (CellType, CellType_predict, cluster).')),
