@@ -195,7 +195,7 @@ make_dotplot <- function(input, db, meta_filter, cat_to_color_df){
       ct |
       group1_labels |
       plot_spacer() |
-      dp_legened |plot_spacer() | plot_layout(nrow = 1, widths = c(1,0.1, .05,.05, .05,.05))
+      dp_legened |plot_spacer() | plot_layout(nrow = 1, widths = c(1,0.1, .05,.05, .1,.1))
     out$plot <- top/plot_spacer() / group1_legend +plot_layout(ncol = 1, heights = c(1,.05, .2))
   }
 
