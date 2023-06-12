@@ -55,13 +55,7 @@ make_exp_plot <- function(input, db, meta_filter){
       filter(Gene %in% gene) %>%
       collect()
   }
-  # validate(
-  #   need(input$exp_plot_groups != '', "Please select at least one grouping feature")
-  # )
 
-
-
-  #cat(input)
   box_data_temp <- list()
   box_data_NA <- list()
   for (i in gene){
@@ -69,11 +63,7 @@ make_exp_plot <- function(input, db, meta_filter){
     box_data_temp[[i]] <- box_data %>%
       filter(Gene == i) %>%
       filter(!Platform %in% c('SCRBSeq')) %>%
-      # mutate(CellType_predict = case_when(CellType_predict == 'RPC' ~ 'RPCs',
-      #                                     CellType_predict == 'Mesenchymal/RPE/Endothelial' ~ 'Endothelial',
-      #                                     TRUE ~ CellType_predict)) %>%
       mutate(Stage = factor(Stage, levels = c('Early Dev.', 'Late Dev.', 'Maturing', 'Mature'))) %>%
-      #filter(!is.na(!!as.symbol(grouping_features))) %>%
       group_by_at(vars(one_of(c('Gene', input$exp_plot_facet, grouping_features)))) %>%
       summarise(counts = sum(counts * cell_exp_ct) / sum(cell_exp_ct),
                 cell_exp_ct = sum(cell_exp_ct, na.rm = TRUE)) %>%
@@ -89,7 +79,6 @@ make_exp_plot <- function(input, db, meta_filter){
              `Total Cells` = Count,
              `Mean log2(Counts + 1)` = Expression,
              `% of Cells Detected` = `%`) %>%
-
       mutate(`Mean log2(Counts + 1)` = case_when(is.na(`Mean log2(Counts + 1)`) ~ 0, TRUE ~ `Mean log2(Counts + 1)`)) %>%
       filter(`Total Cells` > as.integer(input$exp_filter_min_cell_number))
     # expand missing genes (nothing detected) to all genes used
@@ -100,11 +89,16 @@ make_exp_plot <- function(input, db, meta_filter){
     }
   }
   box_data <- box_data_temp %>% bind_rows()
-
-  #box_data$Group <- box_data[,c(2:(length(grouping_features)+1))] %>% tidyr::unite(x, sep = ' ') %>% pull(1)
+  if (nrow(box_data) == 0){
+    validate(
+      "Warning: no data remains after the filtering. Consider lowering the \"Minimum # Cells in Group\" threshold"
+    )}
 
   out <- list()
   out$box_data <- box_data
+
+
+
   if ((input$exp_plot_flip == "Gene")){
     out$plot <- box_data %>%
       ggplot(aes(x=!!as.symbol(input$exp_plot_facet), y = !!as.symbol(input$exp_plot_ylab), color = !!as.symbol(grouping_features))) +
