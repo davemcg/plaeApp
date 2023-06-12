@@ -22,8 +22,8 @@ library(fst)
 library(dbplyr)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 
-scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/Thunder//data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
-#scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
+#scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/Thunder//data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
+scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="~/data/scEiaD_2022_02/MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
 
 # # testing
 # load('~/data/scEiaD_CTP/xgboost_predictions/n_features-2000__transform-counts__partition-PR__covariate-batch__method-scVI__dims-20__epochs-50__dist-0.1__neighbors-50__knn-20__umapPredictions.Rdata')
@@ -31,13 +31,13 @@ scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/Thunder//data/scEiaD
 x_dir <- -1
 y_dir <- 1
 
-meta_filter <- read_fst('/Volumes/Thunder/data/scEiaD_2022_02//meta_filter.fst') %>%
-# meta_filter <- read_fst('~/data/scEiaD_2022_02//meta_filter.fst') %>%
+#meta_filter <- read_fst('/Volumes/Thunder/data/scEiaD_2022_02//meta_filter.fst') %>%
+meta_filter <- read_fst('~/data/scEiaD_2022_02//meta_filter.fst') %>%
   as_tibble() %>%
-  mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) && !is.na(CellType_predict) ~ 'Tabula Muris',
+  mutate(CellType_predict = case_when(!is.na(TabulaMurisCellType_predict) & !is.na(CellType_predict) ~ 'Tabula Muris',
                                       is.na(CellType_predict) ~ 'Unlabelled',
                                       TRUE ~ CellType_predict)) %>%
- # filter(study_accession != 'Bharti_Nguyen_iRPE_2D_3D') %>%
+  # filter(study_accession != 'Bharti_Nguyen_iRPE_2D_3D') %>%
   mutate(UMAP_a = UMAP_1 * x_dir,
          UMAP_b = UMAP_2 * y_dir) %>%
   mutate(UMAP_1 = UMAP_a, UMAP_2 = UMAP_b)
@@ -330,7 +330,7 @@ shinyServer(function(input, output, session) {
                            server = TRUE)
     }
     observeEvent(input$exp_filter_cat, {
-      if (input$exp_filter_cat == ''){
+      if (length(input$exp_filter_cat) == 0){
         choice = ''
       } else {
         choice = meta_filter[,input$exp_filter_cat] %>% t() %>% c() %>% unique() %>% sort()
@@ -692,7 +692,7 @@ shinyServer(function(input, output, session) {
     output$BUTTON_download_scatter_data <- downloadHandler(
       filename = function() {
         paste("plae_gene_scatter_data_", Sys.Date(), ".csv.gz", sep="")
-        },
+      },
       content = function(file) {
         out <- gene_scatter_plot_maker()$data
         out <- bind_rows(out, mf %>% select(Barcode, UMAP_1, UMAP_2) %>% mutate(counts = 0))
@@ -931,7 +931,7 @@ shinyServer(function(input, output, session) {
     }, height = eventReactive(input$BUTTON_draw_heatmap, {input$heatmap_height %>% as.numeric()}))
   })
 
-## dotplot download ----
+  ## dotplot download ----
   output$BUTTON_download_dotplot <- downloadHandler(
     filename = function() { ('plae_dotplot.png') },
     content = function(file) {
@@ -943,15 +943,15 @@ shinyServer(function(input, output, session) {
     }
   )
   output$BUTTON_download_dotplot_data <-  downloadHandler(
-      filename = function() {
-        paste("plae_dotplot_data_", Sys.Date(), ".csv", sep="")
-      },
-      content = function(file) {
-        out <- make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$data
-        readr::write_csv(out, file=file)
-      }
-    )
-## heatmap download ----
+    filename = function() {
+      paste("plae_dotplot_data_", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      out <- make_dotplot(input, scEiaD_2020_v01, meta_filter,cat_to_color_df)$data
+      readr::write_csv(out, file=file)
+    }
+  )
+  ## heatmap download ----
   output$BUTTON_download_heatmap <- downloadHandler(
     filename = function() { ('plae_heatmap.png') },
     content = function(file) {
