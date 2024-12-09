@@ -20,6 +20,7 @@ library(stringr)
 library(shinyalert)
 library(fst)
 library(dbplyr)
+source("set_slider_func.R")
 suppressPackageStartupMessages(library(ComplexHeatmap))
 
 #scEiaD_2020_v01 <- dbPool(drv = SQLite(), dbname ="/Volumes/Thunder//data/scEiaD_2022_02//MOARTABLES__anthology_limmaFALSE___4000-counts-universe-study_accession-scANVIprojection-15-5-0.1-50-20__pointRelease01.sqlite", idleTimeout = 3600000)
@@ -156,7 +157,7 @@ shinyServer(function(input, output, session) {
           selectizeInput('gene_filter_on', strong('Gene Scatter Select: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
-          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
+          setSliderColor_local(c("#3399ff"), c(1))
           sliderInput("gene_filter_on", label = strong("Gene Filter Range: "), min = min(choice),
                       max = max(choice), value = c(min(choice), max(choice)))
         }
@@ -194,7 +195,7 @@ shinyServer(function(input, output, session) {
           selectizeInput('meta_filter_on', strong('Meta Select: '),
                          choices = choice, selected = NULL, multiple = TRUE)
         } else {
-          shinyWidgets::setSliderColor(c("#3399ff"), c(1))
+          setSliderColor_local(c("#3399ff"), c(1))
           sliderInput("meta_filter_on", label = strong("Meta Filter Range: "), min = min(choice),
                       max = max(choice), value = c(min(choice), max(choice)))
         }

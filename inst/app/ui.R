@@ -12,6 +12,7 @@ library(cowplot)
 library(shinyalert)
 library(magrittr)
 library(DT)
+source("set_slider_func.R")
 # header color
 ## orig: #2c3e50
 ## new:  #6633ff
@@ -68,7 +69,7 @@ shinyUI(
                                                                     selectizeInput('pt_size_gene', strong('Scatter Point Size: '),
                                                                                    choices=c(1,2,3,6,10),
                                                                                    selected = 2, multiple=FALSE))),
-                                                    shinyWidgets::setSliderColor(c("#3269FF"), c(1)),
+                                                    setSliderColor_local(c("#3269FF"), c(1)),
                                                     fluidRow(column(5,
                                                                     selectInput("gene_label_toggle", label = strong("Meta Label: "),
                                                                                 choices = list("None" = 0,
@@ -528,7 +529,7 @@ shinyUI(
              navbarMenu('Info', # Info ------
                         tabPanel('Overview', # Overview ------
                                  fluidPage(
-                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.94'))),
+                                   fluidRow(column(width = 8, offset = 1, h1('plae v0.95'))),
                                    br(),
                                    fluidRow(column(width = 8, offset = 1, h2(HTML("<b>PL</b>atform for <b>A</b>nalysis of sc<b>E</b>iad")))),
                                    fluidRow(column(width = 8, offset = 1,
@@ -587,6 +588,8 @@ shinyUI(
                                    fluidRow(includeHTML("www/footer.html")))),
                         tabPanel('Change Log', # Change Log ------
                                  fluidRow(column(width = 8, offset = 1, h1('Change log'))),
+                                 fluidRow(column(width = 8, offset = 1, '0.95 (2024-12-09): Fixed diff table database slow performance, removed deprecated setSliderColor')),
+                                 br(),
                                  fluidRow(column(width = 8, offset = 1, '0.94 (2023-06-12): Added error handling for exp plot situation where user filters all the data out. Fixed bug in logic for exp plot category filtering')),
                                  br(),
                                  fluidRow(column(width = 8, offset = 1, '0.93 (2023-02-16): Added the ability to download the plot data for the UMAPs, Expression Plot, Dot Plot, and Heatmap. New quick analysis document added',  tags$a(href="(http://plae.nei.nih.gov/plae_custom_plotting.html", "here"), "which gives a quick workthrough about how to recreate the plot locally in R. Enhanced the \"Pop Up\" buttons with more information and GIFs showing some functionality of the app.")),
